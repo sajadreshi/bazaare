@@ -1,3 +1,4 @@
+from decimal import Decimal, ROUND_HALF_UP
 
 from flask import session
 import uuid
@@ -76,7 +77,7 @@ def create_cart_item(product,selected_size,cur_cart):
               product_sku = product.get('product_sku'),
               product_name = product.get('product_name'),
               size_id = selected_size.get('size_id'),
-              product_price = round((sale_price * quantity),2)
+              product_price = (Decimal(str(sale_price)) * Decimal(str(quantity))).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
               )
   db.session.add(item)
   db.session.flush()

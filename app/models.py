@@ -44,20 +44,9 @@ class User(UserMixin,db.Model):
         h = check_password_hash(self.password, password)   
         return h 
 
-    def is_active(self):
-        return True
-
-    def is_authenticated(self):
-        return self.is_authenticated
-
-    def is_anonymous(self):
-        return False
-
-    def is_admin(self):
-        return self.is_admin
-    
-    def get_id(self):
-        return self.id
+    # is_active / is_authenticated / is_anonymous / get_id come from UserMixin.
+    # (Overriding them here used to shadow the is_admin column and made
+    # is_authenticated always truthy.)
 
     def __repr__(self):
         return f"<User {self.email}>"
@@ -85,8 +74,8 @@ class Product(db.Model):
     sku=db.Column(db.String(64),index=True,unique=True,nullable=False)
     name=db.Column(db.String(64),index=True,nullable=False)
     description=db.Column(db.String(300))
-    retail_price=db.Column(db.Float,nullable=False)
-    sale_price=db.Column(db.Float,nullable=False)
+    retail_price=db.Column(db.Numeric(10, 2),nullable=False)
+    sale_price=db.Column(db.Numeric(10, 2),nullable=False)
     main_image=db.Column(db.Unicode(128))
     alt1_image=db.Column(db.Unicode(128))
     alt2_image=db.Column(db.Unicode(128))
@@ -113,7 +102,8 @@ class Variant(db.Model):
     __tablename__ = 'variant'
     id=db.Column(db.Integer,primary_key=True)
     size = db.Column(db.String(30),nullable=False)
-    quantity =  db.Column(db.Float,nullable=False)
+    # Price multiplier for this variant (1 = base price).
+    quantity = db.Column(db.Numeric(10, 2), nullable=False, default=1)
     weight=db.Column(db.Float)
     is_default = db.Column(db.Boolean, default=False)
     description = db.Column(db.String(300))
@@ -262,11 +252,11 @@ class HomeCarousal(db.Model):
 class Cart(db.Model):
     __tablename__ = 'cart'
     id=db.Column(db.Integer, primary_key=True)
-    total_merchandise=db.Column(db.Float,default=0.00)
-    total_shipping=db.Column(db.Float,default=0.00)
-    total_taxes=db.Column(db.Float,default=0.00)
-    total_discount=db.Column(db.Float,default=0.00)
-    total_cart=db.Column(db.Float,default=0.00)
+    total_merchandise=db.Column(db.Numeric(10, 2),default=0.00)
+    total_shipping=db.Column(db.Numeric(10, 2),default=0.00)
+    total_taxes=db.Column(db.Numeric(10, 2),default=0.00)
+    total_discount=db.Column(db.Numeric(10, 2),default=0.00)
+    total_cart=db.Column(db.Numeric(10, 2),default=0.00)
     status=db.Column(db.String(64),index=True,default='PENDING',nullable=False)
     delivery_date=db.Column(db.DateTime,index=True)
     delivery_window=db.Column(db.String(64))
@@ -282,19 +272,19 @@ class Item(db.Model):
     size_id=db.Column(db.Integer, db.ForeignKey('variant.id'))
     product_sku=db.Column(db.String(64),nullable=False)
     product_name=db.Column(db.String(300))
-    product_price=db.Column(db.Float,default=0.00)
+    product_price=db.Column(db.Numeric(10, 2),default=0.00)
     status=db.Column(db.String(64),default='PENDING',nullable=False)
     delivery_date=db.Column(db.DateTime,index=True)
-    shipping_base_charge=db.Column(db.Float,default=0.00)
-    shipping_up_charge=db.Column(db.Float,default=0.00)
-    merchandise_tax=db.Column(db.Float,default=0.00)
-    shipping_tax=db.Column(db.Float,default=0.00)
-    merchandise_discount= db.Column(db.Float,default=0.00)
-    shipping_discount= db.Column(db.Float,default=0.00)
-    total_shipping= db.Column(db.Float,default=0.00)
-    total_tax =  db.Column(db.Float,default=0.00)
-    total_discount =  db.Column(db.Float,default=0.00)
-    total_item= db.Column(db.Float,default=0.00)
+    shipping_base_charge=db.Column(db.Numeric(10, 2),default=0.00)
+    shipping_up_charge=db.Column(db.Numeric(10, 2),default=0.00)
+    merchandise_tax=db.Column(db.Numeric(10, 2),default=0.00)
+    shipping_tax=db.Column(db.Numeric(10, 2),default=0.00)
+    merchandise_discount= db.Column(db.Numeric(10, 2),default=0.00)
+    shipping_discount= db.Column(db.Numeric(10, 2),default=0.00)
+    total_shipping= db.Column(db.Numeric(10, 2),default=0.00)
+    total_tax =  db.Column(db.Numeric(10, 2),default=0.00)
+    total_discount =  db.Column(db.Numeric(10, 2),default=0.00)
+    total_item= db.Column(db.Numeric(10, 2),default=0.00)
     updated_at=db.Column(db.DateTime,index=True,default=datetime.utcnow)
     created_at=db.Column(db.DateTime, index=True,default=datetime.utcnow)
 
@@ -353,8 +343,8 @@ class Payment(db.Model):
     transaction_id = db.Column(db.String(500))
     transaction_status = db.Column(db.String(500))
     auth_code = db.Column(db.String(500))
-    requested_amount= db.Column(db.Float,default=0.00)
-    approved_amount= db.Column(db.Float,default=0.00)
+    requested_amount= db.Column(db.Numeric(10, 2),default=0.00)
+    approved_amount= db.Column(db.Numeric(10, 2),default=0.00)
     updated_at=db.Column(db.DateTime,index=True,default=datetime.utcnow)
     created_at=db.Column(db.DateTime, index=True,default=datetime.utcnow)
 

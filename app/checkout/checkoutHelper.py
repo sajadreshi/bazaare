@@ -32,7 +32,7 @@ def updateVariantSize(itemId, sizeId, productId):
      if(itemId and sizeId and productId):
          produc_price = fetchProductPrice(productId)
          size_qty = fetchSizeDetails(sizeId)
-         new_price =round(Decimal(size_qty) * Decimal(produc_price),2)
+         new_price = (Decimal(str(size_qty)) * Decimal(str(produc_price))).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
          item = db.session.query(Item).filter(Item.id==itemId)
          item.update({"size_id":sizeId,"product_price":new_price})
          db.session.commit()
