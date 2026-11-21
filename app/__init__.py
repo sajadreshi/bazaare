@@ -1,8 +1,9 @@
 import logging
 
 import click
-from flask import Flask, render_template
+from flask import Flask, flash, redirect, render_template, request, url_for
 from flask_admin.menu import MenuLink
+from flask_wtf.csrf import CSRFError
 
 from app.adminapp.auth import bp as admin_auth_bp
 from app.adminapp.views import (
@@ -64,6 +65,16 @@ def create_app(config_overrides=None):
     ckeditor.init_app(app)
     mail.init_app(app)
     csrf.init_app(app)  # every POST (site and /admin) must carry a CSRF token
+
+    @app.errorhandler(CSRFError)
+    def csrf_failed(error):
+        # A stale or missing form token: send them back to the form to try again
+        # instead of showing a bare "Bad Request" page. Nothing was submitted.
+        flash("That form had expired, so nothing was saved. Please try again.", "error")
+        back = request.referrer
+        if not (back and back.startswith(request.host_url)):
+            back = url_for("main.home")
+        return redirect(back)
 
     @app.errorhandler(404)
     def not_found(error):
