@@ -61,6 +61,7 @@
              <div class="col-radio-container">
               {% if(product.sizes and product.sizes | length > 0) %}  
                <form name="addToCartFrm" method="post">
+                   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                    <input type="hidden" id="pid" name="pid" value="{{product.product_id}}">
                    <div class="list-group">
                        {% for sizekey, sizevalue in product.sizes.items() %} 

@@ -1,60 +1,35 @@
-from app.checkout.PaymentStatus import PaymentStatus
+import logging
+from decimal import Decimal
+
 from app.checkout.commonutil import getCartObj
+from app.checkout.PaymentStatus import PaymentStatus
+
+log = logging.getLogger(__name__)
 
 
 def doPayment(payment_form, current_cart):
-
     payment_method = payment_form.payment_method.data
-    cart_obj = getCartObj(current_cart)
-    match  payment_method:
-
+    cart_obj = getCartObj(current_cart) or {}
+    status = PaymentStatus(
+        paymentMethod=payment_method,
+        requestedAmount=Decimal(cart_obj.get("total_cart") or 0),
+    )
+    match payment_method:
         case "COD":
-            return doPaymentWithCOD(payment_form, cart_obj)
-
-        case "creditCard":
-            return doPaymentWithCreditCard(payment_form, cart_obj)
-
-        case "payPal":
-            return doPaymentWithPayPal(payment_form, cart_obj)
-
-
-def doPaymentWithCOD(payment_form, cart_obj):
-    pStatus = initializePayment(payment_form, cart_obj)
-    pStatus.isSuccess = True
-    pStatus.transactionStatus = 'APPROVED'
-    pStatus.approvedAmount = cart_obj.get('total_cart')
-    return pStatus
+            return doPaymentWithCOD(status)
+        case "creditCard" | "payPal":
+            # Gateway integrations (e.g. Stripe, PayPal) go here. They must tokenize
+            # card data on the provider's side; never pass raw card numbers through.
+            status.error = "This payment method is not available yet."
+            return status
+        case _:
+            log.warning("Unknown payment method %r", payment_method)
+            status.error = "Please choose a payment method."
+            return status
 
 
-def doPaymentWithCreditCard(payment_form, cart_obj):
-    # payment integration with payment gateway goes here
-    return initializePayment(payment_form, cart_obj)
-
-
-def doPaymentWithPayPal(payment_form, cart_obj):
-    # payment integration with paypal gateway goes here
-    return initializePayment(payment_form, cart_obj)
-
-
-def initializePayment(payment_form, cart_obj):
-    paymentStatus = PaymentStatus(False,
-                                  '',
-                                  payment_form.payment_method.data,
-                                  '',
-                                  '',
-                                  0,
-                                  0,
-                                  '',
-                                  'PENDING',
-                                  '',
-                                  cart_obj.get('total_cart'),
-                                 0.00)
-    return paymentStatus
-
-
-def getValueFromCart(current_cart,field):
-   
-   try:
-      return getCartObj(current_cart).get(field)
-   except:
-      return None
+def doPaymentWithCOD(status):
+    status.isSuccess = True
+    status.transactionStatus = "APPROVED"
+    status.approvedAmount = status.requestedAmount
+    return status

@@ -12,6 +12,9 @@ htmlcov/
 
 dist/
 build/
-*.egg-info/*.pem
+*.egg-info/
+*.pem
 *.db
 .env
+server.log
+.ruff_cache/

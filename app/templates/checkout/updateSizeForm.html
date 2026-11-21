@@ -1,5 +1,6 @@
 <div class="update-size">
     <form action="" method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <p>
             <select class="checkout-drop-down" name="size" id="variantsizelist-{{item_id}}">
             </select>

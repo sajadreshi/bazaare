@@ -15,6 +15,7 @@
             {%set xsell_price = xsellvalue.product_sale_price if xsellvalue.product_sale_price and xsellvalue.product_sale_price is not none else  0 %}
             <div class="col-lg-4 col-md-6  text-center">
             <form name="addToCartFrm" method="post">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <input type="hidden" id="pid" name="pid" value="{{xsellvalue.prouduct_id}}">  
                 <div class="box">
                     <div class="img-box">

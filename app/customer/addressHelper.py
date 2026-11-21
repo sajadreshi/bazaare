@@ -1,7 +1,6 @@
 from app.customer.customerUtil import findCurrentCustomer
-from app.models import Address
-from flask_login import current_user
 from app.extension import db
+from app.models import Address
 
 
 def updateBillingAddress(billingForm):
@@ -14,6 +13,7 @@ def updateBillingAddress(billingForm):
             return billing_address
     return None
 
+
 def updateShippingAddress(shippingForm):
     if shippingForm:
         shipping_address = persist_address(shippingForm)
@@ -24,11 +24,13 @@ def updateShippingAddress(shippingForm):
             return shipping_address
     return None
 
+
 def getCurrentBillingAddress():
     customer = findCurrentCustomer()
     if customer and customer.billing_address_id:
         return Address.query.filter_by(id=customer.billing_address_id).first()
-    return 
+    return
+
 
 def getCurrentShippingAddress():
     customer = findCurrentCustomer()
@@ -47,7 +49,7 @@ def persist_address(form):
         state=form.state.data,
         zip=form.zip.data,
         email=form.email.data,
-        phone=form.phone.data
+        phone=form.phone.data,
     )
     db.session.add(address)
     db.session.flush()

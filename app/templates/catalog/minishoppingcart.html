@@ -18,7 +18,10 @@
                 <span class="item-price">${{item_value.item_product_price}}</span>
                 <span class="item-quantity">{{c_size.product_size}}</span>
                 <div class="remove-item">
-                <a href="{{ url_for('checkout.remove',itemId=item_key) }}"><i class="fa fa-trash" aria-hidden="true"></i><span> Remove </span></a>
+                <form method="post" action="{{ url_for('checkout.remove',itemId=item_key) }}" class="d-inline">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button type="submit" class="btn btn-link p-0"><i class="fa fa-trash" aria-hidden="true"></i><span> Remove </span></button>
+                </form>
                 </div>
             </li>
             
