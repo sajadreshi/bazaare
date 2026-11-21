@@ -1,0 +1,19 @@
+{# Filterable product grid. Expects `shelves` (list of CategoryShelf). #}
+<div class="heading_container heading_center">
+  <h2>Our Collection</h2>
+</div>
+<ul class="filters_menu">
+  <li class="active" data-filter="*">All</li>
+  {% for shelf in shelves %}
+  <li data-filter=".cat-{{ shelf.category.code | lower }}">{{ shelf.category.name }}</li>
+  {% endfor %}
+</ul>
+<div class="filters-content">
+  <div class="row grid">
+    {% for shelf in shelves %}
+      {% for product in shelf.products %}
+        {% with css_class = 'cat-' ~ (shelf.category.code | lower) %}{% include 'catalog/_product_card.html' %}{% endwith %}
+      {% endfor %}
+    {% endfor %}
+  </div>
+</div>

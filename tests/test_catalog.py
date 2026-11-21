@@ -1,0 +1,129 @@
+"""Catalog and home page rendering from the catalog service."""
+
+from decimal import Decimal
+
+import pytest
+
+from app.extension import db
+from app.models import (
+    Attribute,
+    Carousel,
+    Category,
+    Collection,
+    HomePageContent,
+    Product,
+    ProductAssociation,
+    ProductAttribute,
+    Variant,
+)
+
+
+@pytest.fixture(scope="module")
+def catalog(app):
+    with app.app_context():
+        necklaces = Category.query.filter_by(code="NECKLACES").one()
+        earrings = Category.query.filter_by(code="EARRINGS").one()
+        hidden_cat = Category(code="HIDDEN", name="Hidden Things", is_active=False)
+        jewellery = Collection.query.filter_by(name="Jewellery").one()
+        jewellery.category.append(hidden_cat)
+
+        pendant = Product(
+            sku="CAT-PENDANT",
+            name="Moon Pendant",
+            description="A silver crescent.",
+            retail_price=Decimal("80"),
+            sale_price=Decimal("64.50"),
+            material="Silver",
+            is_active=True,
+            is_sustainable=True,
+            main_image="moon.png",
+            alt1_image="moon-side.png",
+        )
+        studs = Product(
+            sku="CAT-STUDS",
+            name="Pearl Studs",
+            retail_price=Decimal("40"),
+            sale_price=Decimal("30.00"),
+            is_active=True,
+        )
+        retired = Product(
+            sku="CAT-RETIRED", name="Retired Hoop", retail_price=1, sale_price=1, is_active=False
+        )
+        secret = Product(sku="CAT-SECRET", name="Secret Ring", retail_price=1, sale_price=1, is_active=True)
+        pendant.categories.append(necklaces)
+        studs.categories.append(earrings)
+        retired.categories.append(earrings)
+        secret.categories.append(hidden_cat)
+
+        chain_16 = Variant(size="16 inch", quantity=1, is_default=False)
+        chain_18 = Variant(
+            size="18 inch", quantity=Decimal("1.20"), is_default=True, description="Most popular"
+        )
+        one = Variant(size="One size", quantity=1, is_default=True)
+        for v in (chain_16, chain_18):
+            v.products.append(pendant)
+        one.products.append(studs)
+
+        stone = Attribute(attribute_name="Stone", attribute_value="Moonstone")
+        db.session.add_all([pendant, studs, retired, secret, chain_16, chain_18, one, stone, hidden_cat])
+        db.session.flush()
+        db.session.add(ProductAttribute(product_id=pendant.id, attribute_id=stone.id))
+        db.session.add(
+            ProductAssociation(
+                source_product_id=pendant.id,
+                target_product_id=studs.id,
+                association_type="XSELL",
+                is_active=True,
+            )
+        )
+        db.session.add(
+            ProductAssociation(
+                source_product_id=pendant.id,
+                target_product_id=retired.id,
+                association_type="XSELL",
+                is_active=True,
+            )
+        )
+
+        slide1 = Carousel(name="s1", header="New Moon Collection", text="<p>Hand <b>made</b></p>")
+        slide2 = Carousel(name="s2", header="Pearls are back", text="Classic studs")
+        home = HomePageContent(is_active=True, category=earrings, collection=jewellery)
+        home.carousel.append(slide1)
+        home.carousel.append(slide2)
+        db.session.add_all([slide1, slide2, home])
+        db.session.commit()
+        return {"pendant": pendant.id, "studs": studs.id, "retired": retired.id, "chain_18": chain_18.id}
+
+
+def test_collection_page_shows_only_active_categories_and_products(client, catalog):
+    html = client.get("/catalog/collection").get_data(as_text=True)
+    assert "Moon Pendant" in html and "Pearl Studs" in html
+    assert "Retired Hoop" not in html  # inactive product
+    assert "Secret Ring" not in html and "Hidden Things" not in html  # inactive category
+    assert 'data-filter=".cat-necklaces"' in html
+
+
+def test_product_page_shows_variants_attributes_and_cross_sells(client, catalog):
+    html = client.get(f"/catalog/product/{catalog['pendant']}").get_data(as_text=True)
+    assert "Moon Pendant" in html and "Silver" in html and "Moonstone" in html
+    assert "$64.50" in html and "$77.40" in html  # 18 inch = 1.20 x 64.50
+    assert f'value="{catalog["chain_18"]}" checked' in html  # default variant preselected
+    assert "Most popular" in html
+    assert "moon-side.png" in html  # alternate image thumbnail
+    assert "Related Products" in html and "Pearl Studs" in html
+    assert "Retired Hoop" not in html  # inactive cross-sell hidden
+
+
+def test_inactive_product_page_says_unavailable(client, catalog):
+    html = client.get(f"/catalog/product/{catalog['retired']}").get_data(as_text=True)
+    assert "Product does not exist or is currently out of stock" in html
+
+
+def test_home_page_renders_slides_featured_and_collection(client, catalog):
+    html = client.get("/").get_data(as_text=True)
+    assert "New Moon Collection" in html and "Pearls are back" in html
+    assert "Hand made" in html and "<b>made</b>" not in html  # rich text shown as plain text
+    assert html.count('data-slide-to="') == 2
+    assert "Pearl Studs" in html  # featured category (earrings)
+    assert "Moon Pendant" in html  # collection shelves
+    assert "Secret Ring" not in html
