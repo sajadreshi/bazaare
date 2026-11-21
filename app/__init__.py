@@ -7,7 +7,6 @@ from flask_wtf.csrf import CSRFError
 
 from app.adminapp.auth import bp as admin_auth_bp
 from app.adminapp.views import (
-    AttributesRelView,
     AttributesView,
     CarouselView,
     CategoryView,
@@ -41,7 +40,6 @@ from .models import (
     Order,
     Product,
     ProductAssociation,
-    ProductAttribute,
     Role,
     User,
     Variant,
@@ -104,8 +102,7 @@ def create_app(config_overrides=None):
     app.register_blueprint(catalog_bp, url_prefix="/catalog")
     app.register_blueprint(checkout_bp, url_prefix="/checkout")
     app.register_blueprint(customer_bp, url_prefix="/customer")
-    admin.add_view(AttributesView(Attribute, db, category="Attributes"))
-    admin.add_view(AttributesRelView(ProductAttribute, db, category="Attributes"))
+    admin.add_view(AttributesView(Attribute, db, category="Attributes", name="Attribute types"))
     admin.add_view(CategoryView(Category, db, category="Category"))
     admin.add_view(CarouselView(Carousel, db, category="Content", name="Home banner slides"))
     admin.add_view(ProductView(Product, db, category="Product"))

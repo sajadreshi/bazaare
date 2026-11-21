@@ -6,7 +6,7 @@ Only active collections, categories and products are ever shown to shoppers.
 from dataclasses import dataclass, field
 
 from app.extension import db
-from app.models import Carousel, Category, Product
+from app.models import Carousel, Category, Product, ProductAttribute
 from app.services.cart import line_price, product_variants
 
 
@@ -170,6 +170,7 @@ def search(query, limit=60):
             | Product.material.ilike(like)
             | Product.sku.ilike(like)
             | Product.categories.any(Category.name.ilike(like))
+            | Product.attribute_links.any(ProductAttribute.value.ilike(like))
         )
     return q.order_by(Product.id).limit(limit).all()
 

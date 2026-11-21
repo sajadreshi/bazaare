@@ -98,6 +98,7 @@ def test_import_catalog_creates_products_with_designs_and_photos(app, tmp_path):
                 "description": "Test.",
                 "categories": ["EAR-JHUMKAS", "SALE-LAST"],
                 "designs": ["Blue", "Green"],
+                "attributes": {"Stone": "Lapis", "Closure": "Hook"},
                 "images": ["a.jpg", "b.jpg"],
             },
             {
@@ -122,6 +123,10 @@ def test_import_catalog_creates_products_with_designs_and_photos(app, tmp_path):
             ("IMP-2", "UPSELL")
         ]
         assert sorted(v.size for v in jhumka.variant) == ["Blue", "Green"]
+        assert {(link.attribute.name, link.value) for link in jhumka.attribute_links} == {
+            ("Stone", "Lapis"),
+            ("Closure", "Hook"),
+        }
         assert jhumka.main_image and jhumka.alt1_image and not jhumka.alt2_image
         assert (jhumka.sale_price, jhumka.retail_price) == (30, 36)
         assert [v.size for v in Product.query.filter_by(sku="IMP-2").one().variant] == ["One Size"]

@@ -36,7 +36,7 @@
     <dl class="bz-specs">
       {% if product.material %}<dt>Material</dt><dd>{{ product.material }}</dd>{% endif %}
       {% if product.is_handmade %}<dt>Craft</dt><dd>Handmade</dd>{% endif %}
-      {% for link in product.attribute_links %}<dt>{{ link.attribute.attribute_name }}</dt><dd>{{ link.attribute.attribute_value or '' }}</dd>{% endfor %}
+      {% for link in product.attribute_links | sort(attribute='attribute.position') %}<dt>{{ link.attribute.name }}</dt><dd>{{ link.value }}</dd>{% endfor %}
       <dt>SKU</dt><dd>{{ product.sku }}</dd>
     </dl>
 
