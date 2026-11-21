@@ -162,11 +162,23 @@ class RelatedProductInline(InlineFormAdmin):
 
 
 class ProductView(SecureModelView):
-    column_formatters = {attr: thumbnail(attr) for attr in PRODUCT_IMAGES}
     form_extra_fields = {
         attr: StorageImageField(label, folder="products") for attr, label in PRODUCT_IMAGES.items()
     }
     form_excluded_columns = ["created_at", "updated_at", "attribute_links", "linked_from", "associations"]
+    column_list = ("main_image", "sku", "name", "sale_price", "retail_price", "categories", "is_active")
+    column_labels = {
+        "main_image": "Photo",
+        "sale_price": "Price",
+        "retail_price": "Was",
+        "is_active": "Active",
+    }
+    column_formatters = {
+        **{attr: thumbnail(attr) for attr in PRODUCT_IMAGES},
+        "retail_price": lambda v, c, m, n: m.retail_price if m.retail_price != m.sale_price else "",
+        "categories": lambda v, c, m, n: ", ".join(sorted(cat.name for cat in m.categories)),
+    }
+    column_default_sort = ("sku", False)
     column_searchable_list = ["name", "sku"]
     column_filters = ["sale_price", "is_active"]
     # "Related products" table at the bottom of the product form.

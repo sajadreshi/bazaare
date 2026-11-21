@@ -1,5 +1,112 @@
 {% extends 'admin/master.html' %}
-
+{% block title %}Dashboard · BazaarE’ admin{% endblock %}
+{% block page_title %}{% endblock %}{# the greeting below is the heading #}
 {% block body %}
-  <p>Welcome to Bazaare</p>
+{% set money = '%.2f' %}
+<div class="bz-dash">
+  <header class="bz-dash__head">
+    <div>
+      <h1>Good to see you{% if current_user.first_name %}, {{ current_user.first_name | title }}{% endif %}</h1>
+      <p>Here's how the shop is doing.</p>
+    </div>
+    <div class="bz-dash__actions">
+      <a class="btn bz-btn-gold" href="{{ url_for('product.create_view') }}">+ Add product</a>
+      <a class="btn bz-btn-outline" href="{{ url_for('carousel.create_view') }}">+ Banner slide</a>
+      <a class="btn bz-btn-outline" href="{{ url_for('category.index_view') }}">Edit menu</a>
+      <a class="btn bz-btn-outline" href="/" target="_blank" rel="noopener">View shop ↗</a>
+    </div>
+  </header>
+
+  <section class="bz-kpis">
+    <a class="bz-kpi" href="{{ url_for('order.index_view') }}">
+      <span class="bz-kpi__label">Today</span>
+      <span class="bz-kpi__value">${{ money | format(dash.today.revenue) }}</span>
+      <span class="bz-kpi__meta">{{ dash.today.orders }} order{{ 's' if dash.today.orders != 1 }}</span>
+    </a>
+    <a class="bz-kpi" href="{{ url_for('order.index_view') }}">
+      <span class="bz-kpi__label">Last 7 days</span>
+      <span class="bz-kpi__value">${{ money | format(dash.week.revenue) }}</span>
+      <span class="bz-kpi__meta">{{ dash.week.orders }} orders
+        {% if dash.week_change is not none %}· <b class="{{ 'up' if dash.week_change >= 0 else 'down' }}">{{ '+' if dash.week_change >= 0 }}{{ dash.week_change }}%</b> vs previous week{% endif %}
+      </span>
+    </a>
+    <a class="bz-kpi {{ 'bz-kpi--alert' if dash.to_ship }}" href="{{ url_for('order.index_view') }}">
+      <span class="bz-kpi__label">Orders to ship</span>
+      <span class="bz-kpi__value">{{ dash.to_ship }}</span>
+      <span class="bz-kpi__meta">status “Placed”</span>
+    </a>
+    <a class="bz-kpi" href="{{ url_for('product.index_view') }}">
+      <span class="bz-kpi__label">Catalog</span>
+      <span class="bz-kpi__value">{{ dash.active_products }}</span>
+      <span class="bz-kpi__meta">active products · {{ dash.customers }} customer{{ 's' if dash.customers != 1 }}{% if dash.new_customers %} (+{{ dash.new_customers }} this week){% endif %}</span>
+    </a>
+  </section>
+
+  <div class="bz-dash__grid">
+    <section class="bz-panel bz-panel--wide">
+      <h2>Sales, last 14 days</h2>
+      <div class="bz-chart" role="img" aria-label="Daily sales for the last 14 days">
+        {% for day, revenue, orders in dash.daily %}
+        <div class="bz-chart__col" title="{{ day.strftime('%a %d %b') }}: ${{ money | format(revenue) }} from {{ orders }} order{{ 's' if orders != 1 }}">
+          <span class="bz-chart__bar" style="height: {{ (revenue / dash.daily_max * 100) | round(1) }}%"></span>
+          <span class="bz-chart__day">{{ day.strftime('%d') }}</span>
+        </div>
+        {% endfor %}
+      </div>
+      <p class="bz-muted">Average order (7 days): ${{ money | format(dash.week.average) }}</p>
+    </section>
+
+    <section class="bz-panel">
+      <h2>Catalog to-do</h2>
+      {% if dash.todos %}
+      <ul class="bz-todos">
+        {% for message, count, url in dash.todos %}
+        <li><a href="{{ url }}"><span class="bz-todo__count">{{ count }}</span> {{ message }}</a></li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <p class="bz-muted">All good: every active product has a photo, a category and an option.</p>
+      {% endif %}
+    </section>
+
+    <section class="bz-panel bz-panel--wide">
+      <h2>Recent orders <a class="bz-link" href="{{ url_for('order.index_view') }}">All orders →</a></h2>
+      {% if dash.recent_orders %}
+      <div class="table-responsive">
+      <table class="table bz-table">
+        <thead><tr><th>Order</th><th>Customer</th><th>Placed</th><th>Status</th><th class="text-right">Total</th></tr></thead>
+        <tbody>
+          {% for order in dash.recent_orders %}
+          {% set customer = order.customer %}
+          {% set who = (customer.user.email if customer and customer.user else (order.shipping_address.email if order.shipping_address else 'Guest')) %}
+          <tr>
+            <td><a href="{{ url_for('order.edit_view', id=order.id) }}">{{ order.number }}</a></td>
+            <td>{{ who }}</td>
+            <td>{{ order.placed_at.strftime('%d %b %Y, %H:%M') }}</td>
+            <td><span class="bz-status bz-status--{{ order.status | lower }}">{{ order.status | title }}</span></td>
+            <td class="text-right">${{ money | format(order.total) }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      </div>
+      {% else %}
+      <p class="bz-muted">No orders yet. They'll appear here as soon as the first one comes in.</p>
+      {% endif %}
+    </section>
+
+    <section class="bz-panel">
+      <h2>Top sellers (30 days)</h2>
+      {% if dash.top_products %}
+      <ol class="bz-top">
+        {% for name, sku, count, revenue in dash.top_products %}
+        <li><span>{{ name }}</span><span class="bz-muted">{{ count }} sold · ${{ money | format(revenue or 0) }}</span></li>
+        {% endfor %}
+      </ol>
+      {% else %}
+      <p class="bz-muted">Nothing sold in the last 30 days yet.</p>
+      {% endif %}
+    </section>
+  </div>
+</div>
 {% endblock %}

@@ -1,0 +1,13 @@
+{% extends admin_base_template %}
+{# Bazaare admin chrome: brand mark and black-and-gold styling on top of Flask-Admin's Bootstrap 4 theme. #}
+{% block head_tail %}
+  {{ super() }}
+  <link rel="icon" href="{{ url_for('static', filename='images/favicon.png') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+{% endblock %}
+{% block brand %}
+  <a class="navbar-brand bz-admin-brand" href="{{ admin_view.admin.url }}">
+    <img src="{{ url_for('static', filename='images/bazaare-logo.jpg') }}" alt="" width="30" height="30">
+    <span>BazaarE’ <small>admin</small></span>
+  </a>
+{% endblock %}
