@@ -32,7 +32,7 @@
       {% if is_on_sale(product) %}<s class="bz-price__was">${{ '%.2f' | format(product.compare_at_price) }}</s>
       <span class="bz-price__save">Save ${{ '%.0f' | format(product.compare_at_price - product.price) }}</span>{% endif %}
     </p>
-    <div class="bz-product__desc">{{ (product.description or '') | safe }}</div>
+    <div class="bz-product__desc">{{ product.description | rich }}</div>
     <dl class="bz-specs">
       {% if product.material %}<dt>Material</dt><dd>{{ product.material }}</dd>{% endif %}
       {% if product.is_handmade %}<dt>Craft</dt><dd>Handmade</dd>{% endif %}

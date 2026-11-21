@@ -18,12 +18,19 @@ from flask import current_app
 from werkzeug.datastructures import FileStorage
 
 from app.extension import db
-from app.models import Attribute, Category, Product, ProductAssociation, ProductAttribute, Variant
+from app.models import (
+    Attribute,
+    Category,
+    Product,
+    ProductAssociation,
+    ProductAttribute,
+    ProductImage,
+    Variant,
+)
 from app.storage import save_image
 
 log = logging.getLogger(__name__)
 
-IMAGE_FIELDS = ("main_image", "alt1_image", "alt2_image", "alt3_image")
 ONE_SIZE = "One Size"
 
 
@@ -33,30 +40,17 @@ def _upload(images_dir, filename, folder):
         return save_image(FileStorage(stream=fh, filename=filename), folder)
 
 
-def _one_size_variant():
-    variant = Variant.query.filter_by(size=ONE_SIZE).first()
-    if variant is None:
-        variant = Variant(size=ONE_SIZE, quantity=1, is_default=True, description="")
-        db.session.add(variant)
-    return variant
-
-
 def _set_designs(product, designs):
-    """Give the product one variant per design (or the shared One Size variant)."""
-    wanted = designs or [ONE_SIZE]
-    current = {v.size: v for v in product.variant}
-    for variant in list(product.variant):
-        if variant.size not in wanted:
-            variant.products.remove(product)
-    for position, name in enumerate(wanted):
-        if name in current:
-            continue
-        if name == ONE_SIZE:
-            variant = _one_size_variant()
-        else:
-            variant = Variant(size=name[:30], quantity=1, is_default=position == 0, description="Design")
-            db.session.add(variant)
-        variant.products.append(product)
+    """Give the product one option per design (or a single One Size option). Stock is left as it was."""
+    wanted = [name[:64] for name in designs] or [ONE_SIZE]
+    current = {v.name: v for v in product.options}
+    product.options = [
+        current.get(name) or Variant(name=name, is_default=position == 0)
+        for position, name in enumerate(wanted)
+    ]
+    for position, variant in enumerate(product.options):
+        variant.position = position
+    product.option_label = "Design" if designs else None
 
 
 def _set_attributes(product, values):
@@ -126,15 +120,17 @@ def import_catalog(manifest_path, images_dir, update=False):
         product.description = item["description"]
         product.material = item.get("material")
         product.price = price
-        product.compare_at_price = Decimal(str(item.get("compare_at") or price))
+        compare_at = item.get("compare_at")
+        product.compare_at_price = Decimal(str(compare_at)) if compare_at else None
         product.is_active = True
-        product.display = True
         product.categories = [categories[code] for code in item["categories"]]
         _set_designs(product, item.get("designs"))
         _set_attributes(product, item.get("attributes") or {})
-        if not product.main_image:
-            for field, filename in zip(IMAGE_FIELDS, item["images"], strict=False):
-                setattr(product, field, _upload(images_dir, filename, "products"))
+        if not product.images:
+            product.images = [
+                ProductImage(image=_upload(images_dir, filename, "products"), position=position)
+                for position, filename in enumerate(item["images"])
+            ]
         db.session.commit()
         created += is_new
         updated += not is_new

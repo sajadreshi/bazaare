@@ -30,7 +30,8 @@ def take_for_cart(cart):
         count = wanted[variant.id]
         if variant.stock < count:
             left = f"only {variant.stock} left" if variant.stock > 0 else "it just sold out"
-            raise OutOfStock(f"Sorry, {variant.product.name} ({variant.name}): {left}. Please update your bag.")
+            name = f"{variant.product.name} ({variant.name})"
+            raise OutOfStock(f"Sorry, {name}: {left}. Please update your bag.")
         variant.stock -= count
 
 

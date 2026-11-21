@@ -43,7 +43,7 @@ def test_guest_items_merge_into_existing_user_cart(app, client, product_ids):
     login(client, "max@example.com", "max-password-1")
     with app.app_context():
         cart = Cart.query.filter_by(customer_id=user_id, status="PENDING").one()
-        assert sorted(i.variant.size for i in cart.pending_items) == ["Ring size 6", "Ring size 9"]
+        assert sorted(i.variant.name for i in cart.pending_items) == ["Ring size 6", "Ring size 9"]
         assert cart.total_cart == Decimal("209.98")
 
 
@@ -54,7 +54,7 @@ def test_inactive_or_sizeless_products_cannot_be_added(app, client):
         db.session.add_all([hidden, sizeless])
         db.session.commit()
         hidden_id, sizeless_id = hidden.id, sizeless.id
-    for pid, message in [(hidden_id, "not available"), (sizeless_id, "out of stock")]:
+    for pid, message in [(hidden_id, "not available"), (sizeless_id, "sold out")]:
         resp = client.post(f"/catalog/product/{pid}", data={"pid": pid})
         assert resp.status_code == 302
         with client.session_transaction() as sess:
@@ -129,6 +129,6 @@ def test_cart_page_renders_items_and_totals(app, client, product_ids):
     with app.app_context():
         add_to_cart(client, pid, small)
         variant = db.session.get(Variant, small)
-        assert variant.size == "Ring size 6"
+        assert variant.name == "Ring size 6"
     html = client.get("/checkout/shopcart").get_data(as_text=True)
     assert "Gold Signet" in html and "Ring size 6" in html and "$99.99" in html

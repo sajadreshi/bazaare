@@ -1,0 +1,38 @@
+{# Inline rows (product options, details, related products) as a compact table instead of
+   Flask-Admin's stacked cards. Rows can be dragged into order; a hidden "position" input,
+   when the row has one, is renumbered from the row order on save (see admin.js). #}
+{% macro cells(sub, existing) %}
+  {% for f in sub.form if f.widget.input_type == 'hidden' %}{{ f() }}{% endfor %}
+  <span class="bz-row__grip" title="Drag to reorder" aria-hidden="true">⋮⋮</span>
+  {% for f in sub.form if f.widget.input_type != 'hidden' %}
+  <div class="bz-row__cell bz-row__cell--{{ f.short_name }}" data-label="{{ f.label.text }}">
+    {{ f(class_='form-control form-control-sm' if f.widget.input_type not in ('checkbox', 'file') else '', placeholder=f.description or '') }}
+    {% if f.errors %}<div class="bz-row__error">{% for e in f.errors if e is string %}{{ e }} {% endfor %}</div>{% endif %}
+  </div>
+  {% endfor %}
+  <div class="bz-row__del">
+    {% if existing and sub.get_pk and sub.get_pk() %}
+    <label class="bz-row__remove" title="Remove when saved"><input type="checkbox" name="del-{{ sub.id }}" id="del-{{ sub.id }}"> Remove</label>
+    {% else %}
+    <a href="javascript:void(0)" value="Remove this row?" class="inline-remove-field" title="Remove">×</a>
+    {% endif %}
+  </div>
+{% endmacro %}
+
+<div class="inline-field bz-rows bz-rows--{{ field.short_name }}" id="{{ field.id }}">
+  <div class="bz-rows__head" aria-hidden="true">
+    <span></span>
+    {% for f in template.form if f.widget.input_type != 'hidden' %}<span class="bz-row__cell--{{ f.short_name }}">{{ f.label.text }}</span>{% endfor %}
+    <span></span>
+  </div>
+  <div class="inline-field-list" data-bz-sortable>
+    {% for sub in field %}
+    <div id="{{ sub.id }}" class="inline-field bz-row">{{ cells(sub, True) }}</div>
+    {% endfor %}
+  </div>
+  <div class="inline-field-template d-none">
+    {% filter forceescape %}<div class="inline-field bz-row">{{ cells(template, False) }}</div>{% endfilter %}
+  </div>
+  <a id="{{ field.id }}-button" href="javascript:void(0)" class="btn btn-sm bz-btn-outline bz-rows__add" role="button"
+     onclick="faForm.addInlineField(this, '{{ field.id }}');">+ Add {{ field.label.text | lower }}</a>
+</div>

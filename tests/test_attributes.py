@@ -12,9 +12,7 @@ def test_same_attribute_different_values_per_product(app, client):
     with app.app_context():
         metal = Attribute(name="Metal type", position=1)
         ruby_ring = Product(sku="AT-RUBY", name="Ruby Band", compare_at_price=20, price=20, is_active=True)
-        pearl_ring = Product(
-            sku="AT-PEARL", name="Pearl Band", compare_at_price=20, price=20, is_active=True
-        )
+        pearl_ring = Product(sku="AT-PEARL", name="Pearl Band", compare_at_price=20, price=20, is_active=True)
         ruby_ring.attribute_links.append(ProductAttribute(attribute=metal, value="Rose gold-tone"))
         pearl_ring.attribute_links.append(ProductAttribute(attribute=metal, value="Silver-tone"))
         db.session.add_all([metal, ruby_ring, pearl_ring])

@@ -13,6 +13,7 @@ from app.models import (
     Product,
     ProductAssociation,
     ProductAttribute,
+    ProductImage,
     Variant,
 )
 
@@ -32,9 +33,10 @@ def catalog(app):
             price=Decimal("64.50"),
             material="Silver",
             is_active=True,
-            is_sustainable=True,
-            main_image="moon.png",
-            alt1_image="moon-side.png",
+            images=[
+                ProductImage(image="moon.png", position=0),
+                ProductImage(image="moon-side.png", position=1),
+            ],
         )
         studs = Product(
             sku="CAT-STUDS",
@@ -52,14 +54,12 @@ def catalog(app):
         retired.categories.append(earrings)
         secret.categories.append(hidden_cat)
 
-        chain_16 = Variant(size="16 inch", quantity=1, is_default=False)
-        chain_18 = Variant(
-            size="18 inch", quantity=Decimal("1.20"), is_default=True, description="Most popular"
-        )
-        one = Variant(size="One size", quantity=1, is_default=True)
-        for v in (chain_16, chain_18):
-            v.products.append(pendant)
-        one.products.append(studs)
+        chain_16 = Variant(name="16 inch", is_default=False, position=0)
+        chain_18 = Variant(name="18 inch", price=Decimal("77.40"), is_default=True, position=1)
+        one = Variant(name="One size", is_default=True)
+        pendant.options = [chain_16, chain_18]
+        pendant.option_label = "Length"
+        studs.options = [one]
 
         stone = Attribute(name="Stone")
         db.session.add_all([pendant, studs, retired, secret, chain_16, chain_18, one, stone, hidden_cat])
@@ -109,9 +109,9 @@ def test_category_pages_show_only_active_categories_and_products(client, catalog
 def test_product_page_shows_variants_attributes_and_cross_sells(client, catalog):
     html = client.get(f"/catalog/product/{catalog['pendant']}").get_data(as_text=True)
     assert "Moon Pendant" in html and "Silver" in html and "Moonstone" in html
-    assert "$64.50" in html and "$77.40" in html  # 18 inch = 1.20 x 64.50
+    assert "$77.40" in html and 'data-price="64.50"' in html  # 18 inch has its own price
     assert re.search(rf'value="{catalog["chain_18"]}"[^>]*checked', html)  # default variant preselected
-    assert "Most popular" in html
+    assert "Length" in html
     assert "moon-side.png" in html  # alternate image thumbnail
     assert "Complete the look" in html and "Pearl Studs" in html
     assert "Retired Hoop" not in html  # inactive cross-sell hidden

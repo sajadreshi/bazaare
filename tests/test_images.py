@@ -1,6 +1,7 @@
 """Image uploads: admin field, local storage fallback, and the R2 backend (with a stubbed S3 client)."""
 
 import io
+import json
 import os
 import re
 
@@ -32,7 +33,7 @@ def upload_product(client, sku, file, filename="ring.jpg", **extra):
         "compare_at_price": "10",
         "price": "9",
         "is_active": "y",
-        "main_image": (file, filename),
+        "images_new": (file, filename),
         **extra,
     }
     return client.post("/admin/product/new/", data=data, content_type="multipart/form-data")
@@ -110,17 +111,38 @@ def test_removing_an_image_keeps_the_file_for_past_orders(app, admin_client):
     with app.app_context():
         product = Product.query.filter_by(sku="IMG-DEL").one()
         pid, key = product.id, product.main_image
-    data = {
-        "sku": "IMG-DEL",
-        "name": "IMG-DEL",
-        "compare_at_price": "10",
-        "price": "9",
-        "_main_image-delete": "y",
-    }
+    data = {"sku": "IMG-DEL", "name": "IMG-DEL", "price": "9", "images": "[]"}
     assert admin_client.post(f"/admin/product/edit/?id={pid}", data=data).status_code == 302
     with app.app_context():
         assert db.session.get(Product, pid).main_image is None
     assert os.path.exists(stored_path(app, key))
+
+
+def test_photos_upload_together_reorder_and_pick_the_main_one(app, admin_client):
+    files = [(image_file(), "a.jpg"), (image_file(), "b.jpg"), (image_file(), "c.jpg")]
+    data = {"sku": "IMG-MANY", "name": "Many", "price": "9", "images_new": files}
+    assert (
+        admin_client.post("/admin/product/new/", data=data, content_type="multipart/form-data").status_code
+        == 302
+    )
+    with app.app_context():
+        product = Product.query.filter_by(sku="IMG-MANY").one()
+        pid, keys = product.id, product.image_keys
+    assert len(keys) == 3
+    # Star the last photo, drop the first, and add a new one in the middle.
+    order = json.dumps([keys[2], "new:0", keys[1]])
+    data = {
+        "sku": "IMG-MANY",
+        "name": "Many",
+        "price": "9",
+        "images": order,
+        "images_new": (image_file(), "d.jpg"),
+    }
+    resp = admin_client.post(f"/admin/product/edit/?id={pid}", data=data, content_type="multipart/form-data")
+    assert resp.status_code == 302
+    with app.app_context():
+        now = db.session.get(Product, pid).image_keys
+    assert now[0] == keys[2] and now[2] == keys[1] and now[1] not in keys and len(now) == 3
 
 
 def test_placeholder_when_there_is_no_image(app):

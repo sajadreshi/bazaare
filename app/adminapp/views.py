@@ -1,15 +1,30 @@
-from flask import abort, flash, redirect, request
+import re
+
+from flask import abort, flash, redirect, request, url_for
 from flask_admin import expose
 from flask_admin.model.form import InlineFormAdmin
 from flask_ckeditor import CKEditorField
+from flask_wtf.csrf import generate_csrf
 from markupsafe import Markup
-from wtforms import SelectField
-from wtforms.validators import DataRequired
+from wtforms import HiddenField, SelectField, StringField, TextAreaField
+from wtforms.validators import DataRequired, Length, NumberRange, Optional, ValidationError
 
-from app.adminapp.fields import StorageImageField
+from app.adminapp.fields import PhotosField, StorageImageField
 from app.adminapp.security import SecureModelView
 from app.extension import db
-from app.models import ASSOCIATION_TYPES, ORDER_STATUSES, Order, ProductAssociation, ProductAttribute, utcnow
+from app.models import (
+    ASSOCIATION_TYPES,
+    ORDER_STATUSES,
+    Category,
+    Order,
+    Product,
+    ProductAssociation,
+    ProductAttribute,
+    ProductImage,
+    Variant,
+    utcnow,
+)
+from app.richtext import clean_html
 from app.services import stock
 from app.services.shipping import CARRIERS, HAND_DELIVERY
 from app.storage import image_url
@@ -65,6 +80,13 @@ def category_tree(categories):
     return ordered
 
 
+def _categories_as_tree():
+    tree = category_tree(Category.query.all())
+    for category, depth in tree:
+        category._tree_depth = depth
+    return [category for category, _ in tree]
+
+
 class CategoryView(SecureModelView):
     """Categories shown as the menu tree: main menu items with their dropdown items indented below."""
 
@@ -94,9 +116,45 @@ class CategoryView(SecureModelView):
     form_labels = {"product": "Products", "max_price": "Price rule (list all products at or below)"}
     form_extra_fields = {"banner_image": StorageImageField("Banner image", folder="banners")}
     form_args = {
-        "parent": {"label": "Parent (empty = main menu item)"},
-        "position": {"label": "Position in menu"},
+        "name": {"description": "Shown in the menu and as the page title."},
+        "parent": {
+            "label": "Parent",
+            "description": "Empty = a main menu item. Otherwise it appears in that item's dropdown.",
+            "query_factory": lambda: _categories_as_tree(),
+            "get_label": lambda c: ("— " * getattr(c, "_tree_depth", 0)) + c.name,
+        },
+        "position": {"label": "Position in menu", "description": "Lower numbers come first (0, 10, 20...)."},
+        "show_in_menu": {"label": "Show in the menu"},
+        "is_active": {"label": "Active (page can be visited)"},
     }
+    edit_template = "admin/category_edit.html"
+    create_template = "admin/category_create.html"
+
+    def scaffold_form(self):
+        form_class = super().scaffold_form()
+        code = StringField(
+            "Code (used in the page address)",
+            validators=[Optional(), Length(max=64)],
+            description="Leave empty to make one from the name.",
+        )
+        code.creation_counter = form_class.code.creation_counter  # keep its place, after the name
+        form_class.code = code
+        return form_class
+
+    def on_model_change(self, form, model, is_created):
+        code = re.sub(r"[^A-Z0-9]+", "-", (model.code or model.name or "").upper()).strip("-")
+        if model.code:
+            clash = _taken(Category, "code", code, exclude_id=model.id)
+            if clash is not None:
+                raise ValidationError(f"Code {code} is already used by {clash.name}.")
+        else:
+            code = unique_value(Category, "code", code or "CATEGORY", exclude_id=model.id)
+        model.code = code
+        parent = model.parent
+        while parent is not None:
+            if parent is model:
+                raise ValidationError("A category can't be inside itself or one of its own sub-categories.")
+            parent = parent.parent
 
     def _format_name(view, context, model, name):
         depth = getattr(model, "_tree_depth", 0)
@@ -146,27 +204,41 @@ class CarouselView(SecureModelView):
     form_extra_fields = {"image": StorageImageField("Background image (behind the headline)", folder="home")}
 
 
-PRODUCT_IMAGES = {
-    "main_image": "Main Image",
-    "alt1_image": "Alternate Image 1",
-    "alt2_image": "Alternate Image 2",
-    "alt3_image": "Alternate Image 3",
-}
-
-
 ASSOCIATION_CHOICES = [(key, label) for key, label in ASSOCIATION_TYPES.items()]
 
 
-class RelatedProductInline(InlineFormAdmin):
-    """One row per related product on the product form: which product, what kind, order, on/off."""
+def _optional_decimal(label):
+    return {"label": label, "validators": [Optional(), NumberRange(min=0)]}
 
-    form_columns = ("id", "target_product", "association_type", "position", "is_active")
-    form_label = "Related products"
-    form_overrides = {"association_type": SelectField}
+
+class OptionInline(InlineFormAdmin):
+    """The product's sizes/designs as table rows: name, own price, stock, photo, default."""
+
+    form_columns = ("id", "name", "price", "stock", "variant_image", "is_default", "position")
+    form_label = "Option"
+    form_overrides = {"position": HiddenField}
+    form_args = {
+        "name": {"label": "Option", "validators": [DataRequired()], "description": "e.g. Ring size 7"},
+        "price": {**_optional_decimal("Price"), "description": "Same as product"},
+        "stock": {
+            "label": "Stock",
+            "validators": [Optional(), NumberRange(min=0)],
+            "description": "Not counted",
+        },
+        "is_default": {"label": "Default"},
+    }
+    form_extra_fields = {"variant_image": StorageImageField("Photo", folder="variants")}
+
+
+class RelatedProductInline(InlineFormAdmin):
+    """One row per related product on the product form: which product, what kind, on/off."""
+
+    form_columns = ("id", "target_product", "association_type", "is_active", "position")
+    form_label = "Related product"
+    form_overrides = {"association_type": SelectField, "position": HiddenField}
     form_args = {
         "target_product": {"label": "Product", "validators": [DataRequired()]},
         "association_type": {"label": "Show as", "choices": ASSOCIATION_CHOICES},
-        "position": {"label": "Order", "default": 0},
         "is_active": {"label": "Active", "default": True},
     }
 
@@ -175,42 +247,239 @@ class ProductAttributeInline(InlineFormAdmin):
     """One row per product detail on the product form, e.g. Stone: Moonstone."""
 
     form_columns = ("id", "attribute", "value")
-    form_label = "Details"
+    form_label = "Detail"
     form_args = {
         "attribute": {"label": "Attribute", "validators": [DataRequired()]},
-        "value": {"label": "Value", "validators": [DataRequired()]},
+        "value": {"label": "Value", "validators": [DataRequired()], "description": "e.g. Moonstone"},
     }
+
+
+def sku_from_name(name):
+    """BZ- plus up to three words of the name, four letters each, e.g. BZ-PEAC-EMER-PEAR."""
+    words = re.sub(r"[^A-Z0-9 ]+", " ", (name or "").upper()).split()
+    return "-".join(["BZ", *(word[:4] for word in words[:3])])
+
+
+def unique_value(model, column, base, exclude_id=None, limit=64):
+    """``base``, or ``base-2``, ``base-3``... whichever isn't used yet by another row."""
+    candidate, n = base[:limit], 1
+    while True:
+        if not _taken(model, column, candidate, exclude_id):
+            return candidate
+        n += 1
+        suffix = f"-{n}"
+        candidate = base[: limit - len(suffix)] + suffix
+
+
+def _taken(model, column, value, exclude_id=None):
+    """The other row already using this value, if any (without flushing the row being saved)."""
+    with db.session.no_autoflush:
+        query = model.query.filter(getattr(model, column) == value)
+        if exclude_id is not None:
+            query = query.filter(model.id != exclude_id)
+        return query.first()
+
+
+def _photo_cell(view, context, model, name):
+    if not model.main_image:
+        return Markup('<span class="bz-nophoto" title="No photo">—</span>')
+    return Markup('<img class="bz-list-thumb" src="%s" alt="">') % image_url(model.main_image, thumb=True)
+
+
+def _name_cell(view, context, model, name):
+    edit = view.get_url(".edit_view", id=model.id, url=request.url)
+    shop = url_for("catalog.product", productId=model.id)
+    return Markup(
+        '<a href="%s"><strong>%s</strong></a><br><small class="bz-muted">%s · '
+        '<a href="%s" target="_blank" rel="noopener">view in shop ↗</a></small>'
+    ) % (edit, model.name, model.sku, shop)
+
+
+def _price_cell(view, context, model, name):
+    text = Markup("$%.2f") % model.price
+    if model.on_sale:
+        text += Markup(' <s class="bz-muted">$%.2f</s>') % model.compare_at_price
+    return text
+
+
+def _stock_cell(view, context, model, name):
+    options = model.options
+    tracked = [o for o in options if o.stock is not None]
+    if not options:
+        return Markup('<span class="bz-pill bz-pill--warn">no options</span>')
+    if not tracked:
+        return Markup('<span class="bz-muted">not counted</span>')
+    total = sum(o.stock for o in tracked)
+    sold_out = [o for o in tracked if o.stock <= 0]
+    if len(sold_out) == len(options):
+        return Markup('<span class="bz-pill bz-pill--bad">sold out</span>')
+    label = Markup("%d in stock") % total
+    if sold_out:
+        label += Markup('<br><small class="bz-muted">%d option(s) sold out</small>') % len(sold_out)
+    return label
+
+
+def _active_cell(view, context, model, name):
+    action = view.get_url(".toggle_active", id=model.id)
+    return Markup(
+        '<form method="post" action="%s" class="bz-inline-form">'
+        '<input type="hidden" name="csrf_token" value="%s">'
+        '<input type="hidden" name="next" value="%s">'
+        '<button type="submit" class="bz-switch %s" title="%s"><span></span>%s</button></form>'
+    ) % (
+        action,
+        generate_csrf(),
+        request.full_path,
+        "is-on" if model.is_active else "",
+        "Click to hide from the shop" if model.is_active else "Click to show in the shop",
+        "Active" if model.is_active else "Hidden",
+    )
 
 
 class ProductView(SecureModelView):
-    form_extra_fields = {
-        attr: StorageImageField(label, folder="products") for attr, label in PRODUCT_IMAGES.items()
+    """Products, edited on one sectioned page: basics, photos, pricing, options & stock, details, related."""
+
+    create_template = "admin/product_create.html"
+    edit_template = "admin/product_edit.html"
+    form_columns = (
+        "name",
+        "sku",
+        "description",
+        "material",
+        "is_handmade",
+        "price",
+        "compare_at_price",
+        "option_label",
+        "is_active",
+        "categories",
+        "images",
+        "options",
+        "attribute_links",
+        "associations",
+    )
+    form_overrides = {"description": TextAreaField}
+    form_args = {
+        "name": {"label": "Name", "validators": [DataRequired(), Length(max=150)]},
+        "description": {"label": "Description", "render_kw": {"data-bz-rich": "1", "rows": 6}},
+        "material": {"label": "Material"},
+        "is_handmade": {"label": "Handmade"},
+        "price": {"label": "Price ($)", "validators": [NumberRange(min=0)]},
+        "compare_at_price": _optional_decimal("Compare-at price ($)"),
+        "option_label": {"label": "Option name"},
+        "is_active": {"label": "Active (shown in the shop)"},
+        "categories": {"label": "Categories"},
     }
-    form_excluded_columns = ["created_at", "updated_at", "attribute_links", "linked_from", "associations"]
-    column_list = ("main_image", "sku", "name", "price", "compare_at_price", "categories", "is_active")
-    column_labels = {
-        "main_image": "Photo",
-        "price": "Price",
-        "compare_at_price": "Was",
-        "is_active": "Active",
-    }
+    form_extra_fields = {"images": PhotosField("Photos", folder="products", model=ProductImage)}
+    inline_models = (
+        OptionInline(Variant),
+        ProductAttributeInline(ProductAttribute),
+        RelatedProductInline(ProductAssociation),
+    )
+
+    column_list = ("photo", "name", "price", "stock", "categories", "is_active")
+    column_labels = {"photo": "", "name": "Product", "is_active": "Shown"}
     column_formatters = {
-        **{attr: thumbnail(attr) for attr in PRODUCT_IMAGES},
-        "compare_at_price": lambda v, c, m, n: m.compare_at_price if m.compare_at_price != m.price else "",
+        "photo": _photo_cell,
+        "name": _name_cell,
+        "price": _price_cell,
+        "stock": _stock_cell,
+        "is_active": _active_cell,
         "categories": lambda v, c, m, n: ", ".join(sorted(cat.name for cat in m.categories)),
     }
-    column_default_sort = ("sku", False)
+    column_sortable_list = ("name", "price", "is_active")
+    column_default_sort = ("name", False)
     column_searchable_list = ["name", "sku"]
-    column_filters = ["price", "is_active"]
-    # "Related products" table at the bottom of the product form.
-    inline_models = (ProductAttributeInline(ProductAttribute), RelatedProductInline(ProductAssociation))
+    column_filters = ["price", "is_active", "categories.name"]
+    page_size = 50
+
+    def scaffold_form(self):
+        form_class = super().scaffold_form()
+        # Optional here: an empty SKU is made from the name when saving.
+        form_class.sku = StringField("SKU", validators=[Optional(), Length(max=64)])
+        return form_class
+
+    def on_model_change(self, form, model, is_created):
+        model.description = clean_html(model.description) or None
+        sku = (model.sku or "").strip().upper()
+        if sku:
+            clash = _taken(Product, "sku", sku, exclude_id=model.id)
+            if clash is not None:
+                raise ValidationError(f"SKU {sku} is already used by {clash.name}.")
+        else:
+            sku = unique_value(Product, "sku", sku_from_name(model.name), exclude_id=model.id)
+        model.sku = sku
+        if model.compare_at_price is not None and model.compare_at_price <= model.price:
+            model.compare_at_price = None
+        if not model.options:
+            model.options = [Variant(name="One Size", is_default=True)]
+        defaults = [o for o in model.options if o.is_default]
+        for option in model.options:
+            option.is_default = option is (defaults[0] if defaults else model.options[0])
+        for rows in (model.options, model.associations):
+            for row in rows:
+                row.position = int(row.position) if str(row.position or "").isdigit() else 0
+
+    @expose("/toggle/<int:id>", methods=["POST"])
+    def toggle_active(self, id):
+        product = db.session.get(Product, id) or abort(404)
+        product.is_active = not product.is_active
+        db.session.commit()
+        where = "shown in" if product.is_active else "hidden from"
+        flash(f"{product.name} is now {where} the shop.", "success")
+        back = request.form.get("next", "")
+        return redirect(back if back.startswith("/admin/") else self.get_url(".index_view"))
+
+    @expose("/duplicate/<int:id>", methods=["POST"])
+    def duplicate(self, id):
+        source = db.session.get(Product, id) or abort(404)
+        with db.session.no_autoflush:
+            copy = duplicate_product(source)
+        db.session.commit()
+        flash(f"Copied {source.name}. The copy is hidden until you tick Active; set its stock.", "success")
+        return redirect(self.get_url(".edit_view", id=copy.id))
 
 
-class VariantView(SecureModelView):
-    column_formatters = {"variant_image": thumbnail("variant_image")}
-    form_extra_fields = {"variant_image": StorageImageField("Variant Image", folder="variants")}
-    form_excluded_columns = ["created_at", "updated_at", "products"]
-    column_display_pk = False
+def duplicate_product(source):
+    """A hidden copy of a product with its photos, options (stock 0 if counted), details and links."""
+    copy = Product(
+        sku=unique_value(Product, "sku", f"{source.sku}-COPY"),
+        name=f"{source.name} (copy)"[:150],
+        description=source.description,
+        price=source.price,
+        compare_at_price=source.compare_at_price,
+        material=source.material,
+        is_handmade=source.is_handmade,
+        option_label=source.option_label,
+        is_active=False,
+    )
+    db.session.add(copy)
+    copy.categories = list(source.categories)
+    copy.images = [ProductImage(image=p.image, position=p.position) for p in source.images]
+    copy.options = [
+        Variant(
+            name=o.name,
+            price=o.price,
+            stock=None if o.stock is None else 0,
+            is_default=o.is_default,
+            position=o.position,
+            weight=o.weight,
+            variant_image=o.variant_image,
+        )
+        for o in source.options
+    ]
+    copy.attribute_links = [
+        ProductAttribute(attribute=a.attribute, value=a.value) for a in source.attribute_links
+    ]
+    copy.associations = [
+        ProductAssociation(
+            target_product=a.target_product,
+            association_type=a.association_type,
+            position=a.position,
+            is_active=a.is_active,
+        )
+        for a in source.associations
+    ]
+    return copy
 
 
 class ProductAssociationView(SecureModelView):

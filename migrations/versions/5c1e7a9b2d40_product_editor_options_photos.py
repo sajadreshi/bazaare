@@ -110,8 +110,9 @@ def upgrade():
             continue
         new_id = conn.execute(
             sa.text(
-                "INSERT INTO variant (product_id, name, price, position, weight, is_default, variant_image, "
-                "created_at, updated_at) VALUES (:pid, :name, :price, :pos, :weight, :is_default, :image, "
+                "INSERT INTO variant (product_id, name, quantity, price, position, weight, is_default, "
+                "variant_image, "
+                "created_at, updated_at) VALUES (:pid, :name, 1, :price, :pos, :weight, :is_default, :image, "
                 ":created_at, :updated_at) RETURNING id"
             ),
             {
@@ -133,7 +134,8 @@ def upgrade():
     # Variants no product uses any more.
     conn.execute(
         sa.text(
-            "UPDATE item SET size_id = NULL WHERE size_id IN (SELECT id FROM variant WHERE product_id IS NULL)"
+            "UPDATE item SET size_id = NULL "
+            "WHERE size_id IN (SELECT id FROM variant WHERE product_id IS NULL)"
         )
     )
     conn.execute(

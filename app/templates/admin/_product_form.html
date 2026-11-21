@@ -1,0 +1,106 @@
+{# Sectioned product editor, shared by create and edit. Expects `form`, `return_url` and, when editing, `model`. #}
+{% import 'admin/lib.html' as lib with context %}
+{% macro field(f, hint=None, cls='') %}
+  <div class="bz-field {{ cls }} {{ 'has-error' if f.errors }}">
+    {% if f.widget.input_type == 'checkbox' %}
+      <label class="bz-check">{{ f() }} <span>{{ f.label.text }}</span></label>
+    {% else %}
+      <label for="{{ f.id }}">{{ f.label.text }}{% if f.flags.required %} <span class="bz-req">*</span>{% endif %}</label>
+      {{ f(class_='form-control') }}
+    {% endif %}
+    {% if hint %}<small class="bz-hint">{{ hint }}</small>{% endif %}
+    {% for e in f.errors if e is string %}<div class="bz-error">{{ e }}</div>{% endfor %}
+  </div>
+{% endmacro %}
+
+{% set product = model if model is defined else None %}
+<form action="" method="POST" role="form" class="admin-form bz-editor" enctype="multipart/form-data" data-bz-editor>
+  {{ form.hidden_tag() if form.hidden_tag is defined else '' }}
+  {% if csrf_token is defined and csrf_token and form.csrf_token is not defined %}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% endif %}
+
+  <div class="bz-editor__head">
+    <div>
+      <a class="bz-back" href="{{ return_url }}">← All products</a>
+      <h1>{{ product.name if product else 'New product' }}</h1>
+      {% if product %}<p class="bz-muted">SKU {{ product.sku }} · {{ 'Active, shown in the shop' if product.is_active else 'Hidden from the shop' }}</p>{% endif %}
+    </div>
+    {% if product %}
+    <div class="bz-editor__tools">
+      <a class="btn bz-btn-outline" href="{{ url_for('catalog.product', productId=product.id) }}" target="_blank" rel="noopener">View in shop ↗</a>
+      <button class="btn bz-btn-outline" type="submit" form="bz-duplicate">Duplicate</button>
+    </div>
+    {% endif %}
+  </div>
+
+  <div class="bz-editor__grid">
+    <div class="bz-editor__main">
+      <section class="bz-panel">
+        <h2>Basics</h2>
+        {{ field(form.name) }}
+        {{ field(form.description, 'Shown on the product page. Use bold, lists and short paragraphs.') }}
+        <div class="bz-two">
+          {{ field(form.material, 'e.g. Oxidised silver-tone metal') }}
+          {{ field(form.sku, 'Leave empty to create one from the name.') }}
+        </div>
+        {{ field(form.is_handmade) }}
+      </section>
+
+      <section class="bz-panel">
+        <h2>Photos</h2>
+        {{ form.images() }}
+        {% for e in form.images.errors if e is string %}<div class="bz-error">{{ e }}</div>{% endfor %}
+      </section>
+
+      <section class="bz-panel">
+        <h2>Pricing</h2>
+        <div class="bz-two">
+          {{ field(form.price, 'What shoppers pay.') }}
+          {{ field(form.compare_at_price, 'Optional. A higher "was" price, shown crossed out.') }}
+        </div>
+        <p class="bz-sale-hint" data-bz-sale-hint hidden></p>
+      </section>
+
+      <section class="bz-panel">
+        <h2>Options &amp; stock</h2>
+        <p class="bz-muted bz-panel__intro">One row per size or design. Leave <em>Price</em> empty to use the product price,
+          and <em>Stock</em> empty if you don't count it. Drag ⋮⋮ to change the order. No rows = sold as “One Size”.</p>
+        {{ field(form.option_label, 'What the choice is called on the product page, e.g. Size, Design, Length.') }}
+        {{ form.options() | safe }}
+      </section>
+
+      <section class="bz-panel">
+        <h2>Details</h2>
+        <p class="bz-muted bz-panel__intro">Extra facts listed on the product page, e.g. Stone: Moonstone. Add new kinds under Product › Attribute types.</p>
+        {{ form.attribute_links() | safe }}
+      </section>
+
+      <section class="bz-panel">
+        <h2>Related products</h2>
+        <p class="bz-muted bz-panel__intro"><em>Complete the look</em> shows on this page and in the bag; <em>Upgrade to</em> suggests a step up.</p>
+        {{ form.associations() | safe }}
+      </section>
+    </div>
+
+    <aside class="bz-editor__side">
+      <section class="bz-panel">
+        <h2>Visibility</h2>
+        {{ field(form.is_active, 'Unticked products are hidden from the shop.') }}
+      </section>
+      <section class="bz-panel">
+        <h2>Categories</h2>
+        {{ field(form.categories, 'Where it appears in the menu. Pick a type (e.g. Earrings › Jhumkas) and any collections.') }}
+      </section>
+      <section class="bz-panel bz-editor__save">
+        <button type="submit" class="btn bz-btn-gold btn-block">Save</button>
+        <button type="submit" name="_continue_editing" value="1" class="btn bz-btn-outline btn-block">Save and keep editing</button>
+        <button type="submit" name="_add_another" value="1" class="btn bz-btn-outline btn-block">Save and add another</button>
+        <a href="{{ return_url }}" class="btn btn-link btn-block">Cancel</a>
+      </section>
+    </aside>
+  </div>
+</form>
+{% if product %}
+<form id="bz-duplicate" method="POST" action="{{ get_url('.duplicate', id=product.id) }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+</form>
+{% endif %}

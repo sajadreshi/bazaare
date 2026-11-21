@@ -122,14 +122,14 @@ def test_import_catalog_creates_products_with_designs_and_photos(app, tmp_path):
         assert [(a.target_product.sku, a.association_type) for a in jhumka.associations] == [
             ("IMP-2", "UPSELL")
         ]
-        assert sorted(v.size for v in jhumka.variant) == ["Blue", "Green"]
+        assert sorted(v.name for v in jhumka.options) == ["Blue", "Green"]
         assert {(link.attribute.name, link.value) for link in jhumka.attribute_links} == {
             ("Stone", "Lapis"),
             ("Closure", "Hook"),
         }
-        assert jhumka.main_image and jhumka.alt1_image and not jhumka.alt2_image
+        assert len(jhumka.images) == 2 and jhumka.main_image == jhumka.images[0].image
         assert (jhumka.price, jhumka.compare_at_price) == (30, 36)
-        assert [v.size for v in Product.query.filter_by(sku="IMP-2").one().variant] == ["One Size"]
+        assert [v.name for v in Product.query.filter_by(sku="IMP-2").one().options] == ["One Size"]
         assert Category.query.filter_by(code="EARRINGS").one().banner_image.startswith("banners/")
         # --update refreshes text but keeps photos
         manifest["products"][0]["name"] = "Renamed Jhumka"

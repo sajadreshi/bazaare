@@ -152,19 +152,17 @@ def test_full_guest_checkout(app, client, product_ids):
 @pytest.fixture(scope="module")
 def cheap_product_ids(app):
     with app.app_context():
-        variant = Variant(size="One size", quantity=1, is_default=True)
         product = Product(
             sku="FLOW-CHEAP",
             name="Plain Stud",
             compare_at_price=Decimal("2.00"),
             price=Decimal("1.00"),
             is_active=True,
-            display=True,
         )
-        variant.products.append(product)
-        db.session.add_all([product, variant])
+        product.options = [Variant(name="One size", is_default=True)]
+        db.session.add(product)
         db.session.commit()
-        return product.id, variant.id
+        return product.id, product.options[0].id
 
 
 def test_size_change_cannot_borrow_another_products_price(app, client, product_ids, cheap_product_ids):
