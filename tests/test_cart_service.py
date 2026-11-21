@@ -1,6 +1,5 @@
 """Cart and checkout services: behaviour added or tightened in the service-layer refactor."""
 
-import datetime
 from decimal import Decimal
 
 from app.extension import db
@@ -65,20 +64,47 @@ def test_inactive_or_sizeless_products_cannot_be_added(app, client):
         assert Item.query.filter(Item.product_id.in_([hidden_id, sizeless_id])).count() == 0
 
 
-def test_delivery_date_must_be_one_we_offer(app, client, product_ids):
+def test_shipping_method_must_be_one_we_offer(app, client, product_ids):
     pid, small, _ = product_ids
     with app.app_context():
         cart_id = add_to_cart(client, pid, small).id
-    too_soon = datetime.date.today().isoformat()
-    for date, window in [(too_soon, "Morning"), ("not-a-date", "Morning"), (None, "Midnight")]:
-        date = date or (datetime.date.today() + datetime.timedelta(days=10)).isoformat()
-        client.post(
-            "/checkout/order",
-            data={"form_id": "delivery_form", "delivery_date": date, "delivery_window": window},
-            headers=REFERER,
-        )
-        with app.app_context():
-            assert db.session.get(Cart, cart_id).delivery_date is None, (date, window)
+    client.post(
+        "/checkout/order",
+        data={"form_id": "shipping_method_form", "shipping_method": "OVERNIGHT"},
+        headers=REFERER,
+    )
+    with app.app_context():
+        assert db.session.get(Cart, cart_id).shipping_method is None  # unknown method ignored
+    client.post(
+        "/checkout/order",
+        data={"form_id": "shipping_method_form", "shipping_method": "EXPRESS"},
+        headers=REFERER,
+    )
+    with app.app_context():
+        cart = db.session.get(Cart, cart_id)
+        assert cart.shipping_method == "EXPRESS" and cart.total_shipping == Decimal("14.99")
+
+
+def test_standard_shipping_is_free_over_the_threshold(app):
+    from app.services.shipping import METHODS
+
+    standard = METHODS["STANDARD"]
+    assert standard.charge(Decimal("49.99")) == Decimal("5.99")
+    assert standard.charge(Decimal("50.00")) == Decimal("0.00")
+
+
+def test_estimates_skip_weekends_and_holidays(app):
+    import datetime as dt
+
+    from app.models import Holiday
+    from app.services.shipping import add_business_days
+
+    with app.app_context():
+        friday = dt.date(2026, 12, 4)
+        assert add_business_days(friday, 1) == dt.date(2026, 12, 7)  # Monday
+        db.session.add(Holiday(holiday_date=dt.datetime(2026, 12, 7)))
+        db.session.commit()
+        assert add_business_days(friday, 1) == dt.date(2026, 12, 8)  # Monday is a holiday
 
 
 def test_checkout_page_prefills_saved_address(app, client, product_ids):

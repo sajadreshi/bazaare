@@ -95,3 +95,6 @@ a:hover { color: #f1d595; }
   .bz-status { border: 1px solid #000; background: none !important; color: #000 !important; }
   .bz-order__grid { grid-template-columns: 2fr 1fr; }
 }
+.bz-ship-form { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--bz-line); display: grid; gap: 6px; }
+.bz-ship-form label { font-size: .78rem; color: var(--bz-muted); margin: 4px 0 0; }
+.bz-ship-form .btn { margin-top: 8px; justify-self: start; }

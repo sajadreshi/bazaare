@@ -278,3 +278,8 @@
 .bz-hero__slides .bz-hero__shade { position: absolute; inset: 0; background: linear-gradient(90deg, rgba(14, 13, 11, .9) 0%, rgba(14, 13, 11, .45) 60%, rgba(14, 13, 11, .2) 100%); }
 .bz-hero__slides .bz-hero__text { position: relative; z-index: 1; }
 .bz-hero--slides::after { display: none; }
+
+/* Checkout: shipping method choice */
+.bz-ship-methods { border: 0; padding: 0; margin: 0 0 12px; }
+.bz-ship-method { display: flex; gap: 10px; align-items: flex-start; padding: 12px 14px; border: 1px solid var(--bz-line); border-radius: 12px; background: var(--bz-paper); margin-bottom: 8px; cursor: pointer; }
+.bz-ship-method input { margin-top: 4px; accent-color: var(--bz-ink); }

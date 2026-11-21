@@ -9,7 +9,8 @@ from wtforms.validators import DataRequired
 from app.adminapp.fields import StorageImageField
 from app.adminapp.security import SecureModelView
 from app.extension import db
-from app.models import ASSOCIATION_TYPES, ORDER_STATUSES, Order, ProductAssociation
+from app.models import ASSOCIATION_TYPES, ORDER_STATUSES, Order, ProductAssociation, utcnow
+from app.services.shipping import CARRIERS
 from app.storage import image_url
 
 
@@ -272,6 +273,16 @@ def _customer_cell(view, context, model, name):
     return Markup("%s<br><small class='bz-muted'>%s · %s</small>") % (person, email or "no email", kind)
 
 
+def _shipping_cell(view, context, model, name):
+    if model.tracking_number:
+        return Markup("%s<br><small class='bz-muted'>%s %s</small>") % (
+            model.method.name,
+            model.carrier or "",
+            model.tracking_number,
+        )
+    return model.method.name
+
+
 # Next steps offered as buttons on an order, depending on where it is now.
 ORDER_ACTIONS = {
     "PLACED": [("SHIPPED", "Mark shipped"), ("CANCELLED", "Cancel order")],
@@ -290,23 +301,19 @@ class OrderView(SecureModelView):
     can_view_details = True
     details_template = "admin/order_details.html"
     column_default_sort = ("placed_at", True)
-    column_list = ("number", "customer", "items", "total", "status", "delivery_date", "placed_at")
-    column_labels = {"number": "Order", "delivery_date": "Delivery", "placed_at": "Placed"}
+    column_list = ("number", "customer", "items", "total", "status", "shipping_method", "placed_at")
+    column_labels = {"number": "Order", "shipping_method": "Shipping", "placed_at": "Placed"}
     column_formatters = {
         "number": _order_link,
         "customer": _customer_cell,
         "items": lambda v, c, m, n: sum(1 for _ in m.items),
         "total": lambda v, c, m, n: f"${m.total:.2f}",
         "status": _status_badge,
-        "delivery_date": lambda v, c, m, n: (
-            f"{m.delivery_date:%a %d %b}" + (f" · {m.delivery_window}" if m.delivery_window else "")
-            if m.delivery_date
-            else ""
-        ),
+        "shipping_method": _shipping_cell,
         "placed_at": lambda v, c, m, n: f"{m.placed_at:%d %b %Y, %H:%M}",
     }
-    column_sortable_list = ("total", "status", "delivery_date", "placed_at")
-    column_filters = ("status", "placed_at", "delivery_date")
+    column_sortable_list = ("total", "status", "shipping_method", "placed_at")
+    column_filters = ("status", "shipping_method", "placed_at")
     column_searchable_list = ("id",)
 
     def render(self, template, **kwargs):
@@ -315,6 +322,7 @@ class OrderView(SecureModelView):
             kwargs.update(
                 customer=order_customer(order),
                 actions=ORDER_ACTIONS.get(order.status, []),
+                carriers=list(CARRIERS),
                 statuses=ORDER_STATUSES,
             )
         return super().render(template, **kwargs)
@@ -325,11 +333,20 @@ class OrderView(SecureModelView):
         if order is None:
             abort(404)
         status = request.form.get("status", "")
+        carrier = request.form.get("carrier", "").strip()
+        tracking = request.form.get("tracking_number", "").strip()
         if status not in ORDER_STATUSES:
             flash("Unknown status.", "error")
+        elif status == "SHIPPED" and order.status != "SHIPPED" and not (carrier in CARRIERS and tracking):
+            flash("To mark an order shipped, choose the carrier and enter the tracking number.", "error")
         elif status != order.status:
             previous = order.status
             order.status = status
+            if status == "SHIPPED":
+                order.carrier, order.tracking_number = carrier, tracking[:64]
+                order.shipped_at = utcnow()
+            elif status == "DELIVERED":
+                order.delivered_at = utcnow()
             db.session.commit()
             flash(f"{order.number} moved from {previous.title()} to {status.title()}.", "success")
         return redirect(self.get_url(".details_view", id=order.id))

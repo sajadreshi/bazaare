@@ -1,6 +1,5 @@
-"""End-to-end guest checkout: add to cart, remove, addresses, delivery, place order."""
+"""End-to-end guest checkout: add to cart, remove, addresses, shipping method, place order."""
 
-import datetime
 from decimal import Decimal
 
 import pytest
@@ -92,7 +91,7 @@ def test_place_order_requires_shipping_address(app, client, product_ids):
     assert "Please complete your shipping address" in messages
 
 
-def checkout(app, client, product_ids, delivery_days=7):
+def checkout(app, client, product_ids, method="STANDARD"):
     """Run a full guest checkout and return (cart_id, order_id)."""
     pid, small, _ = product_ids
     with app.app_context():
@@ -100,10 +99,9 @@ def checkout(app, client, product_ids, delivery_days=7):
 
     assert client.post("/checkout/order", data=address("shipping_form"), headers=REFERER).status_code == 302
     assert client.post("/checkout/order", data=address("billing_form"), headers=REFERER).status_code == 302
-    delivery = (datetime.date.today() + datetime.timedelta(days=delivery_days)).isoformat()
     resp = client.post(
         "/checkout/order",
-        data={"form_id": "delivery_form", "delivery_date": delivery, "delivery_window": "Morning"},
+        data={"form_id": "shipping_method_form", "shipping_method": method},
         headers=REFERER,
     )
     assert resp.status_code == 302
@@ -132,7 +130,8 @@ def test_full_guest_checkout(app, client, product_ids):
         order = db.session.get(Order, order_id)
         assert order.status == "PLACED"
         assert order.total == Decimal("99.99")
-        assert order.delivery_window == "Morning"
+        assert order.shipping_method == "STANDARD"
+        assert order.total_shipping == Decimal("0.00")  # Standard is free over $50
         assert order.shipping_address.city == "Albany"
         assert order.billing_address.last_name == "Lovelace"
         [line] = order.items
@@ -225,25 +224,14 @@ def test_order_cannot_be_placed_twice(app, client, product_ids):
         assert Order.query.filter_by(cart_id=cart_id).count() == 1
 
 
-def test_earliest_offered_delivery_date_is_accepted(app, client, product_ids):
-    from app.services.checkout import delivery_dates
-
-    pid, small, _ = product_ids
+def test_express_shipping_is_charged_and_recorded(app, client, product_ids):
+    _, order_id = checkout(app, client, product_ids, method="EXPRESS")
     with app.app_context():
-        add_to_cart(client, pid, small)
-        earliest = delivery_dates()[0]
-    for form in ("shipping_form", "billing_form"):
-        client.post("/checkout/order", data=address(form), headers=REFERER)
-    client.post(
-        "/checkout/order",
-        data={
-            "form_id": "delivery_form",
-            "delivery_date": earliest.isoformat(),
-            "delivery_window": "Evening",
-        },
-        headers=REFERER,
-    )
-    resp = client.post(
-        "/checkout/order", data={"form_id": "place_order_form", "payment_method": "COD"}, headers=REFERER
-    )
-    assert "/checkout/confirm/" in resp.headers["Location"]
+        order = db.session.get(Order, order_id)
+        assert order.shipping_method == "EXPRESS"
+        assert order.total_shipping == Decimal("14.99")
+        assert order.total == Decimal("114.98")  # 99.99 + 14.99
+        earliest, latest = order.estimated_delivery
+        assert order.placed_at.date() < earliest <= latest
+    html = client.get(f"/checkout/confirm/{order_id}").get_data(as_text=True)
+    assert "Express shipping" in html and "Estimated delivery" in html

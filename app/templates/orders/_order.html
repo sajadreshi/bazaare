@@ -23,10 +23,22 @@
             {% endfor %}
           </div>
           {% endcall %}
-          {% call section("Delivery Date") %}
+          {% call section("Shipping") %}
+          {% set earliest, latest = order.estimated_delivery %}
           <div class="address-sec">
-            <span class="add-elem">{{ order.delivery_date.strftime('%a, %d %b %Y') if order.delivery_date else 'Not set' }}</span>
-            <span class="add-elem">{{ order.delivery_window or '' }}</span>
+            <span class="add-elem">{{ order.method.name }} shipping · {{ order.method.days_label }}</span>
+            {% if order.status == 'DELIVERED' %}
+            <span class="add-elem">Delivered{% if order.delivered_at %} {{ order.delivered_at.strftime('%a, %d %b %Y') }}{% endif %}</span>
+            {% elif order.status == 'CANCELLED' %}
+            <span class="add-elem">Cancelled</span>
+            {% else %}
+            <span class="add-elem">Estimated delivery {{ earliest.strftime('%a, %d %b') }} – {{ latest.strftime('%a, %d %b %Y') }}</span>
+            {% endif %}
+            {% if order.tracking_number %}
+            <span class="add-elem">{{ order.carrier }} tracking:
+              {% if order.tracking_url %}<a href="{{ order.tracking_url }}" target="_blank" rel="noopener">{{ order.tracking_number }}</a>{% else %}{{ order.tracking_number }}{% endif %}
+            </span>
+            {% endif %}
           </div>
           {% endcall %}
           {% call section("Items") %}

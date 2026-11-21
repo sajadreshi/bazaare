@@ -1,7 +1,7 @@
 from flask import abort, flash, jsonify, redirect, render_template, request, url_for
 
 from app.checkout import checkout
-from app.checkout.forms import BillingForm, DeliveryDateForm, PlaceOrderForm, ShippingForm
+from app.checkout.forms import BillingForm, PlaceOrderForm, ShippingForm, ShippingMethodForm
 from app.services import cart as cart_service
 from app.services import catalog as catalog_service
 from app.services import checkout as checkout_service
@@ -34,7 +34,7 @@ def shopcart():
 def order():
     shipping_form = ShippingForm()
     billing_form = BillingForm()
-    delivery_form = DeliveryDateForm()
+    delivery_form = ShippingMethodForm()
     place_order_form = PlaceOrderForm()
 
     if request.method == "POST":
@@ -45,12 +45,12 @@ def order():
         if form_id == "billing_form" and billing_form.validate_on_submit():
             checkout_service.save_address(billing_form, "billing")
             return back()
-        if form_id == "delivery_form" and delivery_form.validate_on_submit():
-            if not checkout_service.save_delivery(
-                delivery_form.delivery_date.data, delivery_form.delivery_window.data
-            ):
-                flash("Please choose one of the delivery dates and windows offered.")
-            return back("#collapseFour")
+        if form_id == "shipping_method_form":
+            delivery_form.fill_from(cart_service.get_cart())  # choices must exist before validating
+            if delivery_form.validate_on_submit():
+                if not checkout_service.save_shipping_method(delivery_form.shipping_method.data):
+                    flash("Please choose one of the shipping methods offered.")
+                return back("#collapseFour")
         if form_id == "place_order_form" and place_order_form.validate_on_submit():
             result = checkout_service.place_order(place_order_form.payment_method.data)
             if not result.ok:

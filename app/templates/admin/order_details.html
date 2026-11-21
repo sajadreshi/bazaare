@@ -15,7 +15,7 @@
         {% if order.cart_id %}· from cart #{{ order.cart_id }}{% endif %}</p>
     </div>
     <div class="bz-order__actions bz-noprint">
-      {% for status, label in actions %}
+      {% for status, label in actions if status != 'SHIPPED' %}
       <form method="post" action="{{ get_url('.set_status', order_id=order.id) }}"
             {% if status == 'CANCELLED' %}onsubmit="return confirm('Cancel {{ order.number }}?');"{% endif %}>
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -67,10 +67,30 @@
         {% if phone %}<p>{{ phone }}</p>{% endif %}
       </section>
       <section class="bz-panel">
-        <h2>Delivery</h2>
-        {% if order.delivery_date %}
-        <p><strong>{{ order.delivery_date.strftime('%A %d %B %Y') }}</strong>{% if order.delivery_window %} · {{ order.delivery_window }}{% endif %}</p>
-        {% else %}<p class="bz-muted">No delivery date chosen</p>{% endif %}
+        <h2>Shipping</h2>
+        {% set earliest, latest = order.estimated_delivery %}
+        <p><strong>{{ order.method.name }}</strong> · {{ order.method.days_label }} · ${{ money | format(order.total_shipping) }}</p>
+        {% if order.tracking_number %}
+        <p>{{ order.carrier }}:
+          {% if order.tracking_url %}<a href="{{ order.tracking_url }}" target="_blank" rel="noopener">{{ order.tracking_number }}</a>{% else %}{{ order.tracking_number }}{% endif %}</p>
+        {% endif %}
+        {% if order.shipped_at %}<p class="bz-muted">Shipped {{ order.shipped_at.strftime('%d %b %Y, %H:%M') }}</p>{% endif %}
+        {% if order.delivered_at %}<p class="bz-muted">Delivered {{ order.delivered_at.strftime('%d %b %Y, %H:%M') }}</p>{% endif %}
+        {% if order.status in ('PLACED', 'SHIPPED') %}<p class="bz-muted">Promised to arrive {{ earliest.strftime('%a %d %b') }}–{{ latest.strftime('%a %d %b') }}</p>{% endif %}
+
+        {% if actions | selectattr(0, 'equalto', 'SHIPPED') | list %}
+        <form class="bz-ship-form bz-noprint" method="post" action="{{ get_url('.set_status', order_id=order.id) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="status" value="SHIPPED">
+          <label for="carrier">Carrier</label>
+          <select id="carrier" name="carrier" class="form-control" required>
+            {% for carrier in carriers %}<option value="{{ carrier }}">{{ carrier }}</option>{% endfor %}
+          </select>
+          <label for="tracking_number">Tracking number</label>
+          <input id="tracking_number" name="tracking_number" class="form-control" required maxlength="64" autocomplete="off">
+          <button type="submit" class="btn bz-btn-gold">Mark shipped</button>
+        </form>
+        {% endif %}
       </section>
       <section class="bz-panel">
         <h2>Payment</h2>

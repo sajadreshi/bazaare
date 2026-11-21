@@ -85,13 +85,13 @@
                         <div class="worked checkout-sec" id="delivery-worked" style="display: {{worked_delivery_date_display}};">
                             <div class="completed-sec">
                                 <h5 class="mb-0">
-                                    <span class="heading"> Delivery Date</span>
+                                    <span class="heading"> Shipping</span>
                                     <a href="javascript:void(0)" class="edit-delivery">
                                        <span style="float: right;"> Edit</span>
                                     </a>
                                 </h5>
                                 <div class="card-body">
-                                    {% include 'checkout/deliveryDateDisplay.html'%}
+                                    {% include 'checkout/shippingMethodDisplay.html'%}
                                 </div>
                             </div>
                         </div>
@@ -101,7 +101,7 @@
                                     <button class="btn btn-link collapsed" type="button" data-toggle="collapse"
                                         data-target="#collapseThree" aria-expanded="false"
                                         aria-controls="collapseThree">
-                                        Delivery Date
+                                        Shipping
                                         <a href="javascript:void(0)" style="display:none" id="delivery-cancel" class="cancel-delivery">
                                            <span style="float: right;"> Cancel</span>
                                         </a>
@@ -112,7 +112,7 @@
                                 data-parent="#accordionExample">
                                 <div class="card-body">
                                     <div class="card-details">
-                                        {% include 'checkout/deliveryDateForm.html'%}
+                                        {% include 'checkout/shippingMethodForm.html'%}
                                     </div>
                                 </div>
                             </div>
