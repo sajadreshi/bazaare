@@ -45,7 +45,9 @@ CARRIERS = {
     "FedEx": "https://www.fedex.com/fedextrack/?trknbr={number}",
     "DHL": "https://www.dhl.com/us-en/home/tracking.html?tracking-id={number}",
     "Other": None,
+    "Hand delivery": None,  # the shop delivers the order in person: no tracking number
 }
+HAND_DELIVERY = "Hand delivery"
 
 
 def method_for(code):

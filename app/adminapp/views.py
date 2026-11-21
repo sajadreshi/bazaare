@@ -10,7 +10,7 @@ from app.adminapp.fields import StorageImageField
 from app.adminapp.security import SecureModelView
 from app.extension import db
 from app.models import ASSOCIATION_TYPES, ORDER_STATUSES, Order, ProductAssociation, utcnow
-from app.services.shipping import CARRIERS
+from app.services.shipping import CARRIERS, HAND_DELIVERY
 from app.storage import image_url
 
 
@@ -274,6 +274,8 @@ def _customer_cell(view, context, model, name):
 
 
 def _shipping_cell(view, context, model, name):
+    if model.carrier == HAND_DELIVERY:
+        return Markup("%s<br><small class='bz-muted'>Hand delivery</small>") % model.method.name
     if model.tracking_number:
         return Markup("%s<br><small class='bz-muted'>%s %s</small>") % (
             model.method.name,
@@ -285,7 +287,11 @@ def _shipping_cell(view, context, model, name):
 
 # Next steps offered as buttons on an order, depending on where it is now.
 ORDER_ACTIONS = {
-    "PLACED": [("SHIPPED", "Mark shipped"), ("CANCELLED", "Cancel order")],
+    "PLACED": [
+        ("SHIPPED", "Mark shipped"),
+        ("DELIVERED", "Delivered by hand"),
+        ("CANCELLED", "Cancel order"),
+    ],
     "SHIPPED": [("DELIVERED", "Mark delivered"), ("CANCELLED", "Cancel order")],
     "DELIVERED": [],
     "CANCELLED": [("PLACED", "Reopen")],
@@ -337,16 +343,24 @@ class OrderView(SecureModelView):
         tracking = request.form.get("tracking_number", "").strip()
         if status not in ORDER_STATUSES:
             flash("Unknown status.", "error")
-        elif status == "SHIPPED" and order.status != "SHIPPED" and not (carrier in CARRIERS and tracking):
+        elif (
+            status == "SHIPPED"
+            and order.status != "SHIPPED"
+            and not (carrier in CARRIERS and (tracking or carrier == HAND_DELIVERY))
+        ):
             flash("To mark an order shipped, choose the carrier and enter the tracking number.", "error")
         elif status != order.status:
             previous = order.status
             order.status = status
+            now = utcnow()
             if status == "SHIPPED":
-                order.carrier, order.tracking_number = carrier, tracking[:64]
-                order.shipped_at = utcnow()
+                order.carrier, order.tracking_number = carrier, (tracking[:64] or None)
+                order.shipped_at = now
             elif status == "DELIVERED":
-                order.delivered_at = utcnow()
+                if carrier == HAND_DELIVERY and previous == "PLACED":
+                    order.carrier, order.tracking_number = HAND_DELIVERY, None
+                order.shipped_at = order.shipped_at or now
+                order.delivered_at = now
             db.session.commit()
             flash(f"{order.number} moved from {previous.title()} to {status.title()}.", "success")
         return redirect(self.get_url(".details_view", id=order.id))
