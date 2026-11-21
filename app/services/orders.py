@@ -32,7 +32,7 @@ def create_order_from_cart(cart):
                 variant_id=item.size_id,
                 sku=item.product_sku,
                 name=item.product_name or (product.name if product else item.product_sku),
-                variant_name=variant.size if variant else None,
+                variant_name=variant.name if variant else None,
                 image=product.main_image if product else None,
                 price=item.product_price or 0,
                 shipping=item.total_shipping or 0,

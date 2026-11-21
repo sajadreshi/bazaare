@@ -46,7 +46,7 @@ def test_dashboard_numbers(app):
 def test_catalog_todos_flag_products_without_photo_or_category(app):
     with app.app_context():
         db.session.add(
-            Product(sku="DASH-NOPHOTO", name="No Photo", retail_price=5, sale_price=5, is_active=True)
+            Product(sku="DASH-NOPHOTO", name="No Photo", compare_at_price=5, price=5, is_active=True)
         )
         db.session.commit()
         messages = " | ".join(message for message, *_ in build_dashboard().todos)

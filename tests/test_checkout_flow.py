@@ -156,8 +156,8 @@ def cheap_product_ids(app):
         product = Product(
             sku="FLOW-CHEAP",
             name="Plain Stud",
-            retail_price=Decimal("2.00"),
-            sale_price=Decimal("1.00"),
+            compare_at_price=Decimal("2.00"),
+            price=Decimal("1.00"),
             is_active=True,
             display=True,
         )

@@ -34,8 +34,8 @@ def test_product_page_shows_jewellery_fields(app, client):
         product = Product(
             sku="RING-001",
             name="Silver Band",
-            retail_price=49.0,
-            sale_price=39.0,
+            compare_at_price=49.0,
+            price=39.0,
             material="Sterling silver",
             is_handmade=True,
             is_active=True,

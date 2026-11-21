@@ -30,7 +30,7 @@ def test_menu_shows_top_level_items_with_dropdowns(client):
 
 def _product(sku, price, *codes, compare_at=None, name=None):
     product = Product(
-        sku=sku, name=name or sku, retail_price=compare_at or price, sale_price=price, is_active=True
+        sku=sku, name=name or sku, compare_at_price=compare_at or price, price=price, is_active=True
     )
     product.categories = [Category.query.filter_by(code=c).one() for c in codes]
     db.session.add(product)
@@ -128,7 +128,7 @@ def test_import_catalog_creates_products_with_designs_and_photos(app, tmp_path):
             ("Closure", "Hook"),
         }
         assert jhumka.main_image and jhumka.alt1_image and not jhumka.alt2_image
-        assert (jhumka.sale_price, jhumka.retail_price) == (30, 36)
+        assert (jhumka.price, jhumka.compare_at_price) == (30, 36)
         assert [v.size for v in Product.query.filter_by(sku="IMP-2").one().variant] == ["One Size"]
         assert Category.query.filter_by(code="EARRINGS").one().banner_image.startswith("banners/")
         # --update refreshes text but keeps photos

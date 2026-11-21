@@ -10,6 +10,7 @@ from app.services.customers import get_or_create_current_customer
 from app.services.orders import create_order_from_cart
 from app.services.payments import take_payment
 from app.services.shipping import METHODS
+from app.services.stock import OutOfStock, take_for_cart
 
 log = logging.getLogger(__name__)
 
@@ -114,6 +115,7 @@ def place_order(payment_method):
             db.session.rollback()
             return PlaceOrderResult(error="This order has already been placed.")
         recalculate(cart)
+        take_for_cart(cart)
         payment = take_payment(payment_method, cart.total_cart)
         if not payment.approved:
             db.session.rollback()
@@ -139,6 +141,9 @@ def place_order(payment_method):
         cart.status = "COMPLETED"
         cart.updated_at = now
         db.session.commit()
+    except OutOfStock as error:
+        db.session.rollback()
+        return PlaceOrderResult(error=str(error))
     except Exception:
         db.session.rollback()
         log.exception("Placing order for cart %s failed", cart_id)

@@ -10,6 +10,7 @@ from app.adminapp.fields import StorageImageField
 from app.adminapp.security import SecureModelView
 from app.extension import db
 from app.models import ASSOCIATION_TYPES, ORDER_STATUSES, Order, ProductAssociation, ProductAttribute, utcnow
+from app.services import stock
 from app.services.shipping import CARRIERS, HAND_DELIVERY
 from app.storage import image_url
 
@@ -186,21 +187,21 @@ class ProductView(SecureModelView):
         attr: StorageImageField(label, folder="products") for attr, label in PRODUCT_IMAGES.items()
     }
     form_excluded_columns = ["created_at", "updated_at", "attribute_links", "linked_from", "associations"]
-    column_list = ("main_image", "sku", "name", "sale_price", "retail_price", "categories", "is_active")
+    column_list = ("main_image", "sku", "name", "price", "compare_at_price", "categories", "is_active")
     column_labels = {
         "main_image": "Photo",
-        "sale_price": "Price",
-        "retail_price": "Was",
+        "price": "Price",
+        "compare_at_price": "Was",
         "is_active": "Active",
     }
     column_formatters = {
         **{attr: thumbnail(attr) for attr in PRODUCT_IMAGES},
-        "retail_price": lambda v, c, m, n: m.retail_price if m.retail_price != m.sale_price else "",
+        "compare_at_price": lambda v, c, m, n: m.compare_at_price if m.compare_at_price != m.price else "",
         "categories": lambda v, c, m, n: ", ".join(sorted(cat.name for cat in m.categories)),
     }
     column_default_sort = ("sku", False)
     column_searchable_list = ["name", "sku"]
-    column_filters = ["sale_price", "is_active"]
+    column_filters = ["price", "is_active"]
     # "Related products" table at the bottom of the product form.
     inline_models = (ProductAttributeInline(ProductAttribute), RelatedProductInline(ProductAssociation))
 
@@ -368,6 +369,10 @@ class OrderView(SecureModelView):
         elif status != order.status:
             previous = order.status
             order.status = status
+            if status == "CANCELLED":
+                stock.put_back(order)
+            elif previous == "CANCELLED":
+                stock.take_again(order)
             now = utcnow()
             if status == "SHIPPED":
                 order.carrier, order.tracking_number = carrier, (tracking[:64] or None)

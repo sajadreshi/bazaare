@@ -49,8 +49,8 @@ def test_guest_items_merge_into_existing_user_cart(app, client, product_ids):
 
 def test_inactive_or_sizeless_products_cannot_be_added(app, client):
     with app.app_context():
-        hidden = Product(sku="HIDDEN-1", name="Hidden", retail_price=1, sale_price=1, is_active=False)
-        sizeless = Product(sku="NOSIZE-1", name="No Size", retail_price=1, sale_price=1, is_active=True)
+        hidden = Product(sku="HIDDEN-1", name="Hidden", compare_at_price=1, price=1, is_active=False)
+        sizeless = Product(sku="NOSIZE-1", name="No Size", compare_at_price=1, price=1, is_active=True)
         db.session.add_all([hidden, sizeless])
         db.session.commit()
         hidden_id, sizeless_id = hidden.id, sizeless.id

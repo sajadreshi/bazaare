@@ -172,8 +172,8 @@ def test_admin_can_put_a_product_in_categories(app, client):
     data = {
         "sku": "ADMIN-CAT-1",
         "name": "Category Ring",
-        "retail_price": "10",
-        "sale_price": "9",
+        "compare_at_price": "10",
+        "price": "9",
         "is_active": "y",
         "categories": [str(rings), str(bracelets)],
     }

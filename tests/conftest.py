@@ -59,8 +59,8 @@ def product_ids(app):
         product = Product(
             sku="FLOW-RING",
             name="Gold Signet",
-            retail_price=Decimal("120.00"),
-            sale_price=Decimal("99.99"),
+            compare_at_price=Decimal("120.00"),
+            price=Decimal("99.99"),
             material="18k gold",
             is_active=True,
             display=True,

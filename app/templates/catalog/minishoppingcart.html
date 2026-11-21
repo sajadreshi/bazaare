@@ -11,7 +11,7 @@
                     alt="{{ item.product_name }}" />
                 <span class="item-name">{{ item.product_name }}</span>
                 <span class="item-price">${{ item.product_price }}</span>
-                <span class="item-quantity">{{ item.variant.size if item.variant else '' }}</span>
+                <span class="item-quantity">{{ item.variant.name if item.variant else '' }}</span>
                 <div class="remove-item">
                 <form method="post" action="{{ url_for('checkout.remove', itemId=item.id) }}" class="d-inline">
                   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">

@@ -92,6 +92,7 @@ def create_app(config_overrides=None):
         shop_menu=catalog_service.menu,
         wishlist_ids=wishlist_service.ids,
         is_on_sale=catalog_service.is_on_sale,
+        default_option=catalog_service.default_option,
         primary_category=catalog_service.primary_category,
         shipping_method_for=shipping_service.method_for,
         shipping_estimate=shipping_service.estimated_delivery,

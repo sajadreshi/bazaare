@@ -28,8 +28,8 @@ def catalog(app):
             sku="CAT-PENDANT",
             name="Moon Pendant",
             description="A silver crescent.",
-            retail_price=Decimal("80"),
-            sale_price=Decimal("64.50"),
+            compare_at_price=Decimal("80"),
+            price=Decimal("64.50"),
             material="Silver",
             is_active=True,
             is_sustainable=True,
@@ -39,14 +39,14 @@ def catalog(app):
         studs = Product(
             sku="CAT-STUDS",
             name="Pearl Studs",
-            retail_price=Decimal("40"),
-            sale_price=Decimal("30.00"),
+            compare_at_price=Decimal("40"),
+            price=Decimal("30.00"),
             is_active=True,
         )
         retired = Product(
-            sku="CAT-RETIRED", name="Retired Hoop", retail_price=1, sale_price=1, is_active=False
+            sku="CAT-RETIRED", name="Retired Hoop", compare_at_price=1, price=1, is_active=False
         )
-        secret = Product(sku="CAT-SECRET", name="Secret Ring", retail_price=1, sale_price=1, is_active=True)
+        secret = Product(sku="CAT-SECRET", name="Secret Ring", compare_at_price=1, price=1, is_active=True)
         pendant.categories.append(necklaces)
         studs.categories.append(earrings)
         retired.categories.append(earrings)

@@ -17,8 +17,8 @@
     <h3 class="bz-card__name"><a href="{{ url_for('catalog.product', productId=product.id) }}">{{ product.name }}</a></h3>
     {% if product.material %}<p class="bz-card__meta">{{ product.material }}</p>{% endif %}
     <p class="bz-price">
-      <span class="bz-price__now">${{ '%.2f' | format(product.sale_price) }}</span>
-      {% if is_on_sale(product) %}<s class="bz-price__was">${{ '%.2f' | format(product.retail_price) }}</s>{% endif %}
+      <span class="bz-price__now">${{ '%.2f' | format(product.price) }}</span>
+      {% if is_on_sale(product) %}<s class="bz-price__was">${{ '%.2f' | format(product.compare_at_price) }}</s>{% endif %}
     </p>
   </div>
 </article>

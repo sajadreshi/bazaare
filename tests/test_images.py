@@ -29,8 +29,8 @@ def upload_product(client, sku, file, filename="ring.jpg", **extra):
     data = {
         "sku": sku,
         "name": sku,
-        "retail_price": "10",
-        "sale_price": "9",
+        "compare_at_price": "10",
+        "price": "9",
         "is_active": "y",
         "main_image": (file, filename),
         **extra,
@@ -113,8 +113,8 @@ def test_removing_an_image_keeps_the_file_for_past_orders(app, admin_client):
     data = {
         "sku": "IMG-DEL",
         "name": "IMG-DEL",
-        "retail_price": "10",
-        "sale_price": "9",
+        "compare_at_price": "10",
+        "price": "9",
         "_main_image-delete": "y",
     }
     assert admin_client.post(f"/admin/product/edit/?id={pid}", data=data).status_code == 302

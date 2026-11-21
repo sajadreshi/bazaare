@@ -13,7 +13,7 @@
                         <button type="submit" class="btn btn-link p-0"><i class="fa fa-trash" aria-hidden="true"> Remove</i></button>
                     </form></span>
                     <div class="size-display" id="size-display-{{item_id}}" style="display: block;">
-                        <span class="td-content">{{ item.variant.size if item.variant else '' }}</span><br>
+                        <span class="td-content">{{ item.variant.name if item.variant else '' }}</span><br>
                         <span class="td-content"><a href="javascript:eidt_item_size({{item_id}})">
                                <i class="fa fa-edit"  aria-hidden="true"></i> Edit</a></span>
                         <span class="td-content" id="error-display-{{item_id}}" style="color: red;"></span><br>
