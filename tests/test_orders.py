@@ -128,3 +128,33 @@ def test_customer_sees_tracking_once_shipped(app, client, product_ids):
     )
     html = shopper.get(f"/checkout/confirm/{order_id}").get_data(as_text=True)
     assert "FedEx tracking" in html and "https://www.fedex.com/fedextrack/?trknbr=7777" in html
+
+
+def test_hand_delivery_in_one_step(app, client, product_ids):
+    shopper = app.test_client()
+    _, order_id = checkout(app, shopper, product_ids)
+    login(client, ADMIN_EMAIL, ADMIN_PASSWORD)
+    assert "Delivered by hand" in client.get(f"/admin/order/details/?id={order_id}").get_data(as_text=True)
+    client.post(f"/admin/order/status/{order_id}", data={"status": "DELIVERED", "carrier": "Hand delivery"})
+    with app.app_context():
+        order = db.session.get(Order, order_id)
+        assert (order.status, order.carrier, order.tracking_number) == ("DELIVERED", "Hand delivery", None)
+        assert order.shipped_at and order.delivered_at
+    assert "Delivered by hand" in shopper.get(f"/checkout/confirm/{order_id}").get_data(as_text=True)
+
+
+def test_out_for_hand_delivery_needs_no_tracking_number(app, client, product_ids):
+    shopper = app.test_client()
+    _, order_id = checkout(app, shopper, product_ids)
+    login(client, ADMIN_EMAIL, ADMIN_PASSWORD)
+    client.post(
+        f"/admin/order/status/{order_id}",
+        data={"status": "SHIPPED", "carrier": "Hand delivery", "tracking_number": ""},
+    )
+    with app.app_context():
+        order = db.session.get(Order, order_id)
+        assert (order.status, order.carrier, order.tracking_url) == ("SHIPPED", "Hand delivery", None)
+    assert "bringing it to you by hand" in shopper.get(f"/checkout/confirm/{order_id}").get_data(as_text=True)
+    client.post(f"/admin/order/status/{order_id}", data={"status": "DELIVERED"})
+    with app.app_context():
+        assert db.session.get(Order, order_id).status == "DELIVERED"

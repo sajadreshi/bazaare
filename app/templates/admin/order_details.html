@@ -17,10 +17,11 @@
     <div class="bz-order__actions bz-noprint">
       {% for status, label in actions if status != 'SHIPPED' %}
       <form method="post" action="{{ get_url('.set_status', order_id=order.id) }}"
-            {% if status == 'CANCELLED' %}onsubmit="return confirm('Cancel {{ order.number }}?');"{% endif %}>
+            {% if status == 'CANCELLED' %}onsubmit="return confirm('Cancel {{ order.number }}?');"{% elif status == 'DELIVERED' and order.status == 'PLACED' %}onsubmit="return confirm('Mark {{ order.number }} as delivered by hand?');"{% endif %}>
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <input type="hidden" name="status" value="{{ status }}">
-        <button type="submit" class="btn {{ 'bz-btn-outline bz-btn-danger' if status == 'CANCELLED' else 'bz-btn-gold' }}">{{ label }}</button>
+        {% if status == 'DELIVERED' and order.status == 'PLACED' %}<input type="hidden" name="carrier" value="Hand delivery">{% endif %}
+        <button type="submit" class="btn {{ 'bz-btn-outline bz-btn-danger' if status == 'CANCELLED' else ('bz-btn-outline' if status == 'DELIVERED' and order.status == 'PLACED' else 'bz-btn-gold') }}">{{ label }}</button>
       </form>
       {% endfor %}
       <button type="button" class="btn bz-btn-outline" onclick="window.print()">Print packing slip</button>
@@ -70,7 +71,9 @@
         <h2>Shipping</h2>
         {% set earliest, latest = order.estimated_delivery %}
         <p><strong>{{ order.method.name }}</strong> · {{ order.method.days_label }} · ${{ money | format(order.total_shipping) }}</p>
-        {% if order.tracking_number %}
+        {% if order.carrier == 'Hand delivery' %}
+        <p><strong>Hand delivery</strong>{% if order.status == 'SHIPPED' %} · out for delivery{% endif %}</p>
+        {% elif order.tracking_number %}
         <p>{{ order.carrier }}:
           {% if order.tracking_url %}<a href="{{ order.tracking_url }}" target="_blank" rel="noopener">{{ order.tracking_number }}</a>{% else %}{{ order.tracking_number }}{% endif %}</p>
         {% endif %}
@@ -86,8 +89,8 @@
           <select id="carrier" name="carrier" class="form-control" required>
             {% for carrier in carriers %}<option value="{{ carrier }}">{{ carrier }}</option>{% endfor %}
           </select>
-          <label for="tracking_number">Tracking number</label>
-          <input id="tracking_number" name="tracking_number" class="form-control" required maxlength="64" autocomplete="off">
+          <label for="tracking_number">Tracking number <span class="bz-muted">(not needed for hand delivery)</span></label>
+          <input id="tracking_number" name="tracking_number" class="form-control" maxlength="64" autocomplete="off">
           <button type="submit" class="btn bz-btn-gold">Mark shipped</button>
         </form>
         {% endif %}
