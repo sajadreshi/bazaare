@@ -70,5 +70,18 @@
     {% else %}
     <p class="bz-soldout">Currently out of stock</p>
     {% endif %}
+
+    {% if upsells %}
+    <aside class="bz-upsells" aria-label="Upgrade to">
+      <h2>Upgrade to</h2>
+      {% for up in upsells %}
+      <a class="bz-upsell" href="{{ url_for('catalog.product', productId=up.id) }}">
+        <img src="{{ image_url(up.main_image, thumb=True) }}" alt="" width="64" height="64">
+        <span class="bz-upsell__name">{{ up.name }}</span>
+        <span class="bz-upsell__price">${{ '%.2f' | format(up.sale_price) }}</span>
+      </a>
+      {% endfor %}
+    </aside>
+    {% endif %}
   </div>
 </div>

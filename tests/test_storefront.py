@@ -87,6 +87,7 @@ def test_import_catalog_creates_products_with_designs_and_photos(app, tmp_path):
         (tmp_path / name).write_bytes(buf.getvalue())
     manifest = {
         "banners": {"EARRINGS": "banner.jpg"},
+        "associations": [{"source": "IMP-1", "target": "IMP-2", "type": "UPSELL", "position": 1}],
         "products": [
             {
                 "sku": "IMP-1",
@@ -117,6 +118,9 @@ def test_import_catalog_creates_products_with_designs_and_photos(app, tmp_path):
         assert import_catalog(str(path), str(tmp_path)) == (2, 0, 0)
         assert import_catalog(str(path), str(tmp_path)) == (0, 0, 2)  # idempotent
         jhumka = Product.query.filter_by(sku="IMP-1").one()
+        assert [(a.target_product.sku, a.association_type) for a in jhumka.associations] == [
+            ("IMP-2", "UPSELL")
+        ]
         assert sorted(v.size for v in jhumka.variant) == ["Blue", "Green"]
         assert jhumka.main_image and jhumka.alt1_image and not jhumka.alt2_image
         assert (jhumka.sale_price, jhumka.retail_price) == (30, 36)
@@ -138,6 +142,9 @@ def test_client_manifest_is_valid(app):
     with app.app_context():
         codes = {c.code for c in Category.query.all()}
     assert len(manifest["products"]) >= 50
+    skus = {item["sku"] for item in manifest["products"]}
+    for link in manifest["associations"]:
+        assert link["source"] in skus and link["target"] in skus and link["type"] in ("XSELL", "UPSELL"), link
     for item in manifest["products"]:
         assert set(item["categories"]) <= codes, item["sku"]
         assert item["images"] and item["description"] and item["price"] > 0

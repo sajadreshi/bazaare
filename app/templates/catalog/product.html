@@ -18,8 +18,14 @@
 </section>
 {% if xsells %}
 <section class="bz-section">
-  <h2 class="bz-title">You may also like</h2>
+  <h2 class="bz-title">Complete the look</h2>
   {% with products = xsells %}{% include 'catalog/_grid.html' %}{% endwith %}
+</section>
+{% elif similar %}
+<section class="bz-section">
+  {% set crumb = primary_category(product) %}
+  <h2 class="bz-title">More {{ crumb.name | lower if crumb else 'pieces' }}</h2>
+  {% with products = similar %}{% include 'catalog/_grid.html' %}{% endwith %}
 </section>
 {% endif %}
 {% endblock %}

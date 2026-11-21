@@ -263,3 +263,12 @@
 .bz-hero__dots { position: relative; bottom: auto; justify-content: flex-start; max-width: var(--bz-max); margin: -60px auto 0; padding: 0 20px 34px; }
 .bz-hero__dots li { width: 28px; height: 3px; border: 0; background: rgba(243, 237, 226, .4); }
 .bz-hero__dots li.active { background: var(--bz-gold-2); }
+
+/* Upsells beside the buy box ("Upgrade to") */
+.bz-upsells { margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--bz-line); }
+.bz-upsells h2 { font-size: .8rem; letter-spacing: .14em; text-transform: uppercase; color: var(--bz-muted); margin: 0 0 10px; font-family: var(--bz-sans); }
+.bz-upsell { display: grid; grid-template-columns: 64px 1fr auto; align-items: center; gap: 14px; padding: 8px; border: 1px solid var(--bz-line); border-radius: 12px; background: var(--bz-paper); margin-bottom: 8px; }
+.bz-upsell:hover { border-color: var(--bz-gold); }
+.bz-upsell img { width: 64px; height: 64px; object-fit: cover; border-radius: 8px; }
+.bz-upsell__name { font-family: var(--bz-serif); font-size: 1.1rem; font-weight: 600; color: var(--bz-ink); }
+.bz-upsell__price { font-weight: 600; color: var(--bz-ink); padding-right: 6px; }

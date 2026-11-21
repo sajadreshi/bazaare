@@ -18,7 +18,7 @@ from flask import current_app
 from werkzeug.datastructures import FileStorage
 
 from app.extension import db
-from app.models import Category, Product, Variant
+from app.models import Category, Product, ProductAssociation, Variant
 from app.storage import save_image
 
 log = logging.getLogger(__name__)
@@ -59,6 +59,34 @@ def _set_designs(product, designs):
         variant.products.append(product)
 
 
+def _import_associations(links):
+    """Add related-product links ({source, target, type, position}) that don't exist yet."""
+    skus = {sku for link in links for sku in (link["source"], link["target"])}
+    products = {p.sku: p for p in Product.query.filter(Product.sku.in_(skus))} if skus else {}
+    added = 0
+    for link in links:
+        source, target = products.get(link["source"]), products.get(link["target"])
+        if source is None or target is None:
+            raise click.ClickException(f"related link {link['source']} -> {link['target']}: unknown SKU")
+        kind = link.get("type", "XSELL")
+        exists = ProductAssociation.query.filter_by(
+            source_product_id=source.id, target_product_id=target.id, association_type=kind
+        ).first()
+        if exists is None:
+            db.session.add(
+                ProductAssociation(
+                    source_product_id=source.id,
+                    target_product_id=target.id,
+                    association_type=kind,
+                    position=link.get("position", 0),
+                    is_active=True,
+                )
+            )
+            added += 1
+    db.session.commit()
+    return added
+
+
 def import_catalog(manifest_path, images_dir, update=False):
     with open(manifest_path) as fh:
         manifest = json.load(fh)
@@ -96,6 +124,10 @@ def import_catalog(manifest_path, images_dir, update=False):
         created += is_new
         updated += not is_new
         click.echo(f"{'created' if is_new else 'updated'} {product.sku}  {product.name}")
+
+    links_added = _import_associations(manifest.get("associations", []))
+    if links_added:
+        click.echo(f"{links_added} related-product links added")
 
     for code, filename in manifest.get("banners", {}).items():
         category = categories.get(code)

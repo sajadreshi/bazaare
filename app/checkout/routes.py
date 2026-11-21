@@ -3,6 +3,7 @@ from flask import abort, flash, jsonify, redirect, render_template, request, url
 from app.checkout import checkout
 from app.checkout.forms import BillingForm, DeliveryDateForm, PlaceOrderForm, ShippingForm
 from app.services import cart as cart_service
+from app.services import catalog as catalog_service
 from app.services import checkout as checkout_service
 from app.services.customers import get_current_customer
 from app.services.orders import get_customer_order
@@ -23,7 +24,10 @@ def remove(itemId):
 def shopcart():
     if request.method == "POST":
         cart_service.change_variant(request.form.get("itemId", type=int), request.form.get("size", type=int))
-    return render_template("checkout/shopcart.html", cart=cart_service.get_cart())
+    cart = cart_service.get_cart()
+    return render_template(
+        "checkout/shopcart.html", cart=cart, suggestions=catalog_service.bag_suggestions(cart)
+    )
 
 
 @checkout.route("/order", methods=["GET", "POST"])
