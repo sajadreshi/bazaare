@@ -5,7 +5,7 @@ import re
 from app.extension import db
 from app.models import User
 from tests.conftest import ADMIN_EMAIL, ADMIN_PASSWORD
-from tests.test_security import login
+from tests.test_security import login  # noqa: F401
 
 FAILED = "doesn&#39;t have admin access"
 
@@ -76,7 +76,15 @@ def test_sign_out(client):
 def test_admin_login_needs_csrf_token(app, client):
     app.config["WTF_CSRF_ENABLED"] = True
     try:
-        assert admin_login(client, ADMIN_EMAIL, ADMIN_PASSWORD).status_code == 400
+        # A stale sign-in page bounces back to itself with a message instead of "Bad Request".
+        resp = client.post(
+            "/admin/login",
+            data={"email": ADMIN_EMAIL, "password": ADMIN_PASSWORD, "csrf_token": "stale"},
+            headers={"Referer": "http://localhost/admin/login"},
+        )
+        assert resp.headers["Location"] == "http://localhost/admin/login"
+        assert "That form had expired" in client.get("/admin/login").get_data(as_text=True)
+        assert client.get("/admin/").status_code == 302  # not signed in
         page = client.get("/admin/login").get_data(as_text=True)
         token = re.search(r'name="csrf_token" type="hidden" value="([^"]+)"', page).group(1)
         resp = client.post(
@@ -85,3 +93,8 @@ def test_admin_login_needs_csrf_token(app, client):
         assert resp.status_code == 302
     finally:
         app.config["WTF_CSRF_ENABLED"] = False
+
+
+def test_csrf_tokens_do_not_expire_while_the_browser_session_lasts(app):
+    # The admin sign-in page used to fail with "The CSRF token has expired" after an hour.
+    assert app.config["WTF_CSRF_TIME_LIMIT"] is None

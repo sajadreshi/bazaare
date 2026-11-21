@@ -11,6 +11,16 @@ from app.seed import seed_admin
 from app.urls import is_safe_next
 from tests.conftest import ADMIN_EMAIL, ADMIN_PASSWORD
 
+CSRF_EXPIRED = "That form had expired"
+
+
+def assert_csrf_rejected(client, resp):
+    """A request without a valid CSRF token is bounced back with a message, and not processed."""
+    assert resp.status_code == 302
+    with client.session_transaction() as sess:
+        messages = [m for _, m in sess.get("_flashes", [])]
+    assert any(CSRF_EXPIRED in m for m in messages), messages
+
 
 def login(client, email, password, next_url=None):
     url = "/auth/login" + (f"?next={next_url}" if next_url else "")
@@ -98,8 +108,9 @@ def test_login_next_only_allows_local_paths(target, safe):
 def test_post_without_csrf_token_is_rejected(app, client):
     app.config["WTF_CSRF_ENABLED"] = True
     try:
-        assert client.post("/checkout/remove/1").status_code == 400
-        assert client.post("/auth/login", data={"email": "a@b.c", "password": "x"}).status_code == 400
+        assert_csrf_rejected(client, client.post("/checkout/remove/1"))
+        assert_csrf_rejected(client, login(client, ADMIN_EMAIL, ADMIN_PASSWORD))
+        assert client.get("/customer/profile").status_code == 302  # the login above did not happen
 
         page = client.get("/auth/login").get_data(as_text=True)
         token = re.search(r'name="csrf_token" type="hidden" value="([^"]+)"', page).group(1)
@@ -138,7 +149,9 @@ def test_admin_can_save_with_csrf_on_and_is_protected_without_it(app, client):
         tokens = re.findall(r'name="csrf_token" value="([^"]+)"', page)
         assert len(tokens) == 1  # exactly one token per form, or WTForms reads the wrong one
         data = {"size": "Admin size", "quantity": "1"}
-        assert client.post("/admin/variant/new/", data=data).status_code == 400
+        assert_csrf_rejected(client, client.post("/admin/variant/new/", data=data))
+        with app.app_context():
+            assert Variant.query.filter_by(size="Admin size").count() == 0
         resp = client.post("/admin/variant/new/", data={**data, "csrf_token": tokens[0]})
         assert resp.status_code == 302
         with app.app_context():

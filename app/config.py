@@ -34,6 +34,10 @@ class Config(object):
     ADMIN_EMAIL = os.environ.get("ADMIN_EMAIL")
     ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD")
 
+    # CSRF tokens stay valid for the whole browser session (Flask-WTF's default is
+    # one hour, which broke forms left open, e.g. the admin sign-in page).
+    WTF_CSRF_TIME_LIMIT = None
+
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SAMESITE = "Lax"
     SESSION_COOKIE_SECURE = env_flag("SESSION_COOKIE_SECURE")
