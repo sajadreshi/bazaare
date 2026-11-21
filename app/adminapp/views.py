@@ -3,11 +3,6 @@ import os.path as op
 
 from flask import url_for
 from flask_admin import form
-from PIL import Image
-
-# Flask-Admin 1.6 thumbnails still use Image.ANTIALIAS, which Pillow 10 removed.
-if not hasattr(Image, "ANTIALIAS"):
-    Image.ANTIALIAS = Image.LANCZOS
 from flask_ckeditor import CKEditorField
 from markupsafe import Markup
 from sqlalchemy.event import listens_for

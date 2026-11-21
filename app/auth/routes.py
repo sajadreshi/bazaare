@@ -1,6 +1,7 @@
+from urllib.parse import urlsplit
+
 from flask import flash, redirect, render_template, request, session, url_for
 from flask_login import current_user, login_user, logout_user
-from werkzeug.urls import url_parse
 
 from app.auth import bp
 from app.auth.resetPassword import send_password_reset_email
@@ -14,7 +15,7 @@ def is_safe_next(target):
     """Only allow redirects to a path on this site (blocks //evil.com, /\\evil.com, http://...)."""
     if not target or not target.startswith("/") or target.startswith("//") or "\\" in target:
         return False
-    parsed = url_parse(target)
+    parsed = urlsplit(target)
     return not parsed.scheme and not parsed.netloc
 
 

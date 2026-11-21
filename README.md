@@ -8,8 +8,13 @@ collection.
 
 ## Stack
 
-Flask 2.3, Flask-SQLAlchemy on PostgreSQL, Flask-Admin, Flask-Login,
-Flask-Migrate (Alembic), Jinja templates, Bootstrap.
+Python 3.12, Flask 3.1, SQLAlchemy 2.0 (Flask-SQLAlchemy) on PostgreSQL,
+Flask-Admin 2, Flask-Login, Flask-WTF, Flask-Migrate (Alembic), Jinja
+templates, Bootstrap.
+
+Dependencies: `requirements.in` lists the direct ones; `requirements.txt` is
+the fully pinned lock file generated from it with
+`uv pip compile requirements.in -o requirements.txt --python-version 3.12`.
 
 ## Run locally
 

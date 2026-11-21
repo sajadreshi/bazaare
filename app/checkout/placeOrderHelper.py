@@ -1,5 +1,4 @@
 import logging
-from datetime import datetime
 
 from app.checkout.commonutil import getCartObj
 from app.checkout.getcarthelper import get_current_cart
@@ -7,7 +6,7 @@ from app.checkout.orders import create_order_from_cart
 from app.checkout.PaymentHelper import doPayment
 from app.checkout.placeOrderStatus import PlaceOrderStatus
 from app.extension import db
-from app.models import Cart, Item, Payment
+from app.models import Cart, Item, Payment, utcnow
 
 log = logging.getLogger(__name__)
 
@@ -50,7 +49,7 @@ def processCart(place_order_frm, current_cart, status):
             return status
 
         order = create_order_from_cart(cart)
-        now = datetime.now()
+        now = utcnow()
         db.session.add(
             Payment(
                 payment_method=payment_status.paymentMethod,
