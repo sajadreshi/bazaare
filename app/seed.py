@@ -1,7 +1,7 @@
 """Idempotent starter data for Bazaare.
 
-Launch scope is jewellery only. Apparel can be added later by creating
-new categories and a new collection in the admin.
+Launch scope is jewellery only. Apparel can be added later as new menu
+categories in the admin.
 """
 
 import logging
@@ -9,7 +9,7 @@ import logging
 from flask import current_app
 
 from app.extension import db
-from app.models import Category, Collection, Role, User
+from app.models import Category, Role, User
 
 log = logging.getLogger(__name__)
 
@@ -90,9 +90,6 @@ MENU = [
     ),
 ]
 
-# Categories from the first seed, before the menu existed; kept out of the menu.
-LEGACY_CATEGORIES = ("RINGS", "NECKLACES", "BRACELETS")
-
 
 def seed_admin():
     """Create or update the admin account from ADMIN_EMAIL / ADMIN_PASSWORD.
@@ -141,26 +138,12 @@ def _upsert_category(code, name, description, parent, position, extra=None):
 
 
 def seed_menu():
-    top_level = []
     for position, (code, name, description, children) in enumerate(MENU, start=1):
         parent = _upsert_category(code, name, description, None, position)
-        top_level.append(parent)
         for child_position, child in enumerate(children, start=1):
             child_code, child_name, child_description, *extra = child
             _upsert_category(child_code, child_name, child_description, parent, child_position, *extra)
 
-    for legacy in Category.query.filter(Category.code.in_(LEGACY_CATEGORIES)):
-        legacy.show_in_menu = False
-
-    collection = Collection.query.filter_by(name="Jewellery").first()
-    if not collection:
-        collection = Collection(
-            name="Jewellery", description="The BazaarE' jewellery collection.", is_active=True
-        )
-        db.session.add(collection)
-    for category in top_level:
-        if category not in collection.category:
-            collection.category.append(category)
     db.session.commit()
 
 

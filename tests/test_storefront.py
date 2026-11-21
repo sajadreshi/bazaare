@@ -28,16 +28,6 @@ def test_menu_shows_top_level_items_with_dropdowns(client):
     assert "Jewellery · Craft · Culture" in html
 
 
-def test_legacy_categories_stay_out_of_the_menu(app, client):
-    with app.app_context():
-        db.session.add(Category(code="RINGS", name="Old Rings", is_active=True))
-        db.session.commit()
-        from app.seed import seed_menu
-
-        seed_menu()
-    assert "Old Rings" not in client.get("/").get_data(as_text=True)
-
-
 def _product(sku, price, *codes, compare_at=None, name=None):
     product = Product(
         sku=sku, name=name or sku, retail_price=compare_at or price, sale_price=price, is_active=True

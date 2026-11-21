@@ -108,11 +108,6 @@ class CategoryView(SecureModelView):
         return count, [category for category, _ in tree]
 
 
-class CollectionView(SecureModelView):
-    form_excluded_columns = ["created_at", "updated_at", "home"]
-    column_display_pk = False
-
-
 class CarouselView(SecureModelView):
     """A slide in the home page's top banner: a headline and a short message."""
 
