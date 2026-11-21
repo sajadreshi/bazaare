@@ -125,6 +125,9 @@ class HomePageView(SecureModelView):
     """What the home page's top banner and Featured section show. The newest active row is used."""
 
     column_list = ("is_active", "hero_image", "carousel", "category", "updated_at")
+    # "carousel" is a dynamic relationship, which can't be eager-loaded: without this
+    # the list page crashes as soon as one row exists.
+    column_auto_select_related = False
     column_labels = {
         "is_active": "Active",
         "hero_image": "Banner image",
