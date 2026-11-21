@@ -1,15 +1,13 @@
 from app.extension import db
-from app.models import Category, Collection, Product, Variant
+from app.models import Category, Product, Variant
 
 
 def test_jewellery_seed(app):
     with app.app_context():
         codes = {c.code for c in Category.query.all()}
         assert {"ACC-RINGS", "NECK-NECKLACES", "EARRINGS", "ACC-BANGLES", "GIFT-UNDER-25"} <= codes
-        jewellery = Collection.query.filter_by(name="Jewellery").one()
-        assert {"NEW", "EARRINGS", "NECKPIECES", "ACCESSORIES", "SALE"} <= {
-            c.code for c in jewellery.category
-        }
+        top = {c.code for c in Category.query.filter_by(parent_id=None)}
+        assert {"NEW", "EARRINGS", "NECKPIECES", "ACCESSORIES", "SALE"} <= top
         rings = Category.query.filter_by(code="ACC-RINGS").one()
         assert rings.parent.code == "ACCESSORIES"
 

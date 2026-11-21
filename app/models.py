@@ -187,9 +187,6 @@ class Category(db.Model):
     # Optional rule: also list every active product priced at or below this (e.g. "Under $25").
     max_price = db.Column(db.Numeric(10, 2))
     banner_image = db.Column(db.Unicode(255))
-    collection = db.relationship(
-        "Collection", secondary="collection_category_rel", backref=db.backref("category", lazy="dynamic")
-    )
     home = db.relationship("HomePageContent", backref=db.backref("category", uselist=False))
     parent = db.relationship("Category", remote_side=[id], back_populates="children")
     children = db.relationship("Category", back_populates="parent", order_by="Category.position")
@@ -209,30 +206,6 @@ class ProductCategory(db.Model):
     __tablename__ = "category_product_rel"
     id = db.Column(db.Integer, primary_key=True)
     product_id = db.Column(db.Integer, db.ForeignKey("product.id", ondelete="CASCADE"), nullable=False)
-    category_id = db.Column(db.Integer, db.ForeignKey("category.id", ondelete="CASCADE"), nullable=False)
-
-
-class Collection(db.Model):
-    __tablename__ = "collection"
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(64), index=True, nullable=False)
-    description = db.Column(db.String(300))
-    is_active = db.Column(db.Boolean, default=False)
-    created_at = db.Column(db.DateTime, index=True, default=utcnow)
-    updated_at = db.Column(db.DateTime, index=True, default=utcnow)
-    home = db.relationship("HomePageContent", backref=db.backref("collection", uselist=False))
-
-    def __repr__(self):
-        return self.name
-
-    def __unicode__(self):
-        return self.name
-
-
-class CollectionCategory(db.Model):
-    __tablename__ = "collection_category_rel"
-    id = db.Column(db.Integer, primary_key=True)
-    collection_id = db.Column(db.Integer, db.ForeignKey("collection.id", ondelete="CASCADE"), nullable=False)
     category_id = db.Column(db.Integer, db.ForeignKey("category.id", ondelete="CASCADE"), nullable=False)
 
 
@@ -261,7 +234,6 @@ class HomePageContent(db.Model):
     hero_image = db.Column(db.Unicode(128))
     is_active = db.Column(db.Boolean, default=False)
     category_id = db.Column(db.Integer, db.ForeignKey("category.id"))
-    collection_id = db.Column(db.Integer, db.ForeignKey("collection.id"))
     updated_at = db.Column(db.DateTime, index=True, default=utcnow)
     created_at = db.Column(db.DateTime, index=True, default=utcnow)
 

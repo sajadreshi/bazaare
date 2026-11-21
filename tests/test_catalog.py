@@ -10,7 +10,6 @@ from app.models import (
     Attribute,
     Carousel,
     Category,
-    Collection,
     HomePageContent,
     Product,
     ProductAssociation,
@@ -25,8 +24,6 @@ def catalog(app):
         necklaces = Category.query.filter_by(code="NECK-NECKLACES").one()
         earrings = Category.query.filter_by(code="EARRINGS").one()
         hidden_cat = Category(code="HIDDEN", name="Hidden Things", is_active=False)
-        jewellery = Collection.query.filter_by(name="Jewellery").one()
-        jewellery.category.append(hidden_cat)
 
         pendant = Product(
             sku="CAT-PENDANT",
@@ -88,7 +85,7 @@ def catalog(app):
 
         slide1 = Carousel(name="s1", header="New Moon Collection", text="<p>Hand <b>made</b></p>")
         slide2 = Carousel(name="s2", header="Pearls are back", text="Classic studs")
-        home = HomePageContent(is_active=True, category=earrings, collection=jewellery)
+        home = HomePageContent(is_active=True, category=earrings)
         home.carousel.append(slide1)
         home.carousel.append(slide2)
         db.session.add_all([slide1, slide2, home])

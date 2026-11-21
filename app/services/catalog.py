@@ -11,37 +11,15 @@ from app.services.cart import line_price, product_variants
 
 
 @dataclass
-class CategoryShelf:
-    """An active category with its active products, ready to render as a grid."""
-
-    category: Category
-    products: list
-
-
-@dataclass
 class HomePage:
     hero_image: str | None = None
     slides: list = field(default_factory=list)
     featured: list = field(default_factory=list)
     featured_title: str | None = None
-    shelves: list = field(default_factory=list)
 
 
 def active_products(category):
     return category.product.filter(Product.is_active.is_(True)).order_by(Product.id).all()
-
-
-def shelves_for(collection):
-    """Active categories of a collection that have at least one active product."""
-    if collection is None or not collection.is_active:
-        return []
-    categories = (
-        collection.category.filter(Category.is_active.is_(True))
-        .order_by(Category.position, Category.id)
-        .all()
-    )
-    shelves = [CategoryShelf(category, category_products(category)) for category in categories]
-    return [shelf for shelf in shelves if shelf.products]
 
 
 def get_product(product_id):
@@ -92,7 +70,6 @@ def home_page():
         slides=content.carousel.order_by(Carousel.id).all(),
         featured=featured,
         featured_title=content.category.name if featured else None,
-        shelves=shelves_for(content.collection),
     )
 
 
