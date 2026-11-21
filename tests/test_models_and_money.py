@@ -44,6 +44,7 @@ def test_cart_total_subtracts_discount_exactly(app):
         db.session.commit()
         cart = db.session.get(Cart, cart.id)
         assert cart.total_merchandise == Decimal("30.60")
-        assert cart.total_shipping == Decimal("3.30")
+        # Item shipping (3 x 1.10) plus Standard shipping ($5.99: under the $50 free-shipping threshold).
+        assert cart.total_shipping == Decimal("9.29")
         assert cart.total_discount == Decimal("0.30")
-        assert cart.total_cart == Decimal("33.60")  # 30.60 + 3.30 - 0.30
+        assert cart.total_cart == Decimal("39.59")  # 30.60 + 9.29 - 0.30

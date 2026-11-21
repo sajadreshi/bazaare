@@ -1,12 +1,11 @@
 from flask_wtf import FlaskForm
-from wtforms import HiddenField, SelectField, StringField, SubmitField
+from wtforms import HiddenField, RadioField, SelectField, StringField, SubmitField
 from wtforms.validators import DataRequired, Email, Length
 
-from app.services.checkout import ADDRESS_FIELDS, DELIVERY_WINDOWS, delivery_dates
+from app.services.checkout import ADDRESS_FIELDS
 from app.services.payments import PAYMENT_METHODS
+from app.services.shipping import METHODS, estimated_delivery, method_for
 from app.us_states import US_STATES
-
-DATE_LABEL = "%a, %d  %b  %Y"
 
 
 class _AddressForm(FlaskForm):
@@ -45,23 +44,23 @@ class BillingForm(_AddressForm):
     form_id = HiddenField("FormId", default="billing_form")
 
 
-class DeliveryDateForm(FlaskForm):
-    delivery_date = SelectField(
-        "Delivery Date", validators=[DataRequired()], choices=[], validate_choice=False
-    )
-    delivery_window = SelectField(
-        "Delivery Window", validators=[DataRequired()], choices=[(w, w) for w in DELIVERY_WINDOWS]
-    )
-    form_id = HiddenField("FormId", default="delivery_form")
+class ShippingMethodForm(FlaskForm):
+    shipping_method = RadioField("Shipping method", validators=[DataRequired()], choices=[])
+    form_id = HiddenField("FormId", default="shipping_method_form")
     submit = SubmitField("Continue")
 
     def fill_from(self, cart):
-        self.delivery_date.choices = [(d.isoformat(), d.strftime(DATE_LABEL)) for d in delivery_dates()]
-        if cart is not None and not self.is_submitted():
-            if cart.delivery_date:
-                self.delivery_date.data = cart.delivery_date.date().isoformat()
-            if cart.delivery_window:
-                self.delivery_window.data = cart.delivery_window
+        merchandise = cart.total_merchandise if cart and cart.total_merchandise is not None else 0
+        self.shipping_method.choices = []
+        for method in METHODS.values():
+            charge = method.charge(merchandise)
+            earliest, latest = estimated_delivery(method.code)
+            price = "Free" if not charge else f"${charge:.2f}"
+            arrives = f"arrives {earliest:%a %d %b}–{latest:%a %d %b}"
+            label = f"{method.name}: {price} · {method.days_label} ({arrives})"
+            self.shipping_method.choices.append((method.code, label))
+        if not self.is_submitted():
+            self.shipping_method.data = method_for(cart.shipping_method if cart else None).code
         return self
 
 

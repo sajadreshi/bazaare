@@ -26,6 +26,7 @@ from app.checkout import checkout as checkout_bp
 from app.customer import customer as customer_bp
 from app.main import main
 from app.services import catalog as catalog_service
+from app.services import shipping as shipping_service
 from app.services import wishlist as wishlist_service
 from app.services.cart import item_count
 from app.storage import init_storage
@@ -94,6 +95,8 @@ def create_app(config_overrides=None):
         wishlist_ids=wishlist_service.ids,
         is_on_sale=catalog_service.is_on_sale,
         primary_category=catalog_service.primary_category,
+        shipping_method_for=shipping_service.method_for,
+        shipping_estimate=shipping_service.estimated_delivery,
     )
     app.register_blueprint(main)
     app.register_blueprint(admin_auth_bp)

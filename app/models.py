@@ -275,8 +275,7 @@ class Cart(db.Model):
     total_discount = db.Column(db.Numeric(10, 2), default=0.00)
     total_cart = db.Column(db.Numeric(10, 2), default=0.00)
     status = db.Column(db.String(64), index=True, default="PENDING", nullable=False)
-    delivery_date = db.Column(db.DateTime, index=True)
-    delivery_window = db.Column(db.String(64))
+    shipping_method = db.Column(db.String(20))  # a key of services.shipping.METHODS; None = default
     customer_id = db.Column(db.BigInteger, db.ForeignKey("customer.id"), index=True)
     updated_at = db.Column(db.DateTime, index=True, default=utcnow)
     created_at = db.Column(db.DateTime, index=True, default=utcnow)
@@ -299,7 +298,6 @@ class Item(db.Model):
     product_name = db.Column(db.String(300))
     product_price = db.Column(db.Numeric(10, 2), default=0.00)
     status = db.Column(db.String(64), default="PENDING", nullable=False)
-    delivery_date = db.Column(db.DateTime, index=True)
     shipping_base_charge = db.Column(db.Numeric(10, 2), default=0.00)
     shipping_up_charge = db.Column(db.Numeric(10, 2), default=0.00)
     merchandise_tax = db.Column(db.Numeric(10, 2), default=0.00)
@@ -388,8 +386,11 @@ class Order(db.Model):
     total_taxes = db.Column(db.Numeric(10, 2), nullable=False, default=0)
     total_discount = db.Column(db.Numeric(10, 2), nullable=False, default=0)
     total = db.Column(db.Numeric(10, 2), nullable=False, default=0)
-    delivery_date = db.Column(db.DateTime)
-    delivery_window = db.Column(db.String(64))
+    shipping_method = db.Column(db.String(20), nullable=False, default="STANDARD", server_default="STANDARD")
+    carrier = db.Column(db.String(20))
+    tracking_number = db.Column(db.String(64))
+    shipped_at = db.Column(db.DateTime)
+    delivered_at = db.Column(db.DateTime)
     # Addresses are never edited in place (a change saves a new row), so these
     # keep pointing at the address the order was shipped to.
     shipping_address_id = db.Column(db.Integer, db.ForeignKey("address.id"))
@@ -408,6 +409,25 @@ class Order(db.Model):
     @property
     def number(self):
         return f"BZ-{self.id:06d}"
+
+    @property
+    def method(self):
+        from app.services.shipping import method_for
+
+        return method_for(self.shipping_method)
+
+    @property
+    def estimated_delivery(self):
+        """(earliest, latest) dates, counted in business days from when the order was placed."""
+        from app.services.shipping import estimated_delivery
+
+        return estimated_delivery(self.shipping_method, self.placed_at.date())
+
+    @property
+    def tracking_url(self):
+        from app.services.shipping import tracking_url
+
+        return tracking_url(self.carrier, self.tracking_number)
 
     def __repr__(self):
         return self.number if self.id else "<new order>"

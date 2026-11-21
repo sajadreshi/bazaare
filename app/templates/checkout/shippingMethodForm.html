@@ -1,0 +1,16 @@
+<div class="delivery-form">
+    <form action="" method="post">
+        {{ delivery_form.hidden_tag() }}
+        <fieldset class="bz-ship-methods">
+            <legend class="bz-sr">Shipping method</legend>
+            {% for option in delivery_form.shipping_method %}
+            <label class="bz-ship-method">
+                {{ option() }} <span>{{ option.label.text }}</span>
+            </label>
+            {% endfor %}
+            {% for error in delivery_form.shipping_method.errors %}<span style="color: red;">[{{ error }}]</span>{% endfor %}
+        </fieldset>
+        {{ delivery_form.form_id() }}
+        <p>{{ delivery_form.submit() }}</p>
+    </form>
+</div>

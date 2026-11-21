@@ -10,6 +10,7 @@ from decimal import ROUND_HALF_UP, Decimal
 from app.extension import db
 from app.models import Cart, Item, Product, Variant
 from app.services.customers import get_current_customer, get_or_create_current_customer
+from app.services.shipping import method_for
 
 log = logging.getLogger(__name__)
 
@@ -91,6 +92,9 @@ def recalculate(cart):
         shipping += item.total_shipping
         taxes += item.total_tax
         discount += item.total_discount
+    # Shipping is charged per order, by the chosen method (free over its threshold).
+    if cart.pending_items:
+        shipping += method_for(cart.shipping_method).charge(merchandise)
     cart.total_merchandise = merchandise
     cart.total_shipping = shipping
     cart.total_taxes = taxes

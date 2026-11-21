@@ -2,6 +2,7 @@
 
 from app.extension import db
 from app.models import Order, OrderItem
+from app.services.shipping import method_for
 
 
 def create_order_from_cart(cart):
@@ -19,8 +20,7 @@ def create_order_from_cart(cart):
         total_taxes=cart.total_taxes or 0,
         total_discount=cart.total_discount or 0,
         total=cart.total_cart or 0,
-        delivery_date=cart.delivery_date,
-        delivery_window=cart.delivery_window,
+        shipping_method=method_for(cart.shipping_method).code,
         shipping_address_id=customer.shipping_address_id if customer else None,
         billing_address_id=customer.billing_address_id if customer else None,
     )
