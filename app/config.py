@@ -26,7 +26,6 @@ class Config(object):
     # create_app() refuses to start without it (tests pass their own).
     SECRET_KEY = os.environ.get("SECRET_KEY")
     SQLALCHEMY_DATABASE_URI = _database_url()
-    FLASK_ADMIN_SWATCH = "cyborg"
     MAIL_SERVER = os.environ.get("MAIL_SERVER", "localhost")
     MAIL_PORT = int(os.environ.get("MAIL_PORT", 25))
     ADMINS = [os.environ.get("MAIL_SENDER", "no-reply@bazaare.local")]

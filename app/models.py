@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import UTC, datetime
 from time import time
 
 import jwt
@@ -7,6 +7,11 @@ from flask_login import UserMixin
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from .extension import db
+
+
+def utcnow():
+    """Current UTC time as a naive datetime (the columns are timezone-naive)."""
+    return datetime.now(UTC).replace(tzinfo=None)
 
 
 class User(UserMixin, db.Model):
@@ -23,7 +28,7 @@ class User(UserMixin, db.Model):
     transactional_sms = db.Column(db.Boolean, nullable=True, default=True)
     cell_number = db.Column(db.String(20))
     roles = db.relationship("Role", secondary="user_roles")
-    created_at = db.Column(db.DateTime, index=True, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, index=True, default=utcnow)
 
     def set_password(self, password):
         self.password = generate_password_hash(password)
@@ -92,8 +97,8 @@ class Product(db.Model):
     is_active = db.Column(db.Boolean, default=False)
     display = db.Column(db.Boolean, default=False)
     unit_quantity = db.Column(db.Integer)
-    created_at = db.Column(db.DateTime, index=True, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, index=True, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, index=True, default=utcnow)
+    updated_at = db.Column(db.DateTime, index=True, default=utcnow)
     categories = db.relationship(
         "Category", secondary="category_product_rel", backref=db.backref("product", lazy="dynamic")
     )
@@ -115,8 +120,8 @@ class Variant(db.Model):
     is_default = db.Column(db.Boolean, default=False)
     description = db.Column(db.String(300))
     variant_image = db.Column(db.Unicode(128))
-    created_at = db.Column(db.DateTime, index=True, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, index=True, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, index=True, default=utcnow)
+    updated_at = db.Column(db.DateTime, index=True, default=utcnow)
     products = db.relationship(
         "Product", secondary="variant_product_rel", backref=db.backref("variant", lazy="dynamic")
     )
@@ -173,8 +178,8 @@ class Category(db.Model):
     name = db.Column(db.String(64), index=True, nullable=False)
     description = db.Column(db.String(300))
     is_active = db.Column(db.Boolean, default=False)
-    created_at = db.Column(db.DateTime, index=True, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, index=True, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, index=True, default=utcnow)
+    updated_at = db.Column(db.DateTime, index=True, default=utcnow)
     collection = db.relationship(
         "Collection", secondary="collection_category_rel", backref=db.backref("category", lazy="dynamic")
     )
@@ -200,8 +205,8 @@ class Collection(db.Model):
     name = db.Column(db.String(64), index=True, nullable=False)
     description = db.Column(db.String(300))
     is_active = db.Column(db.Boolean, default=False)
-    created_at = db.Column(db.DateTime, index=True, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, index=True, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, index=True, default=utcnow)
+    updated_at = db.Column(db.DateTime, index=True, default=utcnow)
     home = db.relationship("HomePageContent", backref=db.backref("collection", uselist=False))
 
     def __repr__(self):
@@ -227,8 +232,8 @@ class Carousel(db.Model):
     home = db.relationship(
         "HomePageContent", secondary="home_carousel_rel", backref=db.backref("carousel", lazy="dynamic")
     )
-    created_at = db.Column(db.DateTime, index=True, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, index=True, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, index=True, default=utcnow)
+    updated_at = db.Column(db.DateTime, index=True, default=utcnow)
 
     def __repr__(self):
         return self.name
@@ -244,8 +249,8 @@ class HomePageContent(db.Model):
     is_active = db.Column(db.Boolean, default=False)
     category_id = db.Column(db.Integer, db.ForeignKey("category.id"))
     collection_id = db.Column(db.Integer, db.ForeignKey("collection.id"))
-    updated_at = db.Column(db.DateTime, index=True, default=datetime.utcnow)
-    created_at = db.Column(db.DateTime, index=True, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, index=True, default=utcnow)
+    created_at = db.Column(db.DateTime, index=True, default=utcnow)
 
     def __repr__(self):
         return self.hero_image
@@ -272,8 +277,8 @@ class Cart(db.Model):
     delivery_date = db.Column(db.DateTime, index=True)
     delivery_window = db.Column(db.String(64))
     customer_id = db.Column(db.BigInteger, db.ForeignKey("customer.id"), index=True)
-    updated_at = db.Column(db.DateTime, index=True, default=datetime.utcnow)
-    created_at = db.Column(db.DateTime, index=True, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, index=True, default=utcnow)
+    created_at = db.Column(db.DateTime, index=True, default=utcnow)
 
 
 class Item(db.Model):
@@ -297,8 +302,8 @@ class Item(db.Model):
     total_tax = db.Column(db.Numeric(10, 2), default=0.00)
     total_discount = db.Column(db.Numeric(10, 2), default=0.00)
     total_item = db.Column(db.Numeric(10, 2), default=0.00)
-    updated_at = db.Column(db.DateTime, index=True, default=datetime.utcnow)
-    created_at = db.Column(db.DateTime, index=True, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, index=True, default=utcnow)
+    created_at = db.Column(db.DateTime, index=True, default=utcnow)
 
 
 class Customer(db.Model):
@@ -308,8 +313,8 @@ class Customer(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey("user.id", ondelete="CASCADE"))
     shipping_address_id = db.Column(db.Integer, db.ForeignKey("address.id"))
     billing_address_id = db.Column(db.Integer, db.ForeignKey("address.id"))
-    updated_at = db.Column(db.DateTime, index=True, default=datetime.utcnow)
-    created_at = db.Column(db.DateTime, index=True, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, index=True, default=utcnow)
+    created_at = db.Column(db.DateTime, index=True, default=utcnow)
 
 
 class Address(db.Model):
@@ -345,8 +350,8 @@ class Payment(db.Model):
     auth_code = db.Column(db.String(500))
     requested_amount = db.Column(db.Numeric(10, 2), default=0.00)
     approved_amount = db.Column(db.Numeric(10, 2), default=0.00)
-    updated_at = db.Column(db.DateTime, index=True, default=datetime.utcnow)
-    created_at = db.Column(db.DateTime, index=True, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, index=True, default=utcnow)
+    created_at = db.Column(db.DateTime, index=True, default=utcnow)
 
 
 # Order lifecycle. A cart becomes an Order when it is paid for; after that the
@@ -373,8 +378,8 @@ class Order(db.Model):
     # keep pointing at the address the order was shipped to.
     shipping_address_id = db.Column(db.Integer, db.ForeignKey("address.id"))
     billing_address_id = db.Column(db.Integer, db.ForeignKey("address.id"))
-    placed_at = db.Column(db.DateTime, index=True, nullable=False, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    placed_at = db.Column(db.DateTime, index=True, nullable=False, default=utcnow)
+    updated_at = db.Column(db.DateTime, default=utcnow, onupdate=utcnow)
 
     customer = db.relationship("Customer")
     shipping_address = db.relationship("Address", foreign_keys=[shipping_address_id])
