@@ -130,3 +130,25 @@ def test_home_page_renders_slides_featured_and_collection(client, catalog):
     assert "Pearl Studs" in html  # featured category chosen in the admin (earrings)
     assert 'href="/catalog/c/neckpieces"' in html  # shop-by-category tiles
     assert "Secret Ring" not in html
+
+
+def test_home_banner_uses_the_admin_hero_image_and_slides(app, client, catalog):
+    with app.app_context():
+        home = HomePageContent.query.filter_by(is_active=True).order_by(HomePageContent.id.desc()).first()
+        home.hero_image = "home/2026/11/banner.jpg"
+        db.session.commit()
+    html = client.get("/").get_data(as_text=True)
+    assert 'class="bz-hero__img" src="/media/home/2026/11/banner.jpg"' in html
+    assert html.index("New Moon Collection") < html.index("Shop by category")  # slides are in the top banner
+    assert "Heritage, made to be worn every day" not in html  # default message replaced by the slides
+    assert '<h2 class="bz-title">Earrings</h2>' in html  # featured section titled after its category
+
+
+def test_admin_home_content_form_explains_each_field(client):
+    from tests.conftest import ADMIN_EMAIL, ADMIN_PASSWORD
+    from tests.test_security import login
+
+    login(client, ADMIN_EMAIL, ADMIN_PASSWORD)
+    html = client.get("/admin/homepagecontent/new/").get_data(as_text=True)
+    assert "Slides (headline + message rotating in the top banner)" in html
+    assert "Featured category" in html and 'type="file"' in html

@@ -23,6 +23,7 @@ class HomePage:
     hero_image: str | None = None
     slides: list = field(default_factory=list)
     featured: list = field(default_factory=list)
+    featured_title: str | None = None
     shelves: list = field(default_factory=list)
 
 
@@ -90,6 +91,7 @@ def home_page():
         hero_image=content.hero_image,
         slides=content.carousel.order_by(Carousel.id).all(),
         featured=featured,
+        featured_title=content.category.name if featured else None,
         shelves=shelves_for(content.collection),
     )
 

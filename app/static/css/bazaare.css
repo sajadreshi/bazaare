@@ -256,3 +256,10 @@
 .bz-body .shopping-cart .button:hover { background: var(--bz-gold); color: #fff; }
 .bz-body .shopping-cart .cont_shopping { background: transparent; color: var(--bz-ink); border: 1px solid var(--bz-ink); }
 .bz-body .shopping-cart .dollar-amount, .bz-body .shopping-cart .item-price { color: var(--bz-gold); }
+
+/* Home banner slides (Admin → Content → Carousel / Home Page Content) */
+.bz-hero__slides { position: relative; z-index: 1; }
+.bz-hero__slides .carousel-item .bz-hero__text { min-height: 100%; }
+.bz-hero__dots { position: relative; bottom: auto; justify-content: flex-start; max-width: var(--bz-max); margin: -60px auto 0; padding: 0 20px 34px; }
+.bz-hero__dots li { width: 28px; height: 3px; border: 0; background: rgba(243, 237, 226, .4); }
+.bz-hero__dots li.active { background: var(--bz-gold-2); }
