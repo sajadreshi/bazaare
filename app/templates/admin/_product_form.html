@@ -1,17 +1,6 @@
 {# Sectioned product editor, shared by create and edit. Expects `form`, `return_url` and, when editing, `model`. #}
 {% import 'admin/lib.html' as lib with context %}
-{% macro field(f, hint=None, cls='') %}
-  <div class="bz-field {{ cls }} {{ 'has-error' if f.errors }}">
-    {% if f.widget.input_type == 'checkbox' %}
-      <label class="bz-check">{{ f() }} <span>{{ f.label.text }}</span></label>
-    {% else %}
-      <label for="{{ f.id }}">{{ f.label.text }}{% if f.flags.required %} <span class="bz-req">*</span>{% endif %}</label>
-      {{ f(class_='form-control') }}
-    {% endif %}
-    {% if hint %}<small class="bz-hint">{{ hint }}</small>{% endif %}
-    {% for e in f.errors if e is string %}<div class="bz-error">{{ e }}</div>{% endfor %}
-  </div>
-{% endmacro %}
+{% from 'admin/_editor.html' import field, save_panel with context %}
 
 {% set product = model if model is defined else None %}
 <form action="" method="POST" role="form" class="admin-form bz-editor" enctype="multipart/form-data" data-bz-editor>
@@ -90,12 +79,7 @@
         <h2>Categories</h2>
         {{ field(form.categories, 'Where it appears in the menu. Pick a type (e.g. Earrings › Jhumkas) and any collections.') }}
       </section>
-      <section class="bz-panel bz-editor__save">
-        <button type="submit" class="btn bz-btn-gold btn-block">Save</button>
-        <button type="submit" name="_continue_editing" value="1" class="btn bz-btn-outline btn-block">Save and keep editing</button>
-        <button type="submit" name="_add_another" value="1" class="btn bz-btn-outline btn-block">Save and add another</button>
-        <a href="{{ return_url }}" class="btn btn-link btn-block">Cancel</a>
-      </section>
+      {{ save_panel(return_url) }}
     </aside>
   </div>
 </form>

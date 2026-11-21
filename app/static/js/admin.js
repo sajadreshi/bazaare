@@ -223,12 +223,15 @@
   var catName = document.querySelector('form.admin-form #name');
   var catCode = document.querySelector('form.admin-form #code');
   if (catName && catCode && !form) {
+    var address = document.querySelector('[data-bz-address] strong');
+    var slug = function (text) { return text.toUpperCase().replace(/[^A-Z0-9]+/g, '-').replace(/^-|-$/g, ''); };
     var codeHint = function () {
-      catCode.placeholder = catName.value
-        ? 'Auto: ' + catName.value.toUpperCase().replace(/[^A-Z0-9]+/g, '-').replace(/^-|-$/g, '')
-        : '';
+      var auto = slug(catName.value);
+      catCode.placeholder = auto ? 'Auto: ' + auto : '';
+      if (address) address.textContent = slug(catCode.value || catName.value).toLowerCase();
     };
     catName.addEventListener('input', codeHint);
+    catCode.addEventListener('input', codeHint);
     codeHint();
   }
 })();

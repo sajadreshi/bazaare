@@ -46,6 +46,13 @@ from .models import (
 )
 
 
+def _asset_version(app):
+    import os
+
+    paths = [os.path.join(app.static_folder, f) for f in ("css/admin.css", "js/admin.js", "css/bazaare.css")]
+    return str(int(max((os.path.getmtime(p) for p in paths if os.path.exists(p)), default=0)))
+
+
 def create_app(config_overrides=None):
     app = Flask(__name__)
     app.config.from_object(Config)
@@ -88,6 +95,8 @@ def create_app(config_overrides=None):
         return db.session.get(User, int(user_id))
 
     app.jinja_env.filters["rich"] = lambda text: Markup(clean_html(text))
+    # Changes whenever the admin's CSS/JS change, so browsers fetch the new files.
+    app.jinja_env.globals["asset_version"] = _asset_version(app)
     app.jinja_env.globals.update(
         cart_item_count=item_count,
         shop_menu=catalog_service.menu,

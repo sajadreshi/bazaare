@@ -1,5 +1,8 @@
 {% extends 'admin/model/edit.html' %}
+{% block navlinks %}{% endblock %}
+{% block page_title %}{% endblock %}
+{% block edit_form %}{% include 'admin/_category_form.html' %}{% endblock %}
 {% block tail %}
   {{ super() }}
-  <script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/admin.js', v=asset_version) }}"></script>
 {% endblock %}

@@ -32,6 +32,15 @@ def check_image(file):
 
 
 class StorageImageInput(ImageUploadInput):
+    data_template = (
+        '<div class="image-thumbnail">'
+        " <img %(image)s>"
+        ' <label class="bz-remove-image"><input type="checkbox" name="%(marker)s"> Remove this image</label>'
+        " <input %(text)s>"
+        "</div>"
+        "<input %(file)s>"
+    )
+
     def get_url(self, field):
         return image_url(field.data, thumb=True)
 
