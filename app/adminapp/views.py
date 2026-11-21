@@ -30,8 +30,82 @@ class AttributesRelView(SecureModelView):
     column_list = ("product", "attribute")
 
 
+def category_tree(categories):
+    """[(category, depth)] in menu order: each parent followed by its children, by position."""
+    by_parent = {}
+    for category in categories:
+        by_parent.setdefault(category.parent_id, []).append(category)
+    for siblings in by_parent.values():
+        siblings.sort(key=lambda c: (c.position or 0, c.name.lower()))
+    ids = {c.id for c in categories}
+    roots = [c for c in categories if c.parent_id is None or c.parent_id not in ids]
+    roots.sort(key=lambda c: (c.parent_id is not None, not c.show_in_menu, c.position or 0, c.name.lower()))
+    ordered = []
+
+    def walk(category, depth):
+        ordered.append((category, depth))
+        for child in by_parent.get(category.id, []):
+            walk(child, depth + 1)
+
+    for root in roots:
+        walk(root, 0)
+    return ordered
+
+
 class CategoryView(SecureModelView):
-    form_excluded_columns = ["created_at", "updated_at", "collection", "home"]
+    """Categories shown as the menu tree: main menu items with their dropdown items indented below."""
+
+    list_template = "admin/category_list.html"
+    column_list = ("name", "code", "position", "show_in_menu", "is_active", "max_price", "products")
+    column_labels = {
+        "name": "Category",
+        "show_in_menu": "In menu",
+        "is_active": "Active",
+        "max_price": "Price rule",
+    }
+    column_sortable_list = ()  # the tree order is the order
+    column_searchable_list = ("name", "code")
+    page_size = 500
+    form_columns = (
+        "name",
+        "code",
+        "description",
+        "parent",
+        "position",
+        "show_in_menu",
+        "is_active",
+        "max_price",
+        "banner_image",
+        "product",
+    )
+    form_labels = {"product": "Products", "max_price": "Price rule (list all products at or below)"}
+    form_extra_fields = {"banner_image": StorageImageField("Banner image", folder="banners")}
+    form_args = {
+        "parent": {"label": "Parent (empty = main menu item)"},
+        "position": {"label": "Position in menu"},
+    }
+
+    def _format_name(view, context, model, name):
+        depth = getattr(model, "_tree_depth", 0)
+        prefix = Markup("&nbsp;&nbsp;&nbsp;&nbsp;" * depth + ("└─ " if depth else ""))
+        label = Markup("<strong>%s</strong>") % model.name if depth == 0 else model.name
+        return prefix + label
+
+    def _format_products(view, context, model, name):
+        return model.product.count()
+
+    def _format_price_rule(view, context, model, name):
+        return f"≤ ${model.max_price:.0f}" if model.max_price is not None else ""
+
+    column_formatters = {"name": _format_name, "products": _format_products, "max_price": _format_price_rule}
+
+    def get_list(self, page, sort_column, sort_desc, search, filters, execute=True, page_size=None):
+        count, rows = super().get_list(None, None, False, search, filters, execute=True, page_size=None)
+        rows = list(rows)
+        tree = category_tree(rows)
+        for category, depth in tree:
+            category._tree_depth = depth
+        return count, [category for category, _ in tree]
 
 
 class CollectionView(SecureModelView):
