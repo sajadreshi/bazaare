@@ -1,7 +1,7 @@
 """Access control shared by every Flask-Admin view (kept free of model imports)."""
 
 from flask import redirect, request, url_for
-from flask_admin import AdminIndexView
+from flask_admin import AdminIndexView, expose
 from flask_admin.contrib import sqla
 from flask_login import current_user
 
@@ -21,7 +21,17 @@ class AdminOnlyMixin:
 
 
 class SecureIndexView(AdminOnlyMixin, AdminIndexView):
-    pass
+    """The admin's landing page: a dashboard of sales, orders to ship and catalog to-dos."""
+
+    def __init__(self, **kwargs):
+        kwargs.setdefault("name", "Dashboard")
+        super().__init__(**kwargs)
+
+    @expose("/")
+    def index(self):
+        from app.services.dashboard import build_dashboard  # imported late: models import this module's app
+
+        return self.render("admin/index.html", dash=build_dashboard())
 
 
 class SecureModelView(AdminOnlyMixin, sqla.ModelView):
