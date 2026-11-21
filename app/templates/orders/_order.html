@@ -36,7 +36,7 @@
                 {% for item in order.items %}
                 <tr class="table-body-row">
                   <td class="product-image">
-                    <img src="{{ url_for('static', filename='images/' + (item.image or 'default.jpg')) }}" alt="{{ item.name }}">
+                    <img src="{{ image_url(item.image) }}" alt="{{ item.name }}">
                   </td>
                   <td>
                     <span class="td-content">{{ item.name }}</span><br>

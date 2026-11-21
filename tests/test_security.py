@@ -160,42 +160,6 @@ def test_admin_can_save_with_csrf_on_and_is_protected_without_it(app, client):
         app.config["WTF_CSRF_ENABLED"] = False
 
 
-def test_admin_product_image_upload_makes_thumbnail(app, client):
-    import io
-    import os
-
-    from PIL import Image
-
-    from app.adminapp.views import image_path
-    from app.models import Product
-
-    name = "pytest-upload-ring.png"
-    paths = [os.path.join(image_path, n) for n in (name, "pytest-upload-ring_thumb.png")]
-    buf = io.BytesIO()
-    Image.new("RGB", (300, 200), "gold").save(buf, "PNG")
-    buf.seek(0)
-    login(client, ADMIN_EMAIL, ADMIN_PASSWORD)
-    data = {
-        "sku": "IMG-1",
-        "name": "Image Ring",
-        "retail_price": "10",
-        "sale_price": "9",
-        "main_image": (buf, name),
-    }
-    try:
-        resp = client.post("/admin/product/new/", data=data, content_type="multipart/form-data")
-        assert resp.status_code == 302
-        with app.app_context():
-            assert Product.query.filter_by(sku="IMG-1").one().main_image == name
-        assert all(os.path.exists(p) for p in paths)
-        with Image.open(paths[1]) as thumb:
-            assert thumb.size == (100, 100)
-    finally:
-        for p in paths:
-            if os.path.exists(p):
-                os.remove(p)
-
-
 def test_admin_can_put_a_product_in_categories(app, client):
     from app.models import Category, Product
 

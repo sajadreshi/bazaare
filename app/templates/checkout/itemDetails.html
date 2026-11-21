@@ -4,7 +4,7 @@
             {% for item in cart.pending_items %}
             {% set item_id = item.id %}
             <tr class="table-body-row">
-                <td class="product-image"><img src="{{ url_for('static', filename='images/' + ((item.product.main_image if item.product else None) or 'default.jpg')) }}" alt="{{ item.product_name }}">
+                <td class="product-image"><img src="{{ image_url((item.product.main_image if item.product else None)) }}" alt="{{ item.product_name }}">
                 </td>
                 <td><span class="td-content">{{ item.product_name }}</span><br>
                     <span class="td-content">${{ item.product_price }}</span><br>

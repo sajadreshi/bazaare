@@ -7,7 +7,7 @@
         <ul class="shopping-cart-items">
             {% for item in cart.pending_items %}
             <li class="clearfix">
-                <img class="rounded-2 alt-img" src="{{ url_for('static', filename='images/' + ((item.product.main_image if item.product else None) or 'default.jpg')) }}"
+                <img class="rounded-2 alt-img" src="{{ image_url((item.product.main_image if item.product else None)) }}"
                     alt="{{ item.product_name }}" />
                 <span class="item-name">{{ item.product_name }}</span>
                 <span class="item-price">${{ item.product_price }}</span>

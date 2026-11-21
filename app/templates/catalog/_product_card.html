@@ -4,7 +4,7 @@
     <div>
       <div class="img-box">
         <a href="{{ url_for('catalog.product', productId=product.id) }}">
-          <img src="{{ url_for('static', filename='images/' + (product.main_image or 'default.jpg')) }}" alt="{{ product.name }}">
+          <img src="{{ image_url(product.main_image) }}" alt="{{ product.name }}">
         </a>
       </div>
       <div class="detail-box">

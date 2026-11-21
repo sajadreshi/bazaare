@@ -28,6 +28,7 @@ from app.checkout import checkout as checkout_bp
 from app.customer import customer as customer_bp
 from app.main import main
 from app.services.cart import item_count
+from app.storage import init_storage
 
 from .config import Config
 from .extension import admin, ckeditor, csrf, db, login_manager, mail, migrate
@@ -64,7 +65,8 @@ def create_app(config_overrides=None):
     migrate.init_app(app, db)
     ckeditor.init_app(app)
     mail.init_app(app)
-    csrf.init_app(app)  # every POST (site and /admin) must carry a CSRF token
+    csrf.init_app(app)
+    init_storage(app)  # every POST (site and /admin) must carry a CSRF token
 
     @app.errorhandler(CSRFError)
     def csrf_failed(error):
