@@ -1,0 +1,32 @@
+{% set cart_obj = cart.values() | first %}
+<div class="shopping-cart">
+    <div class="shopping-cart-header">
+        <i class="fa fa-shopping-cart cart-icon"></i><span class="dollar-amount">Total : ${{cart_obj.total_cart
+            |round(2)}}</span>
+    </div> <!--end shopping-cart-header -->
+   
+   <div class="min-shopcart-products">
+        <ul class="shopping-cart-items">
+            {% for item_key, item_value in cart_obj.cart_items.items() %}
+            {% set c_product = item_value.product.values() | first if item_value.product else None %}
+            {% set c_size = c_product.size if c_product.size else None %}
+            <li class="clearfix">
+                {% set prod_img =  c_product.product_image if  c_product.product_image and  c_product.product_image is not none else 'default.jpg' %}
+                <img class="rounded-2 alt-img" src="{{ url_for( 'static',filename = 'images/' + prod_img) }}"
+                    alt="item1" />   
+                <span class="item-name">{{c_product.product_name}}</span>
+                <span class="item-price">${{item_value.item_product_price}}</span>
+                <span class="item-quantity">{{c_size.product_size}}</span>
+                <div class="remove-item">
+                <a href="{{ url_for('checkout.remove',itemId=item_key) }}"><i class="fa fa-trash" aria-hidden="true"></i><span> Remove </span></a>
+                </div>
+            </li>
+            
+                {% endfor %}
+        </ul>
+    </div>
+     <div style="position: relative;">
+        <a href="{{ url_for('checkout.shopcart') }}" class="button">Checkout</a>
+        <a href="javascript:void(0)" class="button cont_shopping">Continue Shopping</a>
+    </div>
+</div> <!--end shopping-cart -->

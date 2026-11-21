@@ -1,0 +1,22 @@
+<div class="update-size">
+    <form action="" method="post">
+        <p>
+            <select class="checkout-drop-down" name="size" id="variantsizelist-{{item_id}}">
+            </select>
+        </p>
+        <input type="hidden" name="productId" value="{{c_product.product_id}}">
+        <input type="hidden" name="itemId" value="{{item_id}}">
+        <input type="hidden" name="siz-url" id="siz-url-{{item_id}}" value="{{ url_for('checkout.size',productId=c_product.product_id) }}">
+        <p>
+            <input
+                type="submit"
+                checkout-btn-box="checkout-btn-box"
+                name="update"
+                value="Update"
+            >
+        </p>
+        <p>
+            <a href="javascript:toggel_eidt_size({{item_id}})" id="cancel-update-btn-{{item_id}}" class="boxed-btn black cancel-update-btn">Cancel</a>
+        </p>
+    </form>
+</div>

@@ -1,0 +1,16 @@
+<div class="place-order">
+    <form action="" method="post">
+        {{ place_order_form.hidden_tag() }}
+        <p>
+            {{place_order_form.payment_method(class_="checkout-drop-down") }}
+            {% for error in place_order_form.payment_method.errors %}
+            <span style="color: red;">[{{ error }}]</span>
+            {% endfor %}
+        </p>
+
+        {{ place_order_form.form_id() }}
+        <p>
+            {{ place_order_form.submit() }}
+        </p>
+    </form>
+</div>

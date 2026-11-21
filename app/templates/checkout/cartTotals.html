@@ -1,0 +1,32 @@
+<div class="col-lg-4">
+    <div class="total-section">
+        <table class="total-table">
+            <thead class="total-table-head">
+                <tr class="total-data-header">
+                    <th colspan="2">Cart Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="total-data">
+                    <td><strong>Subtotal: </strong></td>
+                    <td><span class="td-content">${{cart_obj.total_merchandise}}</span></td>
+                </tr>
+                <tr class="total-data">
+                    <td><strong>Shipping: </strong></td>
+                    <td><span class="td-content">${{cart_obj.total_shipping}}</span></td>
+                </tr>
+                <tr class="total-data">
+                    <td><strong>Estimated Taxes: </strong></td>
+                    <td><span class="td-content">${{cart_obj.total_taxes}}</span></td>
+                </tr>
+                <tr class="total-data">
+                    <td><strong>Discounts: </strong></td>
+                    <td><span class="td-content">${{cart_obj.total_discount}}</span></td>
+                </tr>
+                <tr class="total-data">
+                    <td><strong>Total: </strong></td>
+                    <td><span class="td-content">${{cart_obj.total_cart}}</span></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>

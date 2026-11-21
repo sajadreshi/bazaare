@@ -1,0 +1,35 @@
+{% extends 'common/layout.html' %}
+
+{% block title %}Cart{% endblock %}
+{% block header %}{% include 'common/header.html' %}{% endblock %}
+{% block content %}
+{% with messages = get_flashed_messages() %}
+{% if messages %}
+{% for message in messages %}
+<div class="alert alert-warning alert-dismissible fade show" role="alert">
+  <div class="flash-msg">{{message}}</div>
+  <span type="button" class="close" data-dismiss="alert" aria-label="Close"><span
+      aria-hidden="true">&times;</span></span>
+</div>
+{% endfor %}
+{% endif %}
+{% endwith %}
+<section class="">
+  {% include 'checkout/shopcartbreadcrubm.html'%}
+</section>
+<section class="shopping-cart-details">
+  {% if cart and cart | length > 0 %}
+  {% set cart_obj = cart.values() | first %}
+  {% if cart_obj and cart_obj.items %}
+  {% include 'checkout/cartdetails.html'%}
+  {% else %}
+  {% include 'checkout/emptyCart.html'%}
+  {% endif %}
+  {% else %}
+  {% include 'checkout/emptyCart.html'%}
+  {% endif %}
+</section>
+
+{% endblock %}
+
+{% block footer %}{% include 'common/footer.html' %}{% endblock %}

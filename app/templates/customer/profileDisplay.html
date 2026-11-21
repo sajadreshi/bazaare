@@ -1,0 +1,37 @@
+{% if user %}
+
+<div class="display-prof-sec">
+    <dl class="row">
+        <dt class="col">First Name</dt>
+        <dd class="col">{{user.first_name}}</dd>
+    </dl>
+    <dl class="row">
+        <dt class="col">Last Name</dt>
+        <dd class="col"> {{user.last_name}}</dd>
+    </dl>
+    <dl class="row">
+        <dt class="col">Email (LogonId)</dt>
+        <dd class="col">{{user.email}}</dd>
+    </dl>
+    <dl class="row">
+        <dt class="col">Cell Phone</dt>
+        <dd class="col">{{user.cell_number}}</dd>
+    </dl>
+    <dl class="row">
+        <dt class="col">Receive Marketing email</dt>
+        <dd class="col">{{user.marketting_email}}</dd>
+    </dl>
+    <dl class="row">
+        <dt class="col">Receive Transactional email</dt>
+        <dd class="col"> {{user.transactional_email}}</dd>
+    </dl>
+    <dl class="row">
+        <dt class="col">Receive Marketing sms</dt>
+        <dd class="col"> {{user.marketting_sms}}</dd>
+    </dl>
+    <dl class="row">
+        <dt class="col">Receive Transactional sms</dt>
+        <dd class="col">{{user.transactional_sms}}</dd>
+    </dl>
+</div>
+{% endif %}  

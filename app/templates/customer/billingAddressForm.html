@@ -1,0 +1,62 @@
+<div class="address-form">
+    <form action="" method="post">
+        {{ billingForm.hidden_tag() }}
+        <p>
+            {{ billingForm.first_name() }}
+            {% for error in billingForm.first_name.errors %}
+            <span style="color: red;">[{{ error }}]</span>
+            {% endfor %}
+        </p>
+        <p>
+            {{ billingForm.last_name() }}
+            {% for error in billingForm.last_name.errors %}
+            <span style="color: red;">[{{ error }}]</span>
+            {% endfor %}
+        </p>
+        <p>
+            {{ billingForm.address1() }}
+            {% for error in billingForm.address1.errors %}
+            <span style="color: red;">[{{ error }}]</span>
+            {% endfor %}
+        </p>
+        <p>
+            {{ billingForm.address2() }}
+            {% for error in billingForm.address2.errors %}
+            <span style="color: red;">[{{ error }}]</span>
+            {% endfor %}
+        </p>
+        <p>
+            {{ billingForm.city() }}
+            {% for error in billingForm.city.errors %}
+            <span style="color: red;">[{{ error }}]</span>
+            {% endfor %}
+        </p>
+        <p>
+            {{billingForm.state(class_="checkout-drop-down") }}
+            {% for error in billingForm.state.errors %}
+            <span style="color: red;">[{{ error }}]</span>
+            {% endfor %}
+        </p>
+        <p>
+            {{ billingForm.zip() }}
+            {% for error in billingForm.zip.errors %}
+            <span style="color: red;">[{{ error }}]</span>
+            {% endfor %}
+        </p>
+        <p>
+            {{ billingForm.email() }}
+            {% for error in billingForm.email.errors %}
+            <span style="color: red;">[{{ error }}]</span>
+            {% endfor %}
+        </p>
+        <p>
+            {{ billingForm.phone() }}
+            {% for error in billingForm.phone.errors %}
+            <span style="color: red;">[{{ error }}]</span>
+            {% endfor %}
+        </p>
+        <p>
+            {{ billingForm.submit() }}
+        </p>
+    </form>
+</div>

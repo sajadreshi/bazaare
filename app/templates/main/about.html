@@ -1,0 +1,29 @@
+{% extends 'common/layout.html' %}
+{% block title %}About{% endblock %}
+{% block header %}{% include 'common/header.html' %}{% endblock %}
+{% block content %}
+{% with messages = get_flashed_messages() %}
+{% if messages %}
+{% for message in messages %}
+<div class="alert alert-warning alert-dismissible fade show" role="alert">
+    <div class="flash-msg">{{message}}</div>
+    <span type="button" class="close" data-dismiss="alert" aria-label="Close"><span
+            aria-hidden="true">&times;</span></span>
+</div>
+{% endfor %}
+{% endif %}
+{% endwith %}
+<div class="login_section layout_padding">
+	<div class="container">
+		<div class="heading_container">
+	       <h1>About Bazaare</h1>
+         </div>
+        <div class="about-paragraph">	
+          <span>Bazaare is a small online boutique for jewellery. We pick every piece for its craft, its materials and the story behind it, from everyday rings and earrings to statement necklaces made for special occasions. Many of our pieces are handmade by independent artisans, and we always tell you what each one is made of so you can choose with confidence. We are starting with jewellery and will be adding apparel soon.</span>
+           
+        </div>    
+    </div>        
+</div>
+{% endblock %}
+
+{% block footer %}{% include 'common/footer.html' %}{% endblock %}

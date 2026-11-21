@@ -1,0 +1,104 @@
+<div class="container">
+     
+     <div class="row gx-5">
+       <aside class="col-lg-6">
+         <div class="border rounded-4 mb-3 d-flex justify-content-center">
+           {% set mainImg = product.product_image if product.product_image and product.product_image is not none else 'default.jpg' %}
+             <img id="productImage" class="rounded-4 fit main-img" src="{{ url_for( 'static',filename = 'images/' + mainImg) }}" />
+         </div>
+         <div class="d-flex justify-content-center mb-3">
+           {%if product.product_image and product.image1 is not none %}
+               <a href="javascript:void(0)" class="thumbnail"> 
+               <img class="rounded-2 alt-img" src="{{ url_for( 'static',filename = 'images/' + product.product_image) }}" />
+               </a>  
+          {% endif %} 
+           {%if product.product_image1 and product.image1 is not none %}
+               <a href="javascript:void(0)" class="thumbnail"> 
+                <img class="rounded-2 alt-img" src="{{ url_for( 'static',filename = 'images/' + product.product_image1) }}" />
+               </a>  
+           {% endif %}  
+           {%if product.product_image2 and product.image2 is not none %}
+               <a href="javascript:void(0)" class="thumbnail"> 
+               <img class="rounded-2 alt-img" src="{{ url_for( 'static',filename = 'images/' + product.product_image2) }}" />
+               </a>  
+           {% endif %} 
+          {%if product.product_image3 and product.image3 is not none %}
+           <a href="javascript:void(0)" class="thumbnail"> 
+               <img class="rounded-2 alt-img" src="{{ url_for( 'static',filename = 'images/' + product.product_image3) }}" />
+               </a>  
+          {% endif %} 
+         </div>
+         <!-- thumbs-wrap.// -->
+         <!-- gallery-wrap .end// -->
+       </aside>
+       <main class="col-lg-6">
+         <div class="ps-lg-3">
+           <h2 class="title text-dark">
+               {{ product.product_name}}
+           </h2>
+           <p>
+               {{ product.product_description}}
+           </p>
+ 
+           <div class="row">
+             <dt class="col-3">Material:</dt>
+             <dd class="col-9">{{ product.product_material if product.product_material else '-' }}</dd>
+             <dt class="col-3">Sustainable:</dt>
+             {% if product.is_product_sustainable==1%}
+             <dd class="col-9">&#x2714;</dd>
+             {% else %}
+             <dd class="col-9">&#x2718;</dd>
+             {% endif %}
+             <dt class="col-3">Handmade:</dt>
+             {% if product.is_product_handmade==1%}
+             <dd class="col-9">&#x2714;</div></dd>
+             {% else %}
+             <dd class="col-9">&#x2718;</div></dd>
+             {% endif %}
+           </div>
+           <hr />
+           <div class="row mb-4">
+             <div class="col-radio-container">
+              {% if(product.sizes and product.sizes | length > 0) %}  
+               <form name="addToCartFrm" method="post">
+                   <input type="hidden" id="pid" name="pid" value="{{product.product_id}}">
+                   <div class="list-group">
+                       {% for sizekey, sizevalue in product.sizes.items() %} 
+                       {%set product_price = product.product_sale_price if product.product_sale_price and product.product_sale_price is not none else  0 %}
+                       {%set size_qty = sizevalue.product_quantity if sizevalue.product_quantity and sizevalue.product_quantity is not none else  1 %}
+                       {%set default_size = 'checked' if sizevalue.default_size  else  '' %}
+                       <label class="list-group-item d-flex gap-2 prod-group">
+                       <input class="form-check-input flex-shrink-0" type="radio" name="size" id="sizeGroupRadios{{loop.index}}" value="{{ sizekey}}" {{default_size}}>
+                       <span style="width: 70%;">
+                           {{ sizevalue.product_size }}  <span class="dollar-amount">${{product_price * size_qty}} </span>
+                           {% if sizevalue.size_description and sizevalue.size_description is not none%}
+                           <small class="d-block text-body-secondary">{{ sizevalue.size_description}}</small>
+                           {% endif %}
+                       </span>
+                       {% if sizevalue.size_image and sizevalue.size_image is not none%}
+                       <img class="variant-image" src="{{ url_for( 'static',filename = 'images/' + sizevalue.size_image) }}"/>
+                       {% endif %}
+                       </label>     
+                       {% endfor %}
+                      
+                   </div>
+               </div>
+           </div> 
+                <button type="submit" class="btn btn-primary shadow-0"> <i class="me-1 fa fa-shopping-basket"></i> Add to cart </button>
+                </form>
+       
+         {% else %}
+              <h5 style="color: red;">
+                Product is currently out of stock
+              </h5>
+              <div class="btn-box">
+                  <a href="{{ url_for('catalog.collection') }}">
+                    View More Options
+                  </a>
+                </div>
+          {% endif %} 
+       </div>
+         </div>
+       </main>
+     </div>
+</div>

@@ -1,0 +1,62 @@
+<div class="container">
+    {% set collection_categories =  home.collection.categories if  home.collection.categories is defined else {'None':''} %}
+    <div class="heading_container heading_center">
+      <h2>
+        Our Collection
+      </h2>
+    </div>
+
+    <ul class="filters_menu">
+    {% for mkey, mvalue in collection_categories.items() %}
+        {% set category_name = mvalue.category_name if mvalue.category_name is not none else ''%}
+            {% if loop.index == 1 %}
+            <li class="active" data-filter="*">{{category_name}}</li>
+            {% else %}
+            <li data-filter=.{{category_name}}>{{mvalue.category_name}}</li>
+            {% endif %}
+    {% endfor %}  
+    </ul>
+
+    <div class="filters-content">
+      <div class="row grid">
+      {% for category_key, category_val in collection_categories.items() %}
+         {% set cat_name = category_val.category_name if category_val.category_name is not none else ''%}
+           {% for product_key, product_val in collection_categories[category_key].products.items() %}
+                <div class="col-sm-6 col-lg-4 all {{cat_name}}">
+                <div class="box">
+                    <div>
+                    <div class="img-box">
+                      {% set mainImg =  product_val.product_main_image if  product_val.product_main_image and  product_val.product_main_image is not none else 'default.jpg' %}
+                      <a href="{{ url_for('catalog.product',productId=product_val.product_id) }}">
+                        <img src="{{ url_for( 'static',filename = 'images/' + mainImg) }}" alt="">
+                      </a>  
+                    </div>
+                    <div class="detail-box">
+                        <h5>
+                            {{ product_val.product_name if product_val.product_name is not none else ''}}
+                        </h5>
+                        <p>
+                            {{ product_val.product_description if product_val.product_description is not none else ''}}
+                        </p>
+                        <div class="options">
+                        <h6>
+                            ${{ product_val.product_sale_price if product_val.product_sale_price is not none else '' }}
+                        </h6>
+                        <a href="{{ url_for('catalog.product',productId=product_val.product_id) }}">
+                          <i class="fa fa-shopping-cart cart-icon"></i>
+                        </a>
+                        </div>
+                    </div>
+                    </div>
+                </div>
+                </div>
+           {% endfor %}
+        {% endfor %}
+      </div>
+    </div>
+    <div class="btn-box">
+      <a href="{{ url_for('catalog.collection') }}">
+        View More
+      </a>
+    </div>
+  </div>

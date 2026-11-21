@@ -1,0 +1,146 @@
+<div class="checkout-section mt-150 mb-150">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="checkout-accordion-wrap">
+                    <div class="accordion" id="accordionExample">
+                        {% set shipping_expanded = '' if cart.is_shipping_complete else 'show' %}
+                        {% set billing_expanded = '' if shipping_expanded=='show' or cart.is_billing_complete else 'show' %}
+                        {% set delivery_expanded = '' if (shipping_expanded=='show' or billing_expanded=='show' or cart.is_delivery_complete) else 'show' %}
+                        {% set placeorder_expanded = '' if (shipping_expanded=='show' or billing_expanded=='show' or delivery_expanded=='show') else 'show' %}
+                        {% set worked_ship_address_display = 'block' if cart.is_shipping_complete else 'none' %}
+                        {% set ship_address_form_display = 'none' if cart.is_shipping_complete else 'block' %}
+                        {% set worked_bill_address_display = 'block' if cart.is_billing_complete else 'none' %}
+                        {% set bill_address_form_display = 'none' if cart.is_billing_complete else 'block' %}
+                        <div class="worked checkout-sec" id="ship-worked" style="display: {{worked_ship_address_display}};">
+                            <div class="completed-sec">
+                                <h5 class="mb-0">
+                                    <span class="heading"> Shipping Address</span>
+                                    <a href="javascript:void(0)" class="edit-ship">
+                                       <span style="float: right;"> Edit</span>
+                                    </a>
+                                </h5>
+                                <div class="card-body">
+                                    {% include 'checkout/shipAddressDisplay.html'%}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card single-accordion" id="ship-frm" style="display: {{ship_address_form_display}};">
+                            <div class="card-header" id="headingOne">
+                                <h5 class="mb-0">
+                                    <button class="btn btn-link" type="button" data-toggle="collapse"
+                                        data-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
+                                        Shipping Address
+                                        <a href="javascript:void(0)" style="display:none" id="ship-cancel" class="cancel-ship">
+                                           <span style="float: right;"> Cancel</span>
+                                        </a>
+                                    </button>
+                                </h5>
+                            </div>
+
+                            <div id="collapseOne" class="collapse {{shipping_expanded}}" aria-labelledby="headingOne"
+                                data-parent="#accordionExample">
+                                <div class="card-body">
+                                    {% include 'checkout/shippingAddressForm.html'%}
+                                </div>
+                            </div>
+                        </div>
+        
+                        {% set worked_bill_address_display = 'block' if cart.is_billing_complete else 'none' %}
+                        {% set bill_address_form_display = 'none' if cart.is_billing_complete else 'block' %}
+                        <div class="worked checkout-sec" id="bill-worked" style="display: {{worked_bill_address_display}};">
+                            <div class="completed-sec">
+                                <h5 class="mb-0">
+                                    <span class="heading"> Billing Address</span>
+                                    <a href="javascript:void(0)" class="edit-bill">
+                                       <span style="float: right;"> Edit</span>
+                                    </a>
+                                </h5>
+                                <div class="card-body">
+                                    {% include 'checkout/billAddressDisplay.html'%}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card single-accordion" id="bill-frm" style="display: {{bill_address_form_display}};">
+                            <div class="card-header" id="headingTwo">
+                                <h5 class="mb-0">
+                                    <button class="btn btn-link collapsed" type="button" data-toggle="collapse"
+                                        data-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                                        Billing Address
+                                        <a href="javascript:void(0)" style="display:none" id="bill-cancel" class="cancel-bill">
+                                           <span style="float: right;"> Cancel</span>
+                                        </a>
+                                    </button>
+                                </h5>
+                            </div>
+                            <div id="collapseTwo" class="collapse {{billing_expanded}}" aria-labelledby="headingTwo"
+                                data-parent="#accordionExample">
+                                <div class="card-body">
+                                    {% include 'checkout/billingAddressForm.html'%}
+                                </div>
+                            </div>
+                        </div>
+                        {% set worked_delivery_date_display = 'block' if cart.is_delivery_complete else 'none' %}
+                        {% set delivery_date_form_display = 'none' if cart.is_delivery_complete else 'block' %}
+                        <div class="worked checkout-sec" id="delivery-worked" style="display: {{worked_delivery_date_display}};">
+                            <div class="completed-sec">
+                                <h5 class="mb-0">
+                                    <span class="heading"> Delivery Date</span>
+                                    <a href="javascript:void(0)" class="edit-delivery">
+                                       <span style="float: right;"> Edit</span>
+                                    </a>
+                                </h5>
+                                <div class="card-body">
+                                    {% include 'checkout/deliveryDateDisplay.html'%}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card single-accordion" id="delivery-frm" style="display: {{delivery_date_form_display}};">
+                            <div class="card-header" id="headingThree">
+                                <h5 class="mb-0">
+                                    <button class="btn btn-link collapsed" type="button" data-toggle="collapse"
+                                        data-target="#collapseThree" aria-expanded="false"
+                                        aria-controls="collapseThree">
+                                        Delivery Date
+                                        <a href="javascript:void(0)" style="display:none" id="delivery-cancel" class="cancel-delivery">
+                                           <span style="float: right;"> Cancel</span>
+                                        </a>
+                                    </button>
+                                </h5>
+                            </div>
+                            <div id="collapseThree" class="collapse {{delivery_expanded}}" aria-labelledby="headingThree"
+                                data-parent="#accordionExample">
+                                <div class="card-body">
+                                    <div class="card-details">
+                                        {% include 'checkout/deliveryDateForm.html'%}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card single-accordion">
+                            <div class="card-header" id="headingThree">
+                                <h5 class="mb-0">
+                                    <button class="btn btn-link collapsed" type="button" data-toggle="collapse"
+                                        data-target="#collapseFour" aria-expanded="false"
+                                        aria-controls="collapseFour">
+                                        Place Order
+                                    </button>
+                                </h5>
+                            </div>
+                            <div id="collapseFour" class="collapse {{placeorder_expanded}}" aria-labelledby="headingFour"
+                                data-parent="#accordionExample">
+                                <div class="card-body">
+                                    <div class="card-details">
+                                     {% include 'checkout/placeOrderForm.html'%}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+             {% include 'checkout/cartTotals.html'%}
+        </div>
+    </div>
+</div>

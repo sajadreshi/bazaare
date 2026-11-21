@@ -1,0 +1,29 @@
+{% extends 'common/layout.html' %}
+{% block title %}Confirmation{% endblock %}
+{% block header %}{% include 'common/header.html' %}{% endblock %}
+{% block content %}
+{% with messages = get_flashed_messages() %}
+{% if messages %}
+{% for message in messages %}
+<div class="alert alert-warning alert-dismissible fade show" role="alert">
+    <div class="flash-msg">{{message}}</div>
+    <span type="button" class="close" data-dismiss="alert" aria-label="Close"><span
+            aria-hidden="true">&times;</span></span>
+</div>
+{% endfor %}
+{% endif %}
+{% endwith %}
+{% set cart_obj = cart.values() | first %}
+<section class="">
+    {% include 'checkout/confirmationbreadcrumb.html'%}
+</section>
+<section class="checkout-details">
+    {% if cart_obj and cart_obj | length > 0 %}
+       {% include 'checkout/confirmationdetails.html'%}
+     {% else %}
+       {% include 'checkout/emptyCart.html'%}
+   {% endif %}
+  </section>
+{% endblock %}
+
+{% block footer %}{% include 'common/footer.html' %}{% endblock %}

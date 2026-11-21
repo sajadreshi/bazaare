@@ -1,0 +1,50 @@
+{% extends 'common/layout.html' %}
+
+{% block title %}Customer{% endblock %}
+{% block header %}{% include 'common/header.html' %}{% endblock %}
+{% block content %}
+{% with messages = get_flashed_messages() %}
+{% if messages %}
+{% for message in messages %}
+<div class="alert alert-warning alert-dismissible fade show" role="alert">
+    <div class="flash-msg">{{message}}</div>
+    <span
+        type="button"
+        class="close"
+        data-dismiss="alert"
+        aria-label="Close"
+    >
+        <span aria-hidden="true">&times;</span>
+    </span>
+</div>
+{% endfor %}
+{% endif %}
+{% endwith %}
+{% include 'customer/customerNavigation.html' %}
+<div>{{page}}</div>
+<section class="customer-details">
+    {% if page and page=='profile' %}    
+      {% include 'customer/profile.html' %}
+  {% endif %}
+  {% if page and page=='billingAddress' %}    
+      {% include 'customer/billingAddress.html' %}
+  {% endif %}
+     {% if page and page=='shippingAddress' %}    
+  {% include 'customer/shippingAddress.html' %}
+{% endif %}
+{% if page and page=='changePassword' %}    
+     {% include 'customer/changePassword.html' %}
+{% endif %}
+{% if page and page=='orders' %}    
+     {% include 'customer/ordersDisplay.html' %}
+{% endif %}
+{% if page and page=='ordersDetails' %}  
+{% set cart_obj = cart.values() | first %} 
+   {% if cart_obj and cart_obj | length > 0 %} 
+     {% include 'customer/orderDetails.html' %}
+    {%endif%}
+{% endif %}
+</section>
+{% endblock %}
+
+{% block footer %}{% include 'common/footer.html' %}{% endblock %}

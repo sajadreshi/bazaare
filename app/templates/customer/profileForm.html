@@ -1,0 +1,47 @@
+<div class="address-form">
+    <form action="" method="post">
+        {{ proform.hidden_tag() }}
+        <p>
+            {{ proform.first_name() }}
+            {% for error in proform.first_name.errors %}
+            <span style="color: red;">[{{ error }}]</span>
+            {% endfor %}
+        </p>
+        <p>
+            {{ proform.last_name() }}
+            {% for error in proform.last_name.errors %}
+            <span style="color: red;">[{{ error }}]</span>
+            {% endfor %}
+        </p>
+        <p>
+            {{ proform.cell_number() }}
+            {% for error in  proform.cell_number.errors %}
+            <span style="color: red;">[{{ error }}]</span>
+            {% endfor %}
+        </p>
+        <p>
+            {{ proform.marketting_email.label(class_="form-label") }}
+            {{ proform.marketting_email() }}
+            
+        </p>
+        <p>
+            {{ proform.transactional_email.label(class_="form-label") }}
+            {{ proform.transactional_email() }}
+           
+        </p>
+
+        <p>
+            {{ proform.marketting_sms.label(class_="form-label") }}
+            {{ proform.marketting_sms() }}
+            
+        </p>
+        <p>
+            {{ proform.transactional_sms.label(class_="form-label") }}
+            {{proform.transactional_sms() }}
+           
+        </p>
+        <p>
+            {{ proform.submit() }}
+        </p>
+    </form>
+</div>

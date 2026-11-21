@@ -1,0 +1,65 @@
+<div class="checkout-section mt-150 mb-150">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="checkout-accordion-wrap">
+                    <div class="accordion" id="accordionExample">
+                        <div class="worked checkout-sec" id="ship-worked">
+                            <div class="worked checkout-sec" id="delivery-worked">
+                                <div class="completed-sec">
+                                    <h5 class="mb-0">
+                                        <span class="heading"> Order Details</span>
+                                    </h5>
+                                    <div class="card-body">
+                                        {% include 'checkout/orderDetails.html'%}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="worked checkout-sec" id="delivery-worked">
+                                <div class="completed-sec">
+                                    <h5 class="mb-0">
+                                        <span class="heading"> Delivery Date</span>
+                                    </h5>
+                                    <div class="card-body">
+                                        {% include 'checkout/deliveryDateDisplay.html'%}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="worked checkout-sec" id="delivery-worked">
+                                <div class="completed-sec">
+                                    <h5 class="mb-0">
+                                        <span class="heading"> Items</span>
+                                    </h5>
+                                    <div class="card-body">
+                                        {% include 'checkout/itemDetailsConfirmation.html'%}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="worked checkout-sec" id="ship-worked">
+                                <div class="completed-sec">
+                                    <h5 class="mb-0">
+                                        <span class="heading"> Shipping Address</span>
+                                    </h5>
+                                    <div class="card-body">
+                                        {% include 'checkout/shipAddressDisplay.html'%}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="worked checkout-sec" id="ship-worked">
+                                <div class="completed-sec">
+                                    <h5 class="mb-0">
+                                        <span class="heading"> Billing Address</span>
+                                    </h5>
+                                    <div class="card-body">
+                                        {% include 'checkout/billAddressDisplay.html'%}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% include 'checkout/cartTotals.html'%}
+        </div>
+    </div>
+</div>

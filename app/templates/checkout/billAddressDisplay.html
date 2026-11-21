@@ -1,0 +1,10 @@
+{% set billadd = cart_obj.customer.billing_address%}
+<div class="address-sec">
+    <span class="add-elem-top">{{billadd.billing_first_name}} {{billadd.billing_last_name}} </span>
+    <span class="add-elem">{{billadd.billing_address1}} </span>
+    <span class="add-elem">{{billadd.billing_address2}}</span>
+    <span class="add-elem">{{billadd.billing_city}} {{billadd.billing_state}} </span>
+    <span class="add-elem">{{billadd.billing_zip}} {{billadd.billing_country}} </span>
+    <span class="add-elem">{{billadd.billing_email}} </span>
+    <span class="add-elem">{{billadd.billing_phone}}</span>
+</div>

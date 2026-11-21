@@ -1,0 +1,64 @@
+<div class="address-form">
+    <form action="" method="post">
+        {{ shipping_form.hidden_tag() }}
+        <p>
+            {{ shipping_form.first_name() }}
+            {% for error in shipping_form.first_name.errors %}
+            <span style="color: red;">[{{ error }}]</span>
+            {% endfor %}
+        </p>
+        <p>
+            {{ shipping_form.last_name() }}
+            {% for error in shipping_form.last_name.errors %}
+            <span style="color: red;">[{{ error }}]</span>
+            {% endfor %}
+        </p>
+        <p>
+            {{ shipping_form.address1() }}
+            {% for error in shipping_form.address1.errors %}
+            <span style="color: red;">[{{ error }}]</span>
+            {% endfor %}
+        </p>
+        <p>
+            {{ shipping_form.address2() }}
+            {% for error in shipping_form.address2.errors %}
+            <span style="color: red;">[{{ error }}]</span>
+            {% endfor %}
+        </p>
+        <p>
+            {{ shipping_form.city() }}
+            {% for error in shipping_form.city.errors %}
+            <span style="color: red;">[{{ error }}]</span>
+            {% endfor %}
+        </p>
+        <p>
+            {{shipping_form.state(class_="checkout-drop-down") }}
+            {% for error in shipping_form.state.errors %}
+            <span style="color: red;">[{{ error }}]</span>
+            {% endfor %}
+        </p>
+        <p>
+            {{ shipping_form.zip() }}
+            {% for error in shipping_form.zip.errors %}
+            <span style="color: red;">[{{ error }}]</span>
+            {% endfor %}
+        </p>
+        <p>
+            {{ shipping_form.email() }}
+            {% for error in shipping_form.email.errors %}
+            <span style="color: red;">[{{ error }}]</span>
+            {% endfor %}
+        </p>
+        <p>
+            {{ shipping_form.phone() }}
+            {% for error in shipping_form.phone.errors %}
+            <span style="color: red;">[{{ error }}]</span>
+            {% endfor %}
+        </p>
+
+        {{ shipping_form.form_id() }}
+        <p>
+            {{ shipping_form.submit() }}
+        </p>
+    </form>
+</div>

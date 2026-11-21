@@ -1,0 +1,32 @@
+<div class="offer_container">
+    {% set featured_categories = home.featured.categories if  home.featured.categories is defined else {'None':''} %}
+    
+        <div class="container ">
+            <div class="row">
+                {% for fcname, fcategory in featured_categories.items() %}
+                  {% for fpname, fproduct in featured_categories[fcname].products.items() %}
+                    <div class="col-md-6  ">
+                    <div class="box ">
+                        <div class="img-box">
+                        {% set mainImg =  fproduct.product_main_image if fproduct.product_main_image and  fproduct.product_main_image is not none else 'default.jpg' %}    
+                        <img src={{ url_for( 'static',filename = 'images/' + mainImg) }} alt="">
+                        </div>
+                        <div class="detail-box">
+                        <h3>
+                             {{  fproduct.product_name if  fproduct.product_name is not none else '' }}
+                        </h3>
+                        <h2>
+                            ${{ fproduct.product_sale_price if fproduct.product_sale_price is not none else '10.99' }}
+                        </h2>
+                        <a href="{{ url_for('catalog.product',productId=fproduct.product_id) }}">
+                             Shop Now <svg version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 456.029 456.029" style="enable-background:new 0 0 456.029 456.029;" xml:space="preserve">
+                            </svg>
+                        </a>
+                        </div>
+                    </div>
+                    </div>
+                {% endfor %}    
+            {% endfor %}
+            </div>
+        </div>
+  </div>

@@ -1,0 +1,62 @@
+<div class="address-form">
+    <form action="" method="post">
+        {{ shippingForm.hidden_tag() }}
+        <p>
+            {{ shippingForm.first_name() }}
+            {% for error in shippingForm.first_name.errors %}
+            <span style="color: red;">[{{ error }}]</span>
+            {% endfor %}
+        </p>
+        <p>
+            {{ shippingForm.last_name() }}
+            {% for error in shippingForm.last_name.errors %}
+            <span style="color: red;">[{{ error }}]</span>
+            {% endfor %}
+        </p>
+        <p>
+            {{ shippingForm.address1() }}
+            {% for error in shippingForm.address1.errors %}
+            <span style="color: red;">[{{ error }}]</span>
+            {% endfor %}
+        </p>
+        <p>
+            {{ shippingForm.address2() }}
+            {% for error in shippingForm.address2.errors %}
+            <span style="color: red;">[{{ error }}]</span>
+            {% endfor %}
+        </p>
+        <p>
+            {{ shippingForm.city() }}
+            {% for error in shippingForm.city.errors %}
+            <span style="color: red;">[{{ error }}]</span>
+            {% endfor %}
+        </p>
+        <p>
+            {{shippingForm.state(class_="checkout-drop-down") }}
+            {% for error in shippingForm.state.errors %}
+            <span style="color: red;">[{{ error }}]</span>
+            {% endfor %}
+        </p>
+        <p>
+            {{ shippingForm.zip() }}
+            {% for error in shippingForm.zip.errors %}
+            <span style="color: red;">[{{ error }}]</span>
+            {% endfor %}
+        </p>
+        <p>
+            {{ shippingForm.email() }}
+            {% for error in shippingForm.email.errors %}
+            <span style="color: red;">[{{ error }}]</span>
+            {% endfor %}
+        </p>
+        <p>
+            {{ shippingForm.phone() }}
+            {% for error in shippingForm.phone.errors %}
+            <span style="color: red;">[{{ error }}]</span>
+            {% endfor %}
+        </p>
+        <p>
+            {{ shippingForm.submit() }}
+        </p>
+    </form>
+</div>

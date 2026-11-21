@@ -1,0 +1,36 @@
+<div class="checkout-section mt-150 mb-150">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="checkout-accordion-wrap">
+                    <div class="accordion" id="accordionExample">
+                        <div class="worked checkout-sec" id="ship-worked">
+                            <div class="completed-sec">
+                                <h5 class="mb-0">
+                                    <span class="heading">Items</span>
+                                </h5>
+                                <div class="card-body">
+                                    {% include 'checkout/itemDetails.html'%}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+             {% include 'checkout/cartTotals.html'%}
+			 <div class="checkout-btn-box">
+				<a href="{{ url_for('checkout.order') }}" class="boxed-btn black">Check Out</a>
+			</div>
+			<div class="coupon-section">
+				<h3>Apply Coupon</h3>
+				<div class="coupon-form-wrap">
+					<form action="index.html">
+						<p><input type="text" placeholder="Coupon"></p>
+						<p><input type="submit" value="Apply"></p>
+					</form>
+				</div>
+			</div>
+        </div>
+    </div>
+</div>

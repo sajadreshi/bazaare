@@ -1,0 +1,10 @@
+{% set shpadd = cart_obj.customer.shipping_address%}
+<div class="address-sec">
+    <span class="add-elem-top">{{shpadd.shipping_first_name}} {{shpadd.shipping_last_name}} </span>
+    <span class="add-elem">{{shpadd.shipping_address1}} </span>
+    <span class="add-elem">{{shpadd.shipping_address2}}</span>
+    <span class="add-elem">{{shpadd.shipping_city}} {{shpadd.shipping_state}} </span>
+    <span class="add-elem">{{shpadd.shipping_zip}} {{shpadd.shipping_country}} </span>
+    <span class="add-elem">{{shpadd.shipping_email}} </span>
+    <span class="add-elem">{{shpadd.shipping_phone}}</span>
+</div>

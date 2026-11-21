@@ -1,0 +1,45 @@
+{% extends 'common/layout.html' %}
+
+{% block title %}Product{% endblock %}
+{% block header %}{% include 'common/header.html' %}{% endblock %}
+{% block content %}
+{% with messages = get_flashed_messages() %}
+  {% if messages %}
+    {% for message in messages %}
+        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+              <div class="flash-msg">{{message}}</div>
+			  <span type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></span>
+        </div>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
+<!-- content -->
+<section class="mini_cart_section">
+  {% if cart and cart | length > 0 %}
+     {% include 'catalog/minishoppingcart.html'%}
+  {% endif %} 
+</section>
+<section class="product_section layout_padding">
+  {% if product and product is defined %} 
+    {% include 'catalog/productdetails.html'%}
+  {% else %}
+    <h2>
+      Product does not exist or is currently out of stock
+    </h2>
+    <div class="btn-box">
+        <a href="{{ url_for('catalog.collection') }}">
+          View More Options
+        </a>
+      </div>
+  </div>
+ {% endif %} 
+</section>
+<section class="related_product_section layout_padding-bottom">
+    {% if xsells is defined and xsells | length > 0 %}
+      {% include 'catalog/relatedproducts.html'%}
+    {% endif %}
+   </section>
+<!-- content -->
+{% endblock %}
+  
+{% block footer %}{% include 'common/footer.html' %}{% endblock %}

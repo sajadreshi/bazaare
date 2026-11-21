@@ -1,0 +1,49 @@
+<div class="checkout-section mt-150 mb-150">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="checkout-accordion-wrap">
+                    <div class="accordion" id="accordionExample">
+                        {% set billing_display = 'block' if display=='billing' else 'none'%}
+                        {% set form_display = 'block' if display=='form' else 'none'%}
+                        {% set form_expanded = 'show' if display=='form' else '' %}
+                        <div class="worked checkout-sec" id="ship-worked" style="display: {{billing_display}};">
+                            <div class="completed-sec">
+                                <h5 class="mb-0">
+                                    <span class="heading"> Billing Address</span>
+                                    <a href="javascript:void(0)" class="edit-ship">
+                                        <span style="float: right;"> Edit</span>
+                                    </a>
+                                </h5>
+                                <div class="card-body">
+                                    {% include 'customer/billingAddressDisplay.html'%}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card single-accordion" id="ship-frm" style="display: {{form_display}};">
+                            <div class="card-header" id="headingOne">
+                                <h5 class="mb-0">
+                                    <button class="btn btn-link" type="button" data-toggle="expanded"
+                                        data-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
+                                        Update Billing Address
+                                        <a href="javascript:void(0)" style="display:none" id="ship-cancel"
+                                            class="cancel-ship">
+                                            <span style="float: right;"> Cancel</span>
+                                        </a>
+                                    </button>
+                                </h5>
+                            </div>
+
+                            <div id="collapseOne" class="collapse {{form_expanded}}" aria-labelledby="headingOne"
+                                data-parent="#accordionExample">
+                                <div class="card-body">
+                                    {% include 'customer/billingAddressForm.html'%}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
