@@ -53,5 +53,12 @@ def create_app(config_overrides=None):
     admin.add_view(RoleView(Role, db.session,  category="User"))
     admin.add_view(ProductAssociationView(ProductAssociation, db.session, category="Attributes"))
     admin.add_view(HolidayView(Holiday, db.session, category="Holidays"))
+    @app.cli.command("seed")
+    def seed_command():
+        """Create the admin user and the starter jewellery catalog."""
+        from app.seed import seed_all
+        seed_all()
+        print("Seed data is in place.")
+
     return app
 

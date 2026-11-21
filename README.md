@@ -8,31 +8,48 @@ collection.
 
 ## Stack
 
-Flask 2.3, Flask-SQLAlchemy (SQLite by default), Flask-Admin, Flask-Login,
-Flask-Migrate, Jinja templates, Bootstrap.
+Flask 2.3, Flask-SQLAlchemy on PostgreSQL, Flask-Admin, Flask-Login,
+Flask-Migrate (Alembic), Jinja templates, Bootstrap.
 
 ## Run locally
 
+You need Python 3.12 and a running PostgreSQL.
+
 ```bash
+createdb bazaare                      # or: psql -c "create database bazaare"
+cp .env.example .env                  # then set DATABASE_URL for your Postgres user/password
 python3.12 -m venv venv && source venv/bin/activate
 pip install -r requirements.txt
-python server.py          # creates bazaare.db, seeds admin + jewellery categories
+python server.py                      # applies migrations, seeds data, serves on :8000
 ```
 
 Open http://localhost:8000. The admin is at `/admin`
 (seeded login `user@admin.com` / `admin`, change it before going live).
 
-Configuration comes from the environment:
+Configuration comes from the environment or a `.env` file:
 
-| Variable       | Default               |
-| -------------- | --------------------- |
-| `SECRET_KEY`   | dev-only placeholder  |
-| `DATABASE_URL` | `sqlite:///bazaare.db` |
+| Variable       | Default                                        |
+| -------------- | ---------------------------------------------- |
+| `DATABASE_URL` | `postgresql://postgres@localhost:5432/bazaare` |
+| `SECRET_KEY`   | dev-only placeholder                           |
+
+Useful commands:
+
+```bash
+flask --app server db upgrade                     # apply migrations
+flask --app server db migrate -m "describe change" # after editing app/models.py
+flask --app server seed                           # admin user + jewellery categories (safe to re-run)
+```
 
 ## Tests
 
+Tests use in-memory SQLite by default. To run them against Postgres, point
+`TEST_DATABASE_URL` at a throwaway database (its tables are dropped):
+
 ```bash
-pip install pytest && python -m pytest -q
+pip install pytest
+python -m pytest -q
+createdb bazaare_test && TEST_DATABASE_URL=postgresql://postgres:postgres@localhost:5432/bazaare_test python -m pytest -q
 ```
 
 ## Domain model (renamed from Folksy Cuisine)
