@@ -2,26 +2,28 @@
 {% block title %}Handcrafted jewellery{% endblock %}
 {% block header %}{% include 'common/header.html' %}{% endblock %}
 {% block content %}
-{# Top banner. Admin → Content → Home Page Content sets the image and the slides;
-   without them it falls back to the Collections banner and the default message. #}
-{% set hero_key = home.hero_image or (hero.banner_image if hero else None) %}
+{# Top banner. Admin → Content → Home banner slides: each active slide shows its own
+   background image, headline and message. Without slides, the default message shows. #}
+{% set default_image = hero.banner_image if hero else None %}
 {% macro hero_ctas() %}
 <div class="bz-hero__ctas">
   <a class="bz-btn" href="{{ url_for('catalog.category', slug='new') }}">Shop new arrivals</a>
   <a class="bz-btn bz-btn--ghost" href="{{ url_for('catalog.category', slug='collections') }}">Explore collections</a>
 </div>
 {% endmacro %}
-<section class="bz-hero bz-hero--home {{ 'has-image' if hero_key }}">
-  {% if hero_key %}<img class="bz-hero__img" src="{{ image_url(hero_key) }}" alt="">{% endif %}
-  {% if home.slides %}
-  <div id="bzHeroSlides" class="carousel slide bz-hero__slides" data-ride="carousel" data-interval="6000">
+{% if home.slides %}
+<section class="bz-hero bz-hero--home bz-hero--slides">
+  <div id="bzHeroSlides" class="carousel slide carousel-fade bz-hero__slides" data-ride="carousel" data-interval="6000">
     <div class="carousel-inner">
       {% for slide in home.slides %}
+      {% set image = slide.image or default_image %}
       <div class="carousel-item {{ 'active' if loop.first }}">
+        {% if image %}<img class="bz-hero__img" src="{{ image_url(image) }}" alt="">{% endif %}
+        <div class="bz-hero__shade"></div>
         <div class="bz-hero__text">
           <p class="bz-eyebrow">Jewellery · Craft · Culture</p>
           <h1>{{ slide.header }}</h1>
-          {# Slide text comes from the admin's rich-text editor; show it as plain text. #}
+          {# The message comes from the admin's rich-text editor; show it as plain text. #}
           {% if slide.text %}<p>{{ slide.text | striptags }}</p>{% endif %}
           {{ hero_ctas() }}
         </div>
@@ -36,20 +38,16 @@
     </ol>
     {% endif %}
   </div>
-  {% else %}
+</section>
+{% else %}
+<section class="bz-hero bz-hero--home {{ 'has-image' if default_image }}">
+  {% if default_image %}<img class="bz-hero__img" src="{{ image_url(default_image) }}" alt="">{% endif %}
   <div class="bz-hero__text">
     <p class="bz-eyebrow">Jewellery · Craft · Culture</p>
     <h1>Heritage, made to be worn every day</h1>
     <p>Jhumkas, chandbalis, haslis and kadas, inspired by India's craft traditions and finished by hand.</p>
     {{ hero_ctas() }}
   </div>
-  {% endif %}
-</section>
-
-{% if home.featured %}
-<section class="bz-section">
-  <h2 class="bz-title">{{ home.featured_title or 'Featured' }}</h2>
-  {% with products = home.featured[:8] %}{% include 'catalog/_grid.html' %}{% endwith %}
 </section>
 {% endif %}
 

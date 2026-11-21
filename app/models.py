@@ -221,7 +221,6 @@ class Category(db.Model):
     # Optional rule: also list every active product priced at or below this (e.g. "Under $25").
     max_price = db.Column(db.Numeric(10, 2))
     banner_image = db.Column(db.Unicode(255))
-    home = db.relationship("HomePageContent", backref=db.backref("category", uselist=False))
     parent = db.relationship("Category", remote_side=[id], back_populates="children")
     children = db.relationship("Category", back_populates="parent", order_by="Category.position")
 
@@ -244,44 +243,27 @@ class ProductCategory(db.Model):
 
 
 class Carousel(db.Model):
+    """A slide in the home page's top banner: background image, headline and message.
+
+    Every active slide is shown, in position order (Admin > Content > Home banner slides).
+    """
+
     __tablename__ = "carousel"
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64), nullable=False)
     header = db.Column(db.String(500), nullable=False)
     text = db.Column(db.Text, nullable=False)
-    home = db.relationship(
-        "HomePageContent", secondary="home_carousel_rel", backref=db.backref("carousel", lazy="dynamic")
-    )
+    image = db.Column(db.Unicode(255))
+    is_active = db.Column(db.Boolean, nullable=False, default=True, server_default=db.true())
+    position = db.Column(db.Integer, nullable=False, default=0, server_default="0")
     created_at = db.Column(db.DateTime, index=True, default=utcnow)
-    updated_at = db.Column(db.DateTime, index=True, default=utcnow)
+    updated_at = db.Column(db.DateTime, index=True, default=utcnow, onupdate=utcnow)
 
     def __repr__(self):
         return self.name
 
     def __unicode__(self):
         return self.name
-
-
-class HomePageContent(db.Model):
-    __tablename__ = "home_content"
-    id = db.Column(db.Integer, primary_key=True)
-    hero_image = db.Column(db.Unicode(128))
-    is_active = db.Column(db.Boolean, default=False)
-    category_id = db.Column(db.Integer, db.ForeignKey("category.id"))
-    updated_at = db.Column(db.DateTime, index=True, default=utcnow)
-    created_at = db.Column(db.DateTime, index=True, default=utcnow)
-
-    def __repr__(self):
-        return self.hero_image
-
-
-class HomeCarousel(db.Model):
-    __tablename__ = "home_carousel_rel"
-    id = db.Column(db.Integer, primary_key=True)
-    home_content_id = db.Column(
-        db.Integer, db.ForeignKey("home_content.id", ondelete="CASCADE"), nullable=False
-    )
-    carousel_id = db.Column(db.Integer, db.ForeignKey("carousel.id", ondelete="CASCADE"), nullable=False)
 
 
 class Cart(db.Model):

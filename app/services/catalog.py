@@ -6,16 +6,13 @@ Only active collections, categories and products are ever shown to shoppers.
 from dataclasses import dataclass, field
 
 from app.extension import db
-from app.models import Carousel, Category, HomePageContent, Product
+from app.models import Carousel, Category, Product
 from app.services.cart import line_price, product_variants
 
 
 @dataclass
 class HomePage:
-    hero_image: str | None = None
     slides: list = field(default_factory=list)
-    featured: list = field(default_factory=list)
-    featured_title: str | None = None
 
 
 def active_products(category):
@@ -86,24 +83,14 @@ def bag_suggestions(cart, limit=4):
 
 
 def home_page():
-    """The active home page content (the newest if several are active)."""
-    content = (
-        db.session.query(HomePageContent)
-        .filter(HomePageContent.is_active.is_(True))
-        .order_by(HomePageContent.id.desc())
-        .first()
+    """The home page's top banner: every active slide, in order."""
+    slides = (
+        db.session.query(Carousel)
+        .filter(Carousel.is_active.is_(True))
+        .order_by(Carousel.position, Carousel.id)
+        .all()
     )
-    if content is None:
-        return HomePage()
-    featured = []
-    if content.category is not None and content.category.is_active:
-        featured = active_products(content.category)
-    return HomePage(
-        hero_image=content.hero_image,
-        slides=content.carousel.order_by(Carousel.id).all(),
-        featured=featured,
-        featured_title=content.category.name if featured else None,
-    )
+    return HomePage(slides=slides)
 
 
 # ---------------------------------------------------------------- menu and category pages
