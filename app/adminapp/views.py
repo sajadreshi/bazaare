@@ -177,7 +177,7 @@ class ProductView(sqla.ModelView):
         return current_user.is_authenticated and is_admin_user()
     def inaccessible_callback(self, name, **kwargs):
         # redirect to login page if user doesn't have access
-        return redirect(url_for('main.login', next=request.url))
+        return redirect(url_for('auth.login', next=request.url))
     column_formatters = {
         'main_image': _list_thumbnail_main,
         'alt1_image': _list_thumbnail_alt1,

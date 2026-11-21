@@ -34,3 +34,14 @@ def test_product_page_shows_jewellery_fields(app, client):
     assert b"Ring size 7" in resp.data
     resp = client.get("/catalog/collection")
     assert b"Silver Band" in resp.data
+
+
+def test_add_to_cart(app, client):
+    with app.app_context():
+        product = Product.query.filter_by(sku="RING-001").one()
+        pid, vid = product.id, product.variant.first().id
+    resp = client.post(f"/catalog/product/{pid}", data={"pid": pid, "size": vid})
+    assert resp.status_code == 200
+    resp = client.get("/checkout/shopcart")
+    assert resp.status_code == 200
+    assert b"Silver Band" in resp.data
