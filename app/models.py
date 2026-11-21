@@ -83,24 +83,32 @@ class Product(db.Model):
     __tablename__ = "product"
     id = db.Column(db.Integer, primary_key=True)
     sku = db.Column(db.String(64), index=True, unique=True, nullable=False)
-    name = db.Column(db.String(64), index=True, nullable=False)
-    description = db.Column(db.String(300))
-    retail_price = db.Column(db.Numeric(10, 2), nullable=False)
-    sale_price = db.Column(db.Numeric(10, 2), nullable=False)
-    main_image = db.Column(db.Unicode(128))
-    alt1_image = db.Column(db.Unicode(128))
-    alt2_image = db.Column(db.Unicode(128))
-    alt3_image = db.Column(db.Unicode(128))
-    is_handmade = db.Column(db.Boolean, default=False)
-    is_sustainable = db.Column(db.Boolean, default=False)
+    name = db.Column(db.String(150), index=True, nullable=False)
+    description = db.Column(db.Text)  # HTML from the admin's rich-text editor
+    # What shoppers pay, and an optional higher "was" price shown crossed out.
+    price = db.Column(db.Numeric(10, 2), nullable=False)
+    compare_at_price = db.Column(db.Numeric(10, 2))
     material = db.Column(db.String(100))
+    is_handmade = db.Column(db.Boolean, default=False)
     is_active = db.Column(db.Boolean, default=False)
-    display = db.Column(db.Boolean, default=False)
-    unit_quantity = db.Column(db.Integer)
+    # What the choice is called on the product page, e.g. "Size" or "Design".
+    option_label = db.Column(db.String(30))
     created_at = db.Column(db.DateTime, index=True, default=utcnow)
-    updated_at = db.Column(db.DateTime, index=True, default=utcnow)
+    updated_at = db.Column(db.DateTime, index=True, default=utcnow, onupdate=utcnow)
     categories = db.relationship(
         "Category", secondary="category_product_rel", backref=db.backref("product", lazy="dynamic")
+    )
+    images = db.relationship(
+        "ProductImage",
+        back_populates="product",
+        cascade="all, delete-orphan",
+        order_by="(ProductImage.position, ProductImage.id)",
+    )
+    options = db.relationship(
+        "Variant",
+        back_populates="product",
+        cascade="all, delete-orphan",
+        order_by="(Variant.position, Variant.id)",
     )
     attribute_links = db.relationship(
         "ProductAttribute",
@@ -116,6 +124,23 @@ class Product(db.Model):
         order_by="(ProductAssociation.association_type, ProductAssociation.position, ProductAssociation.id)",
     )
 
+    @property
+    def main_image(self):
+        """Storage key of the first photo (the one shown on cards), or None."""
+        return self.images[0].image if self.images else None
+
+    @property
+    def image_keys(self):
+        return [img.image for img in self.images]
+
+    @property
+    def on_sale(self):
+        return (
+            self.compare_at_price is not None
+            and self.price is not None
+            and self.compare_at_price > self.price
+        )
+
     def __repr__(self):
         return self.name
 
@@ -123,32 +148,50 @@ class Product(db.Model):
         return self.name
 
 
+class ProductImage(db.Model):
+    """One photo of a product. The lowest position is the main photo."""
+
+    __tablename__ = "product_image"
+    id = db.Column(db.Integer, primary_key=True)
+    product_id = db.Column(
+        db.Integer, db.ForeignKey("product.id", ondelete="CASCADE"), index=True, nullable=False
+    )
+    image = db.Column(db.Unicode(255), nullable=False)  # storage key
+    position = db.Column(db.Integer, nullable=False, default=0, server_default="0")
+    product = db.relationship("Product", back_populates="images")
+
+
 class Variant(db.Model):
+    """One choice of a product (a size or design) with its own price, stock and photo."""
+
     __tablename__ = "variant"
     id = db.Column(db.Integer, primary_key=True)
-    size = db.Column(db.String(30), nullable=False)
-    # Price multiplier for this variant (1 = base price).
-    quantity = db.Column(db.Numeric(10, 2), nullable=False, default=1)
-    weight = db.Column(db.Float)
-    is_default = db.Column(db.Boolean, default=False)
-    description = db.Column(db.String(300))
-    variant_image = db.Column(db.Unicode(128))
-    created_at = db.Column(db.DateTime, index=True, default=utcnow)
-    updated_at = db.Column(db.DateTime, index=True, default=utcnow)
-    products = db.relationship(
-        "Product", secondary="variant_product_rel", backref=db.backref("variant", lazy="dynamic")
+    product_id = db.Column(
+        db.Integer, db.ForeignKey("product.id", ondelete="CASCADE"), index=True, nullable=False
     )
+    name = db.Column(db.String(64), nullable=False)
+    # Empty = same as the product's price.
+    price = db.Column(db.Numeric(10, 2))
+    # Empty = stock isn't tracked (always available); 0 = sold out.
+    stock = db.Column(db.Integer)
+    is_default = db.Column(db.Boolean, nullable=False, default=False, server_default=db.false())
+    position = db.Column(db.Integer, nullable=False, default=0, server_default="0")
+    weight = db.Column(db.Float)
+    variant_image = db.Column(db.Unicode(255))
+    created_at = db.Column(db.DateTime, index=True, default=utcnow)
+    updated_at = db.Column(db.DateTime, index=True, default=utcnow, onupdate=utcnow)
+    product = db.relationship("Product", back_populates="options")
+
+    @property
+    def unit_price(self):
+        return self.price if self.price is not None else self.product.price
+
+    @property
+    def in_stock(self):
+        return self.stock is None or self.stock > 0
 
     def __repr__(self):
-        return self.size
-
-
-class VariantProduct(db.Model):
-    __tablename__ = "variant_product_rel"
-    id = db.Column(db.Integer, primary_key=True)
-    variant_id = db.Column(db.Integer, db.ForeignKey("variant.id"), nullable=False)
-    product_id = db.Column(db.Integer, db.ForeignKey("product.id"), nullable=False)
-    association_type = db.Column(db.String(30), nullable=True)
+        return self.name
 
 
 # Kinds of related product. The key is stored; the label is what admins see.
@@ -309,8 +352,8 @@ class Item(db.Model):
     __tablename__ = "item"
     id = db.Column(db.Integer, primary_key=True)
     cart_id = db.Column(db.Integer, db.ForeignKey("cart.id", ondelete="CASCADE"), nullable=False)
-    product_id = db.Column(db.Integer, db.ForeignKey("product.id"))
-    size_id = db.Column(db.Integer, db.ForeignKey("variant.id"))
+    product_id = db.Column(db.Integer, db.ForeignKey("product.id", ondelete="SET NULL"))
+    size_id = db.Column(db.Integer, db.ForeignKey("variant.id", ondelete="SET NULL"))
     product_sku = db.Column(db.String(64), nullable=False)
     product_name = db.Column(db.String(300))
     product_price = db.Column(db.Numeric(10, 2), default=0.00)
@@ -462,7 +505,7 @@ class OrderItem(db.Model):
     variant_id = db.Column(db.Integer, db.ForeignKey("variant.id", ondelete="SET NULL"))
     sku = db.Column(db.String(64), nullable=False)
     name = db.Column(db.String(300), nullable=False)
-    variant_name = db.Column(db.String(30))
+    variant_name = db.Column(db.String(64))
     image = db.Column(db.Unicode(128))
     price = db.Column(db.Numeric(10, 2), nullable=False, default=0)
     shipping = db.Column(db.Numeric(10, 2), nullable=False, default=0)

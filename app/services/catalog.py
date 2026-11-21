@@ -7,7 +7,7 @@ from dataclasses import dataclass, field
 
 from app.extension import db
 from app.models import Carousel, Category, Product, ProductAttribute
-from app.services.cart import line_price, product_variants
+from app.services.cart import default_variant, line_price, product_variants
 
 
 @dataclass
@@ -29,15 +29,29 @@ class VariantOption:
     variant: object
     price: object
 
+    @property
+    def available(self):
+        return self.variant.in_stock
+
 
 def variant_options(product):
     return [VariantOption(v, line_price(product, v)) for v in product_variants(product)]
 
 
+def default_option(options):
+    """The option picked when the page opens: the default if in stock, else the first in stock."""
+    chosen = default_variant([o.variant for o in options])
+    return next((o for o in options if chosen is not None and o.variant.id == chosen.id), None)
+
+
+def price_range(product):
+    """(lowest, highest) price across the product's options that can be bought."""
+    prices = [line_price(product, v) for v in product.options if v.in_stock] or [line_price(product, None)]
+    return min(prices), max(prices)
+
+
 def product_images(product):
-    return [
-        img for img in (product.main_image, product.alt1_image, product.alt2_image, product.alt3_image) if img
-    ]
+    return product.image_keys
 
 
 def related(product, association_type, limit=8):
@@ -140,7 +154,7 @@ def category_products(category, sort="featured"):
             products[product.id] = product
         if cat.max_price is not None:
             cheap = db.session.query(Product).filter(
-                Product.is_active.is_(True), Product.sale_price <= cat.max_price
+                Product.is_active.is_(True), Product.price <= cat.max_price
             )
             for product in cheap:
                 products[product.id] = product
@@ -148,9 +162,9 @@ def category_products(category, sort="featured"):
     if sort == "newest":
         items.sort(key=lambda p: -p.id)
     elif sort == "price-asc":
-        items.sort(key=lambda p: (p.sale_price, p.id))
+        items.sort(key=lambda p: (p.price, p.id))
     elif sort == "price-desc":
-        items.sort(key=lambda p: (-p.sale_price, p.id))
+        items.sort(key=lambda p: (-p.price, p.id))
     else:
         items.sort(key=lambda p: p.id)
     return items
@@ -176,11 +190,7 @@ def search(query, limit=60):
 
 
 def is_on_sale(product):
-    return (
-        product.retail_price is not None
-        and product.sale_price is not None
-        and product.retail_price > product.sale_price
-    )
+    return product.on_sale
 
 
 def new_arrivals(limit=8):

@@ -12,12 +12,11 @@ from tests.test_security import login
 
 def make(sku, name, price, code="NECK-NECKLACES"):
     product = Product(
-        sku=sku, name=name, retail_price=Decimal(price), sale_price=Decimal(price), is_active=True
+        sku=sku, name=name, compare_at_price=Decimal(price), price=Decimal(price), is_active=True
     )
     product.categories = [Category.query.filter_by(code=code).one()]
-    variant = Variant(size="One Size", quantity=1, is_default=True)
-    variant.products.append(product)
-    db.session.add_all([product, variant])
+    product.options = [Variant(name="One Size", is_default=True)]
+    db.session.add(product)
     db.session.flush()
     return product
 
@@ -98,8 +97,8 @@ def test_admin_product_form_edits_related_products_inline(app, client, shop):
     data = {
         "sku": "RP-SIB",
         "name": "Sun Pendant",
-        "retail_price": "31",
-        "sale_price": "31",
+        "compare_at_price": "31",
+        "price": "31",
         "is_active": "y",
         "associations-0-target_product": str(shop["RP-SET"]),
         "associations-0-association_type": "UPSELL",

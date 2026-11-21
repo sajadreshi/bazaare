@@ -8,7 +8,7 @@ import logging
 from decimal import ROUND_HALF_UP, Decimal
 
 from app.extension import db
-from app.models import Cart, Item, Product, Variant
+from app.models import Cart, Item, Product
 from app.services.customers import get_current_customer, get_or_create_current_customer
 from app.services.shipping import method_for
 
@@ -27,25 +27,43 @@ def _money(value):
 
 
 def line_price(product, variant):
-    """Price of one item: the product's sale price times the variant's multiplier."""
-    multiplier = Decimal(str(variant.quantity)) if variant and variant.quantity is not None else Decimal(1)
-    return _money(Decimal(str(product.sale_price or 0)) * multiplier)
+    """Price of one item: the option's own price, else the product's."""
+    if variant is not None and variant.price is not None:
+        return _money(variant.price)
+    return _money(product.price)
 
 
 def product_variants(product):
-    return product.variant.order_by(Variant.id).all()
+    return list(product.options)
 
 
 def default_variant(variants):
-    return next((v for v in variants if v.is_default), variants[0] if variants else None)
+    """The option selected at first: the default if it's in stock, else the first one in stock."""
+    available = [v for v in variants if v.in_stock]
+    return next((v for v in available if v.is_default), available[0] if available else None)
 
 
 def variant_choices(product_id):
-    """[[id, size, description], ...] for the cart's "change size" dropdown."""
+    """[[id, name, note], ...] for the cart's "change size" dropdown (sold-out options left out)."""
     product = db.session.get(Product, product_id)
     if product is None:
         return []
-    return [[v.id, v.size, v.description] for v in product_variants(product)]
+    return [[v.id, v.name, ""] for v in product_variants(product) if v.in_stock]
+
+
+def _in_cart(cart, variant):
+    return sum(1 for item in cart.pending_items if item.size_id == variant.id) if cart else 0
+
+
+def check_stock(cart, variant, adding=1):
+    """Raise CartError if the bag can't hold ``adding`` more of this option."""
+    if variant.stock is None:
+        return
+    wanted = _in_cart(cart, variant) + adding
+    if variant.stock <= 0:
+        raise CartError(f"Sorry, {variant.product.name} ({variant.name}) is sold out.")
+    if wanted > variant.stock:
+        raise CartError(f"Sorry, only {variant.stock} of {variant.product.name} ({variant.name}) left.")
 
 
 def get_cart(create=False):
@@ -109,9 +127,10 @@ def add_item(product_id, variant_id=None):
     if product is None or not product.is_active:
         raise CartError("This product is not available.")
     variants = product_variants(product)
-    if not variants:
-        raise CartError("Product is currently out of stock")
     variant = next((v for v in variants if v.id == variant_id), None) or default_variant(variants)
+    if variant is None:
+        raise CartError("Sorry, this product is sold out.")
+    check_stock(get_cart(), variant)
     cart = get_cart(create=True)
     item = Item(
         product=product,
@@ -154,6 +173,11 @@ def change_variant(item_id, variant_id):
     variant = next((v for v in product_variants(item.product) if v.id == variant_id), None)
     if variant is None:
         return False
+    if variant.id != item.size_id:
+        try:
+            check_stock(item.cart, variant)
+        except CartError:
+            return False
     item.variant = variant
     item.product_price = line_price(item.product, variant)
     recalculate(item.cart)

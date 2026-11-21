@@ -30,20 +30,18 @@ def test_public_pages(client):
 def test_product_page_shows_jewellery_fields(app, client):
     with app.app_context():
         rings = Category.query.filter_by(code="ACC-RINGS").one()
-        variant = Variant(size="Ring size 7", quantity=1, is_default=True)
         product = Product(
             sku="RING-001",
             name="Silver Band",
-            retail_price=49.0,
-            sale_price=39.0,
+            compare_at_price=49.0,
+            price=39.0,
             material="Sterling silver",
             is_handmade=True,
             is_active=True,
-            display=True,
         )
         product.categories.append(rings)
-        variant.products.append(product)
-        db.session.add_all([product, variant])
+        product.options = [Variant(name="Ring size 7", is_default=True)]
+        db.session.add(product)
         db.session.commit()
         pid = product.id
     resp = client.get(f"/catalog/product/{pid}")
@@ -57,7 +55,7 @@ def test_product_page_shows_jewellery_fields(app, client):
 def test_add_to_cart(app, client):
     with app.app_context():
         product = Product.query.filter_by(sku="RING-001").one()
-        pid, vid = product.id, product.variant.first().id
+        pid, vid = product.id, product.options[0].id
     resp = client.post(f"/catalog/product/{pid}", data={"pid": pid, "size": vid})
     assert resp.status_code == 200
     resp = client.get("/checkout/shopcart")

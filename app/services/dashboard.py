@@ -56,17 +56,18 @@ def _period(orders):
 def _catalog_todos():
     todos = []
     active = Product.query.filter(Product.is_active.is_(True))
-    no_photo = active.filter(Product.main_image.is_(None)).count()
+    no_photo = active.filter(~Product.images.any()).count()
     if no_photo:
         todos.append(("Active products without a photo", no_photo, "/admin/product/"))
     no_category = active.filter(~Product.categories.any()).count()
     if no_category:
         todos.append(("Active products in no category (not in the menu)", no_category, "/admin/product/"))
-    no_option = active.filter(~Product.variant.any(Variant.id.isnot(None))).count()
-    if no_option:
-        todos.append(
-            ("Active products with no size/design option (can't be bought)", no_option, "/admin/product/")
-        )
+    sold_out = active.filter(~Product.options.any((Variant.stock.is_(None)) | (Variant.stock > 0))).count()
+    if sold_out:
+        todos.append(("Active products sold out (no option in stock)", sold_out, "/admin/product/"))
+    low = Variant.query.join(Product).filter(Product.is_active.is_(True), Variant.stock.between(1, 2)).count()
+    if low:
+        todos.append(("Options running low (1–2 left)", low, "/admin/product/"))
     menu = Category.query.filter(Category.is_active.is_(True), Category.show_in_menu.is_(True))
     empty = [c.name for c in menu if c.max_price is None and not category_products(c)]
     if empty:

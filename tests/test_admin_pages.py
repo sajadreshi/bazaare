@@ -20,7 +20,7 @@ def admin_client(client):
 def test_every_admin_list_and_create_page_loads(app, admin_client, product_ids):
     with app.app_context():
         views = model_views()
-    assert len(views) >= 10
+    assert len(views) >= 9
     for view in views:
         base = f"/admin/{view.endpoint}/"
         assert admin_client.get(base).status_code == 200, base

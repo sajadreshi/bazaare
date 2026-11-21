@@ -28,11 +28,11 @@
     {% endif %}
     <h1 class="bz-product__name">{{ product.name }}</h1>
     <p class="bz-price bz-price--lg">
-      <span class="bz-price__now" data-bz-price>${{ '%.2f' | format(options[0].price if options else product.sale_price) }}</span>
-      {% if is_on_sale(product) %}<s class="bz-price__was">${{ '%.2f' | format(product.retail_price) }}</s>
-      <span class="bz-price__save">Save ${{ '%.0f' | format(product.retail_price - product.sale_price) }}</span>{% endif %}
+      <span class="bz-price__now" data-bz-price>${{ '%.2f' | format(default_option(options).price if options and default_option(options) else product.price) }}</span>
+      {% if is_on_sale(product) %}<s class="bz-price__was">${{ '%.2f' | format(product.compare_at_price) }}</s>
+      <span class="bz-price__save">Save ${{ '%.0f' | format(product.compare_at_price - product.price) }}</span>{% endif %}
     </p>
-    <p class="bz-product__desc">{{ product.description or '' }}</p>
+    <div class="bz-product__desc">{{ product.description | rich }}</div>
     <dl class="bz-specs">
       {% if product.material %}<dt>Material</dt><dd>{{ product.material }}</dd>{% endif %}
       {% if product.is_handmade %}<dt>Craft</dt><dd>Handmade</dd>{% endif %}
@@ -40,24 +40,26 @@
       <dt>SKU</dt><dd>{{ product.sku }}</dd>
     </dl>
 
-    {% if options %}
+    {% set chosen = default_option(options) if options else None %}
+    {% if chosen %}
     <form name="addToCartFrm" method="post" class="bz-buy">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <input type="hidden" name="pid" value="{{ product.id }}">
-      {% set default_id = (options | selectattr('variant.is_default') | map(attribute='variant.id') | first) or options[0].variant.id %}
-      {% if options | length > 1 or options[0].variant.size != 'One Size' %}
+      {% if options | length > 1 or options[0].variant.name != 'One Size' %}
       <fieldset class="bz-options">
-        <legend>{{ 'Design' if options[0].variant.description == 'Design' else 'Choose an option' }}</legend>
+        <legend>{{ product.option_label or 'Choose an option' }}</legend>
         {% for option in options %}
-        <label class="bz-option">
-          <input type="radio" name="size" value="{{ option.variant.id }}" data-price="{{ '%.2f' | format(option.price) }}" {{ 'checked' if option.variant.id == default_id }}>
-          <span>{{ option.variant.size }}{% if option.price != product.sale_price %} · ${{ '%.2f' | format(option.price) }}{% endif %}
-            {%- if option.variant.description and option.variant.description != 'Design' %}<small> · {{ option.variant.description }}</small>{% endif %}</span>
+        <label class="bz-option {{ 'is-soldout' if not option.available }}">
+          <input type="radio" name="size" value="{{ option.variant.id }}" data-price="{{ '%.2f' | format(option.price) }}"
+                 {% if option.variant.variant_image %}data-image="{{ image_url(option.variant.variant_image) }}"{% endif %}
+                 {{ 'checked' if option.variant.id == chosen.variant.id }} {{ 'disabled' if not option.available }}>
+          <span>{{ option.variant.name }}{% if option.price != product.price %} · ${{ '%.2f' | format(option.price) }}{% endif %}
+            {%- if not option.available %}<small> · sold out</small>{% endif %}</span>
         </label>
         {% endfor %}
       </fieldset>
       {% else %}
-      <input type="hidden" name="size" value="{{ options[0].variant.id }}">
+      <input type="hidden" name="size" value="{{ chosen.variant.id }}">
       {% endif %}
       <div class="bz-buy__actions">
         <button type="submit" class="bz-btn bz-btn--wide">{{ icon('bag', 18) }} Add to bag</button>
@@ -68,7 +70,7 @@
       <button type="submit" class="bz-btn bz-btn--ghost bz-btn--wide {{ 'is-on' if in_wishlist }}">{{ icon('heart', 18) }} {{ 'Saved to wishlist' if in_wishlist else 'Add to wishlist' }}</button>
     </form>
     {% else %}
-    <p class="bz-soldout">Currently out of stock</p>
+    <p class="bz-soldout">Sold out</p>
     {% endif %}
 
     {% if upsells %}
@@ -78,7 +80,7 @@
       <a class="bz-upsell" href="{{ url_for('catalog.product', productId=up.id) }}">
         <img src="{{ image_url(up.main_image, thumb=True) }}" alt="" width="64" height="64">
         <span class="bz-upsell__name">{{ up.name }}</span>
-        <span class="bz-upsell__price">${{ '%.2f' | format(up.sale_price) }}</span>
+        <span class="bz-upsell__price">${{ '%.2f' | format(up.price) }}</span>
       </a>
       {% endfor %}
     </aside>

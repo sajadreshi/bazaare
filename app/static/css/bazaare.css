@@ -226,6 +226,9 @@
 .bz-option input:checked + span { border-color: var(--bz-ink); background: var(--bz-ink); color: #f3ede2; }
 .bz-option input:focus-visible + span { outline: 2px solid var(--bz-gold); outline-offset: 2px; }
 .bz-buy { margin: 0 0 10px; }
+.bz-option.is-soldout { cursor: not-allowed; }
+.bz-option.is-soldout span { opacity: .45; text-decoration: line-through; }
+.bz-option.is-soldout small { text-decoration: none; }
 .bz-soldout { color: var(--bz-sale); font-weight: 500; }
 
 /* ---------------------------------------------------------------- search page */

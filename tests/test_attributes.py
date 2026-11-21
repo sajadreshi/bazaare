@@ -11,10 +11,8 @@ from tests.test_security import login
 def test_same_attribute_different_values_per_product(app, client):
     with app.app_context():
         metal = Attribute(name="Metal type", position=1)
-        ruby_ring = Product(sku="AT-RUBY", name="Ruby Band", retail_price=20, sale_price=20, is_active=True)
-        pearl_ring = Product(
-            sku="AT-PEARL", name="Pearl Band", retail_price=20, sale_price=20, is_active=True
-        )
+        ruby_ring = Product(sku="AT-RUBY", name="Ruby Band", compare_at_price=20, price=20, is_active=True)
+        pearl_ring = Product(sku="AT-PEARL", name="Pearl Band", compare_at_price=20, price=20, is_active=True)
         ruby_ring.attribute_links.append(ProductAttribute(attribute=metal, value="Rose gold-tone"))
         pearl_ring.attribute_links.append(ProductAttribute(attribute=metal, value="Silver-tone"))
         db.session.add_all([metal, ruby_ring, pearl_ring])
@@ -33,7 +31,7 @@ def test_one_value_per_product_per_attribute(app):
 
     with app.app_context():
         finish = Attribute(name="Plating")
-        product = Product(sku="AT-DUP", name="Dup", retail_price=1, sale_price=1)
+        product = Product(sku="AT-DUP", name="Dup", compare_at_price=1, price=1)
         product.attribute_links = [
             ProductAttribute(attribute=finish, value="A"),
             ProductAttribute(attribute=finish, value="B"),
@@ -47,7 +45,7 @@ def test_one_value_per_product_per_attribute(app):
 def test_admin_edits_details_inside_the_product_form(app, client):
     with app.app_context():
         clasp = Attribute(name="Closure")
-        product = Product(sku="AT-ADMIN", name="Admin Bangle", retail_price=30, sale_price=30, is_active=True)
+        product = Product(sku="AT-ADMIN", name="Admin Bangle", compare_at_price=30, price=30, is_active=True)
         db.session.add_all([clasp, product])
         db.session.commit()
         pid, clasp_id = product.id, clasp.id
@@ -57,8 +55,8 @@ def test_admin_edits_details_inside_the_product_form(app, client):
     data = {
         "sku": "AT-ADMIN",
         "name": "Admin Bangle",
-        "retail_price": "30",
-        "sale_price": "30",
+        "compare_at_price": "30",
+        "price": "30",
         "is_active": "y",
         "attribute_links-0-attribute": str(clasp_id),
         "attribute_links-0-value": "Screw clasp",

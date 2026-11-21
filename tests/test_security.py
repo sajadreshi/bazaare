@@ -136,7 +136,7 @@ def test_debug_is_off_by_default(app):
 
 
 def test_admin_can_save_with_csrf_on_and_is_protected_without_it(app, client):
-    from app.models import Variant
+    from app.models import Product
 
     app.config["WTF_CSRF_ENABLED"] = True
     try:
@@ -145,17 +145,20 @@ def test_admin_can_save_with_csrf_on_and_is_protected_without_it(app, client):
         login_data = {"email": ADMIN_EMAIL, "password": ADMIN_PASSWORD, "csrf_token": token}
         assert client.post("/auth/login", data=login_data).status_code == 302
 
-        page = client.get("/admin/variant/new/").get_data(as_text=True)
-        tokens = re.findall(r'name="csrf_token" value="([^"]+)"', page)
+        page = client.get("/admin/product/new/").get_data(as_text=True)
+        form = page[page.index("data-bz-editor") : page.index("</form>")]
+        tokens = re.findall(r'name="csrf_token"[^>]*value="([^"]+)"', form)
         assert len(tokens) == 1  # exactly one token per form, or WTForms reads the wrong one
-        data = {"size": "Admin size", "quantity": "1"}
-        assert_csrf_rejected(client, client.post("/admin/variant/new/", data=data))
+        data = {"name": "CSRF Ring", "price": "12"}
+        assert_csrf_rejected(client, client.post("/admin/product/new/", data=data))
         with app.app_context():
-            assert Variant.query.filter_by(size="Admin size").count() == 0
-        resp = client.post("/admin/variant/new/", data={**data, "csrf_token": tokens[0]})
+            assert Product.query.filter_by(name="CSRF Ring").count() == 0
+        resp = client.post("/admin/product/new/", data={**data, "csrf_token": tokens[0]})
         assert resp.status_code == 302
         with app.app_context():
-            assert Variant.query.filter_by(size="Admin size").count() == 1
+            product = Product.query.filter_by(name="CSRF Ring").one()
+            assert product.sku == "BZ-CSRF-RING"  # made from the name
+            assert [o.name for o in product.options] == ["One Size"]
     finally:
         app.config["WTF_CSRF_ENABLED"] = False
 
@@ -172,8 +175,8 @@ def test_admin_can_put_a_product_in_categories(app, client):
     data = {
         "sku": "ADMIN-CAT-1",
         "name": "Category Ring",
-        "retail_price": "10",
-        "sale_price": "9",
+        "compare_at_price": "10",
+        "price": "9",
         "is_active": "y",
         "categories": [str(rings), str(bracelets)],
     }

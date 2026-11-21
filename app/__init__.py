@@ -4,6 +4,7 @@ import click
 from flask import Flask, flash, redirect, render_template, request, url_for
 from flask_admin.menu import MenuLink
 from flask_wtf.csrf import CSRFError
+from markupsafe import Markup
 
 from app.adminapp.auth import bp as admin_auth_bp
 from app.adminapp.views import (
@@ -16,7 +17,6 @@ from app.adminapp.views import (
     ProductView,
     RoleView,
     UserView,
-    VariantView,
 )
 from app.auth import bp as auth_bp
 from app.catalog import catalog as catalog_bp
@@ -24,6 +24,7 @@ from app.catalog_import import register as register_catalog_import
 from app.checkout import checkout as checkout_bp
 from app.customer import customer as customer_bp
 from app.main import main
+from app.richtext import clean_html
 from app.services import catalog as catalog_service
 from app.services import shipping as shipping_service
 from app.services import wishlist as wishlist_service
@@ -42,7 +43,6 @@ from .models import (
     ProductAssociation,
     Role,
     User,
-    Variant,
 )
 
 
@@ -87,11 +87,14 @@ def create_app(config_overrides=None):
     def load_user(user_id):
         return db.session.get(User, int(user_id))
 
+    app.jinja_env.filters["rich"] = lambda text: Markup(clean_html(text))
     app.jinja_env.globals.update(
         cart_item_count=item_count,
         shop_menu=catalog_service.menu,
         wishlist_ids=wishlist_service.ids,
         is_on_sale=catalog_service.is_on_sale,
+        default_option=catalog_service.default_option,
+        price_range=catalog_service.price_range,
         primary_category=catalog_service.primary_category,
         shipping_method_for=shipping_service.method_for,
         shipping_estimate=shipping_service.estimated_delivery,
@@ -106,7 +109,6 @@ def create_app(config_overrides=None):
     admin.add_view(CategoryView(Category, db, category="Category"))
     admin.add_view(CarouselView(Carousel, db, category="Content", name="Home banner slides"))
     admin.add_view(ProductView(Product, db, category="Product"))
-    admin.add_view(VariantView(Variant, db, category="Product"))
     admin.add_view(UserView(User, db, category="User"))
     admin.add_view(RoleView(Role, db, category="User"))
     admin.add_view(ProductAssociationView(ProductAssociation, db, category="Attributes"))

@@ -18,6 +18,15 @@
       if (!search.hidden) search.querySelector('input').focus();
     });
   }
+  // Product options: show the chosen option's price (and its photo, if it has one).
+  document.querySelectorAll('.bz-options input[name="size"]').forEach(function (radio) {
+    radio.addEventListener('change', function () {
+      var price = document.querySelector('[data-bz-price]');
+      if (price && radio.dataset.price) price.textContent = '$' + radio.dataset.price;
+      var main = document.getElementById('productImage');
+      if (main && radio.dataset.image) main.src = radio.dataset.image;
+    });
+  });
   // Product gallery: show the full image when a thumbnail is clicked.
   document.querySelectorAll('[data-bz-thumb]').forEach(function (thumb) {
     thumb.addEventListener('click', function () {

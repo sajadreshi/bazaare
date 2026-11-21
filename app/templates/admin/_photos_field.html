@@ -1,0 +1,20 @@
+{# Product photos: drag to reorder, star = main photo, × = remove, drop or browse to add. See PhotosField. #}
+<div class="bz-photos" data-bz-photos data-name="{{ field.name }}">
+  <input type="hidden" name="{{ field.name }}" id="{{ field.id }}" value="" data-bz-photos-order>
+  <ul class="bz-photos__list" data-bz-photos-list>
+    {% for photo in field.current %}
+    <li class="bz-photo" draggable="true" data-token="{{ photo.image }}">
+      <img src="{{ image_url(photo.image, thumb=True) }}" alt="">
+      <span class="bz-photo__badge">Main</span>
+      <button type="button" class="bz-photo__btn" data-act="main" title="Make this the main photo">★</button>
+      <button type="button" class="bz-photo__btn" data-act="remove" title="Remove this photo">×</button>
+    </li>
+    {% endfor %}
+  </ul>
+  <label class="bz-photos__drop" data-bz-photos-drop>
+    <strong>Drop photos here</strong> or <u>browse</u>
+    <small>JPEG, PNG, WebP or GIF · several at once · the first photo is the main one</small>
+    <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" multiple data-bz-photos-pick>
+  </label>
+  <div data-bz-photos-files hidden></div>
+</div>

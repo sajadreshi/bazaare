@@ -13,12 +13,12 @@ def test_order_keeps_its_prices_when_the_catalog_changes(app, client, product_id
     _, order_id = checkout(app, client, product_ids)
     with app.app_context():
         product = Product.query.filter_by(sku="FLOW-RING").one()
-        product.sale_price = Decimal("150.00")
+        product.price = Decimal("150.00")
         product.name = "Renamed Ring"
         db.session.commit()
         line = db.session.get(Order, order_id).items[0]
         assert (line.name, line.price) == ("Gold Signet", Decimal("99.99"))
-        product.sale_price = Decimal("99.99")
+        product.price = Decimal("99.99")
         product.name = "Gold Signet"
         db.session.commit()
 

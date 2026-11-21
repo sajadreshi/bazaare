@@ -54,20 +54,18 @@ def client(app):
 def product_ids(app):
     with app.app_context():
         rings = Category.query.filter_by(code="ACC-RINGS").one()
-        small = Variant(size="Ring size 6", quantity=1, is_default=True)
-        large = Variant(size="Ring size 9", quantity=Decimal("1.10"))
+        small = Variant(name="Ring size 6", is_default=True, position=0)
+        large = Variant(name="Ring size 9", price=Decimal("109.99"), position=1)
         product = Product(
             sku="FLOW-RING",
             name="Gold Signet",
-            retail_price=Decimal("120.00"),
-            sale_price=Decimal("99.99"),
+            compare_at_price=Decimal("120.00"),
+            price=Decimal("99.99"),
             material="18k gold",
             is_active=True,
-            display=True,
         )
         product.categories.append(rings)
-        small.products.append(product)
-        large.products.append(product)
-        db.session.add_all([product, small, large])
+        product.options = [small, large]
+        db.session.add(product)
         db.session.commit()
         return product.id, small.id, large.id
