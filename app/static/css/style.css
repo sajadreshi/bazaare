@@ -323,12 +323,13 @@ a:focus {
           align-items: center;
   position: relative;
   padding: 45px 0 75px 0;
-  background-image:url("../images/home-hero-bg.jpg");
-  background-size: cover;
+  min-height: 420px;
+  background-image:url("../images/bazaare-logo.jpg");
+  background-size: contain;
   background-position: center;
   background-repeat: no-repeat;
   background-attachment: scroll;
-  background-color: #1d1a1af3;
+  background-color: #000;
 }
 
 .slider_section .row {
@@ -1223,7 +1224,11 @@ a:focus {
   background: #d5d3b8;
 }
 .breadcrumb-bg {
-  background-image: url(../images/home-hero-bg.jpg);
+  background-color: #000;
+  background-image: url(../images/bazaare-logo.jpg);
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
 .breadcrumb-text p {
