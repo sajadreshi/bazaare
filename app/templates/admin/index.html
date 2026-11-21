@@ -80,7 +80,7 @@
           {% set customer = order.customer %}
           {% set who = (customer.user.email if customer and customer.user else (order.shipping_address.email if order.shipping_address else 'Guest')) %}
           <tr>
-            <td><a href="{{ url_for('order.edit_view', id=order.id) }}">{{ order.number }}</a></td>
+            <td><a href="{{ url_for('order.details_view', id=order.id) }}">{{ order.number }}</a></td>
             <td>{{ who }}</td>
             <td>{{ order.placed_at.strftime('%d %b %Y, %H:%M') }}</td>
             <td><span class="bz-status bz-status--{{ order.status | lower }}">{{ order.status | title }}</span></td>
