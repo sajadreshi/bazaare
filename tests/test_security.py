@@ -5,10 +5,10 @@ import re
 import pytest
 
 from app import create_app
-from app.auth.routes import is_safe_next
 from app.extension import db
 from app.models import Payment, User
 from app.seed import seed_admin
+from app.urls import is_safe_next
 from tests.conftest import ADMIN_EMAIL, ADMIN_PASSWORD
 
 
@@ -57,7 +57,7 @@ def test_admin_requires_login(client):
     for url in ["/admin/", "/admin/product/", "/admin/user/"]:
         resp = client.get(url)
         assert resp.status_code == 302, url
-        assert resp.headers["Location"].startswith("/auth/login?next=/admin/"), url
+        assert resp.headers["Location"].startswith("/admin/login?next=/admin/"), url
 
 
 def test_admin_rejects_non_admin_users(app, client):
