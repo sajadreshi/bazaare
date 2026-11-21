@@ -7,9 +7,7 @@ from flask_login import current_user
 
 
 def is_admin_user():
-    if not current_user.is_authenticated:
-        return False
-    return any(role.name.lower() == "admin" for role in current_user.roles)
+    return bool(current_user.is_authenticated and any(r.name.lower() == "admin" for r in current_user.roles))
 
 
 class AdminOnlyMixin:
@@ -19,7 +17,7 @@ class AdminOnlyMixin:
         return is_admin_user()
 
     def inaccessible_callback(self, name, **kwargs):
-        return redirect(url_for("auth.login", next=request.full_path.rstrip("?")))
+        return redirect(url_for("admin_auth.login", next=request.full_path.rstrip("?")))
 
 
 class SecureIndexView(AdminOnlyMixin, AdminIndexView):

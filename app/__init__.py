@@ -2,7 +2,9 @@ import logging
 
 import click
 from flask import Flask, render_template
+from flask_admin.menu import MenuLink
 
+from app.adminapp.auth import bp as admin_auth_bp
 from app.adminapp.views import (
     AttributesRelView,
     AttributesView,
@@ -78,6 +80,7 @@ def create_app(config_overrides=None):
 
     app.jinja_env.globals.update(cart_item_count=item_count)
     app.register_blueprint(main)
+    app.register_blueprint(admin_auth_bp)
     app.register_blueprint(auth_bp, url_prefix="/auth")
     app.register_blueprint(catalog_bp, url_prefix="/catalog")
     app.register_blueprint(checkout_bp, url_prefix="/checkout")
@@ -96,6 +99,9 @@ def create_app(config_overrides=None):
     admin.add_view(HolidayView(Holiday, db, category="Holidays"))
     admin.add_view(OrderView(Order, db, category="Orders"))
     admin.add_view(OrderItemView(OrderItem, db, category="Orders", name="Order items"))
+    if not any(link.name == "Sign out" for link in admin.menu_links()):
+        admin.add_link(MenuLink(name="View shop", url="/"))
+        admin.add_link(MenuLink(name="Sign out", url="/admin/logout"))
 
     @app.cli.command("seed")
     def seed_command():
