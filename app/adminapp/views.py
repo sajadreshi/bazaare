@@ -1,3 +1,5 @@
+from flask import abort, flash, redirect, request
+from flask_admin import expose
 from flask_admin.model.form import InlineFormAdmin
 from flask_ckeditor import CKEditorField
 from markupsafe import Markup
@@ -6,7 +8,8 @@ from wtforms.validators import DataRequired
 
 from app.adminapp.fields import StorageImageField
 from app.adminapp.security import SecureModelView
-from app.models import ASSOCIATION_TYPES, ORDER_STATUSES, ProductAssociation
+from app.extension import db
+from app.models import ASSOCIATION_TYPES, ORDER_STATUSES, Order, ProductAssociation
 from app.storage import image_url
 
 
@@ -240,22 +243,93 @@ class HolidayView(SecureModelView):
     column_display_pk = False
 
 
+def order_customer(order):
+    """(name, email, kind) for an order's buyer: the account if registered, else the shipping address."""
+    customer = order.customer
+    user = customer.user if customer else None
+    if user is not None:
+        return f"{user.first_name} {user.last_name}".strip(), user.email, "Registered"
+    address = order.shipping_address or order.billing_address
+    if address is not None:
+        return f"{address.first_name} {address.last_name}".strip(), address.email, "Guest"
+    return "Guest", None, "Guest"
+
+
+def _status_badge(view, context, model, name):
+    return Markup('<span class="bz-status bz-status--%s">%s</span>') % (
+        model.status.lower(),
+        model.status.title(),
+    )
+
+
+def _order_link(view, context, model, name):
+    url = view.get_url(".details_view", id=model.id)
+    return Markup('<a href="%s"><strong>%s</strong></a>') % (url, model.number)
+
+
+def _customer_cell(view, context, model, name):
+    person, email, kind = order_customer(model)
+    return Markup("%s<br><small class='bz-muted'>%s · %s</small>") % (person, email or "no email", kind)
+
+
+# Next steps offered as buttons on an order, depending on where it is now.
+ORDER_ACTIONS = {
+    "PLACED": [("SHIPPED", "Mark shipped"), ("CANCELLED", "Cancel order")],
+    "SHIPPED": [("DELIVERED", "Mark delivered"), ("CANCELLED", "Cancel order")],
+    "DELIVERED": [],
+    "CANCELLED": [("PLACED", "Reopen")],
+}
+
+
 class OrderView(SecureModelView):
-    """Orders are created by checkout; admins can only move them through their statuses."""
+    """Orders come from checkout. Click one for the full picture; move it on with the status buttons."""
 
     can_create = False
     can_delete = False
-    column_default_sort = ("placed_at", True)
-    column_list = ("id", "status", "customer_id", "total", "delivery_date", "delivery_window", "placed_at")
-    column_filters = ("status", "placed_at")
-    column_searchable_list = ("id",)
-    form_columns = ("status",)
-    form_choices = {"status": [(s, s.title()) for s in ORDER_STATUSES]}
-
-
-class OrderItemView(SecureModelView):
-    can_create = False
     can_edit = False
-    can_delete = False
-    column_list = ("order", "sku", "name", "variant_name", "price", "shipping", "tax", "discount")
-    column_filters = ("order_id", "sku")
+    can_view_details = True
+    details_template = "admin/order_details.html"
+    column_default_sort = ("placed_at", True)
+    column_list = ("number", "customer", "items", "total", "status", "delivery_date", "placed_at")
+    column_labels = {"number": "Order", "delivery_date": "Delivery", "placed_at": "Placed"}
+    column_formatters = {
+        "number": _order_link,
+        "customer": _customer_cell,
+        "items": lambda v, c, m, n: sum(1 for _ in m.items),
+        "total": lambda v, c, m, n: f"${m.total:.2f}",
+        "status": _status_badge,
+        "delivery_date": lambda v, c, m, n: (
+            f"{m.delivery_date:%a %d %b}" + (f" · {m.delivery_window}" if m.delivery_window else "")
+            if m.delivery_date
+            else ""
+        ),
+        "placed_at": lambda v, c, m, n: f"{m.placed_at:%d %b %Y, %H:%M}",
+    }
+    column_sortable_list = ("total", "status", "delivery_date", "placed_at")
+    column_filters = ("status", "placed_at", "delivery_date")
+    column_searchable_list = ("id",)
+
+    def render(self, template, **kwargs):
+        if template == self.details_template and "model" in kwargs:
+            order = kwargs["model"]
+            kwargs.update(
+                customer=order_customer(order),
+                actions=ORDER_ACTIONS.get(order.status, []),
+                statuses=ORDER_STATUSES,
+            )
+        return super().render(template, **kwargs)
+
+    @expose("/status/<int:order_id>", methods=["POST"])
+    def set_status(self, order_id):
+        order = db.session.get(Order, order_id)
+        if order is None:
+            abort(404)
+        status = request.form.get("status", "")
+        if status not in ORDER_STATUSES:
+            flash("Unknown status.", "error")
+        elif status != order.status:
+            previous = order.status
+            order.status = status
+            db.session.commit()
+            flash(f"{order.number} moved from {previous.title()} to {status.title()}.", "success")
+        return redirect(self.get_url(".details_view", id=order.id))

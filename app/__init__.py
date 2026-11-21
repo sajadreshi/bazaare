@@ -12,7 +12,6 @@ from app.adminapp.views import (
     CarouselView,
     CategoryView,
     HolidayView,
-    OrderItemView,
     OrderView,
     ProductAssociationView,
     ProductView,
@@ -39,7 +38,6 @@ from .models import (
     Category,
     Holiday,
     Order,
-    OrderItem,
     Product,
     ProductAssociation,
     ProductAttribute,
@@ -113,8 +111,7 @@ def create_app(config_overrides=None):
     admin.add_view(RoleView(Role, db, category="User"))
     admin.add_view(ProductAssociationView(ProductAssociation, db, category="Attributes"))
     admin.add_view(HolidayView(Holiday, db, category="Holidays"))
-    admin.add_view(OrderView(Order, db, category="Orders"))
-    admin.add_view(OrderItemView(OrderItem, db, category="Orders", name="Order items"))
+    admin.add_view(OrderView(Order, db, name="Orders", endpoint="order"))
     if not any(link.name == "Sign out" for link in admin.menu_links()):
         admin.add_link(MenuLink(name="View shop", url="/"))
         admin.add_link(MenuLink(name="Sign out", url="/admin/logout"))

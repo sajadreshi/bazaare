@@ -1,0 +1,104 @@
+{% extends 'admin/master.html' %}
+{# Full picture of one order (Admin → Orders → click an order). Expects `model` (Order), `customer`, `actions`. #}
+{% block title %}{{ model.number }} · Orders · BazaarE’ admin{% endblock %}
+{% block page_title %}{% endblock %}
+{% block body %}
+{% set order = model %}
+{% set money = '%.2f' %}
+{% set person, email, kind = customer %}
+<div class="bz-order">
+  <header class="bz-order__head">
+    <div>
+      <a class="bz-back bz-noprint" href="{{ return_url or get_url('.index_view') }}">← All orders</a>
+      <h1>{{ order.number }} <span class="bz-status bz-status--{{ order.status | lower }}">{{ order.status | title }}</span></h1>
+      <p class="bz-muted">Placed {{ order.placed_at.strftime('%A %d %B %Y at %H:%M') }} UTC
+        {% if order.cart_id %}· from cart #{{ order.cart_id }}{% endif %}</p>
+    </div>
+    <div class="bz-order__actions bz-noprint">
+      {% for status, label in actions %}
+      <form method="post" action="{{ get_url('.set_status', order_id=order.id) }}"
+            {% if status == 'CANCELLED' %}onsubmit="return confirm('Cancel {{ order.number }}?');"{% endif %}>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="status" value="{{ status }}">
+        <button type="submit" class="btn {{ 'bz-btn-outline bz-btn-danger' if status == 'CANCELLED' else 'bz-btn-gold' }}">{{ label }}</button>
+      </form>
+      {% endfor %}
+      <button type="button" class="btn bz-btn-outline" onclick="window.print()">Print packing slip</button>
+    </div>
+  </header>
+
+  <div class="bz-order__grid">
+    <section class="bz-panel bz-panel--wide">
+      <h2>Items ({{ order.items | length }})</h2>
+      <div class="table-responsive">
+      <table class="table bz-table">
+        <thead><tr><th></th><th>Item</th><th>Option</th><th>SKU</th><th class="text-right">Price</th></tr></thead>
+        <tbody>
+          {% for item in order.items %}
+          <tr>
+            <td style="width:64px"><img class="bz-order__thumb" src="{{ image_url(item.image, thumb=True) }}" alt=""></td>
+            <td>
+              {% if item.product_id %}<a href="{{ url_for('product.edit_view', id=item.product_id) }}">{{ item.name }}</a>{% else %}{{ item.name }}{% endif %}
+              {% if item.discount %}<br><small class="bz-muted">Discount −${{ money | format(item.discount) }}</small>{% endif %}
+            </td>
+            <td>{{ item.variant_name if item.variant_name and item.variant_name != 'One Size' else '' }}</td>
+            <td><code>{{ item.sku }}</code></td>
+            <td class="text-right">${{ money | format(item.price) }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+        <tfoot>
+          <tr><td colspan="4" class="text-right bz-muted">Subtotal</td><td class="text-right">${{ money | format(order.total_merchandise) }}</td></tr>
+          <tr><td colspan="4" class="text-right bz-muted">Shipping</td><td class="text-right">${{ money | format(order.total_shipping) }}</td></tr>
+          <tr><td colspan="4" class="text-right bz-muted">Taxes</td><td class="text-right">${{ money | format(order.total_taxes) }}</td></tr>
+          {% if order.total_discount %}<tr><td colspan="4" class="text-right bz-muted">Discounts</td><td class="text-right">−${{ money | format(order.total_discount) }}</td></tr>{% endif %}
+          <tr class="bz-order__total"><td colspan="4" class="text-right">Total</td><td class="text-right">${{ money | format(order.total) }}</td></tr>
+        </tfoot>
+      </table>
+      </div>
+    </section>
+
+    <div class="bz-order__side">
+      <section class="bz-panel">
+        <h2>Customer</h2>
+        <p><strong>{{ person }}</strong> <span class="bz-tag">{{ kind }}</span></p>
+        {% if email %}<p><a href="mailto:{{ email }}">{{ email }}</a></p>{% endif %}
+        {% set phone = order.shipping_address.phone if order.shipping_address else None %}
+        {% if phone %}<p>{{ phone }}</p>{% endif %}
+      </section>
+      <section class="bz-panel">
+        <h2>Delivery</h2>
+        {% if order.delivery_date %}
+        <p><strong>{{ order.delivery_date.strftime('%A %d %B %Y') }}</strong>{% if order.delivery_window %} · {{ order.delivery_window }}{% endif %}</p>
+        {% else %}<p class="bz-muted">No delivery date chosen</p>{% endif %}
+      </section>
+      <section class="bz-panel">
+        <h2>Payment</h2>
+        {% for payment in order.payments %}
+        <p>{{ 'Cash on delivery' if payment.payment_method == 'COD' else payment.payment_method }}
+          · <span class="bz-muted">{{ payment.transaction_status | title }}</span>
+          · ${{ money | format(payment.approved_amount or 0) }}</p>
+        {% if payment.transaction_id %}<p class="bz-muted">Ref {{ payment.transaction_id }}</p>{% endif %}
+        {% else %}
+        <p class="bz-muted">No payment recorded</p>
+        {% endfor %}
+      </section>
+    </div>
+
+    {% for title, address in [('Ship to', order.shipping_address), ('Bill to', order.billing_address)] %}
+    <section class="bz-panel">
+      <h2>{{ title }}</h2>
+      {% if address %}
+      <address class="bz-address">
+        <strong>{{ address.first_name }} {{ address.last_name }}</strong><br>
+        {{ address.address1 }}<br>
+        {% if address.address2 %}{{ address.address2 }}<br>{% endif %}
+        {{ address.city }}, {{ address.state }} {{ address.zip }}<br>
+        {{ address.country }}
+      </address>
+      {% else %}<p class="bz-muted">Not provided</p>{% endif %}
+    </section>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

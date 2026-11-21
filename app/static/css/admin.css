@@ -65,3 +65,33 @@ a:hover { color: #f1d595; }
 .bz-status--shipped { background: #1d2c3a; color: #9cc3e8; }
 .bz-status--delivered { background: #1b3022; color: #8fc79a; }
 .bz-status--cancelled { background: #3a1e1b; color: #e08a7a; }
+
+/* Order detail page */
+.bz-order { padding: 10px 0 40px; }
+.bz-order__head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 16px; margin: 14px 0 20px; }
+.bz-order__head h1 { font-family: Georgia, "Times New Roman", serif; color: #fbf3e2; margin: 6px 0 4px; display: flex; align-items: center; gap: 12px; }
+.bz-order__head h1 .bz-status { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; font-size: .85rem; }
+.bz-back { font-size: .85rem; }
+.bz-order__actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.bz-order__actions form { margin: 0; }
+.bz-btn-danger { color: #e08a7a !important; }
+.bz-btn-danger:hover { border-color: #e08a7a; }
+.bz-order__grid { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 14px; }
+@media (max-width: 900px) { .bz-order__grid { grid-template-columns: 1fr; } }
+.bz-order__side { display: flex; flex-direction: column; gap: 14px; }
+.bz-order__side .bz-panel p { margin: 0 0 6px; }
+.bz-order__thumb { width: 52px; height: 52px; object-fit: cover; border-radius: 8px; }
+.bz-order__total td { font-size: 1.1rem; font-weight: 600; color: #fbf3e2; border-top: 1px solid var(--bz-gold) !important; }
+.bz-table tfoot td { border-top: 0; padding-top: 4px; padding-bottom: 4px; }
+.bz-tag { font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; padding: 2px 8px; border-radius: 999px; background: #26231d; color: var(--bz-muted); margin-left: 6px; }
+.bz-address { margin: 0; line-height: 1.6; font-style: normal; }
+
+/* Packing slip: print just the order, in black on white */
+@media print {
+  body { background: #fff !important; color: #000 !important; }
+  .navbar, .bz-noprint, .alert { display: none !important; }
+  .bz-panel { background: #fff !important; border: 1px solid #ccc !important; color: #000 !important; break-inside: avoid; }
+  .bz-order__head h1, .bz-panel h2, .bz-order__total td, .table, a { color: #000 !important; }
+  .bz-status { border: 1px solid #000; background: none !important; color: #000 !important; }
+  .bz-order__grid { grid-template-columns: 2fr 1fr; }
+}
