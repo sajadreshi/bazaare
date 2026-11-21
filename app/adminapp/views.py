@@ -112,38 +112,28 @@ class CategoryView(SecureModelView):
 
 
 class CarouselView(SecureModelView):
-    """A slide in the home page's top banner: a headline and a short message."""
+    """Slides in the home page's top banner. Every active slide shows, in order."""
 
-    form_excluded_columns = ["created_at", "updated_at", "home"]
-    column_list = ("name", "header", "updated_at")
-    form_labels = {"name": "Name (admin only)", "header": "Headline", "text": "Message"}
-    column_display_pk = False
-    form_overrides = dict(text=CKEditorField)
-
-
-class HomePageView(SecureModelView):
-    """What the home page's top banner and Featured section show. The newest active row is used."""
-
-    column_list = ("is_active", "hero_image", "carousel", "category", "updated_at")
+    column_list = ("position", "image", "name", "header", "is_active", "updated_at")
+    column_default_sort = [("position", False), ("id", False)]
     column_labels = {
+        "position": "Order",
+        "image": "Background",
+        "header": "Headline",
         "is_active": "Active",
-        "hero_image": "Banner image",
-        "carousel": "Slides",
-        "category": "Featured category",
         "updated_at": "Updated",
     }
-    column_formatters = {
-        "hero_image": thumbnail("hero_image"),
-        "carousel": lambda v, c, m, n: ", ".join(s.name for s in m.carousel),
-    }
-    form_columns = ("is_active", "hero_image", "carousel", "category")
+    column_formatters = {"image": thumbnail("image")}
+    form_columns = ("name", "header", "text", "image", "position", "is_active")
+    form_overrides = dict(text=CKEditorField)
     form_args = {
-        "is_active": {"label": "Active (the newest active row is shown on the home page)"},
-        "carousel": {"label": "Slides (headline + message rotating in the top banner)"},
-        "category": {"label": "Featured category (its products appear under the banner)"},
+        "name": {"label": "Name (only shown in the admin)"},
+        "header": {"label": "Headline"},
+        "text": {"label": "Message"},
+        "position": {"label": "Order (lowest first)", "default": 0},
+        "is_active": {"label": "Active (shown on the home page)", "default": True},
     }
-    form_extra_fields = {"hero_image": StorageImageField("Banner image (behind the slides)", folder="home")}
-    column_display_pk = False
+    form_extra_fields = {"image": StorageImageField("Background image (behind the headline)", folder="home")}
 
 
 PRODUCT_IMAGES = {

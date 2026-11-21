@@ -272,3 +272,9 @@
 .bz-upsell img { width: 64px; height: 64px; object-fit: cover; border-radius: 8px; }
 .bz-upsell__name { font-family: var(--bz-serif); font-size: 1.1rem; font-weight: 600; color: var(--bz-ink); }
 .bz-upsell__price { font-weight: 600; color: var(--bz-ink); padding-right: 6px; }
+
+/* Each banner slide carries its own background image */
+.bz-hero__slides .carousel-item { position: relative; }
+.bz-hero__slides .bz-hero__shade { position: absolute; inset: 0; background: linear-gradient(90deg, rgba(14, 13, 11, .9) 0%, rgba(14, 13, 11, .45) 60%, rgba(14, 13, 11, .2) 100%); }
+.bz-hero__slides .bz-hero__text { position: relative; z-index: 1; }
+.bz-hero--slides::after { display: none; }

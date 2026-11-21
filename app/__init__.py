@@ -12,7 +12,6 @@ from app.adminapp.views import (
     CarouselView,
     CategoryView,
     HolidayView,
-    HomePageView,
     OrderItemView,
     OrderView,
     ProductAssociationView,
@@ -39,7 +38,6 @@ from .models import (
     Carousel,
     Category,
     Holiday,
-    HomePageContent,
     Order,
     OrderItem,
     Product,
@@ -108,8 +106,7 @@ def create_app(config_overrides=None):
     admin.add_view(AttributesView(Attribute, db, category="Attributes"))
     admin.add_view(AttributesRelView(ProductAttribute, db, category="Attributes"))
     admin.add_view(CategoryView(Category, db, category="Category"))
-    admin.add_view(CarouselView(Carousel, db, category="Content"))
-    admin.add_view(HomePageView(HomePageContent, db, category="Content"))
+    admin.add_view(CarouselView(Carousel, db, category="Content", name="Home banner slides"))
     admin.add_view(ProductView(Product, db, category="Product"))
     admin.add_view(VariantView(Variant, db, category="Product"))
     admin.add_view(UserView(User, db, category="User"))

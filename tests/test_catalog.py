@@ -10,7 +10,6 @@ from app.models import (
     Attribute,
     Carousel,
     Category,
-    HomePageContent,
     Product,
     ProductAssociation,
     ProductAttribute,
@@ -83,12 +82,16 @@ def catalog(app):
             )
         )
 
-        slide1 = Carousel(name="s1", header="New Moon Collection", text="<p>Hand <b>made</b></p>")
-        slide2 = Carousel(name="s2", header="Pearls are back", text="Classic studs")
-        home = HomePageContent(is_active=True, category=earrings)
-        home.carousel.append(slide1)
-        home.carousel.append(slide2)
-        db.session.add_all([slide1, slide2, home])
+        slide1 = Carousel(
+            name="s1",
+            header="New Moon Collection",
+            text="<p>Hand <b>made</b></p>",
+            position=1,
+            image="home/2026/11/moon.jpg",
+        )
+        slide2 = Carousel(name="s2", header="Pearls are back", text="Classic studs", position=2)
+        draft = Carousel(name="draft", header="Not ready yet", text="Hidden", is_active=False)
+        db.session.add_all([slide1, slide2, draft])
         db.session.commit()
         return {"pendant": pendant.id, "studs": studs.id, "retired": retired.id, "chain_18": chain_18.id}
 
@@ -119,33 +122,23 @@ def test_inactive_product_page_says_unavailable(client, catalog):
     assert "Product does not exist or is currently out of stock" in html
 
 
-def test_home_page_renders_slides_featured_and_collection(client, catalog):
+def test_home_banner_shows_active_slides_in_order_with_their_images(client, catalog):
     html = client.get("/").get_data(as_text=True)
-    assert "New Moon Collection" in html and "Pearls are back" in html
+    assert html.index("New Moon Collection") < html.index("Pearls are back") < html.index("Shop by category")
+    assert "Not ready yet" not in html  # inactive slide
     assert "Hand made" in html and "<b>made</b>" not in html  # rich text shown as plain text
     assert html.count('data-slide-to="') == 2
-    assert "Pearl Studs" in html  # featured category chosen in the admin (earrings)
-    assert 'href="/catalog/c/neckpieces"' in html  # shop-by-category tiles
-    assert "Secret Ring" not in html
-
-
-def test_home_banner_uses_the_admin_hero_image_and_slides(app, client, catalog):
-    with app.app_context():
-        home = HomePageContent.query.filter_by(is_active=True).order_by(HomePageContent.id.desc()).first()
-        home.hero_image = "home/2026/11/banner.jpg"
-        db.session.commit()
-    html = client.get("/").get_data(as_text=True)
-    assert 'class="bz-hero__img" src="/media/home/2026/11/banner.jpg"' in html
-    assert html.index("New Moon Collection") < html.index("Shop by category")  # slides are in the top banner
+    assert 'src="/media/home/2026/11/moon.jpg"' in html  # the slide's own background image
     assert "Heritage, made to be worn every day" not in html  # default message replaced by the slides
-    assert '<h2 class="bz-title">Earrings</h2>' in html  # featured section titled after its category
+    assert 'href="/catalog/c/neckpieces"' in html  # shop-by-category tiles
 
 
-def test_admin_home_content_form_explains_each_field(client):
+def test_admin_slides_form_explains_each_field(client):
     from tests.conftest import ADMIN_EMAIL, ADMIN_PASSWORD
     from tests.test_security import login
 
     login(client, ADMIN_EMAIL, ADMIN_PASSWORD)
-    html = client.get("/admin/homepagecontent/new/").get_data(as_text=True)
-    assert "Slides (headline + message rotating in the top banner)" in html
-    assert "Featured category" in html and 'type="file"' in html
+    html = client.get("/admin/carousel/new/").get_data(as_text=True)
+    assert "Background image (behind the headline)" in html and 'type="file"' in html
+    assert "Order (lowest first)" in html and "Active (shown on the home page)" in html
+    assert client.get("/admin/homepagecontent/").status_code == 404  # screen removed
