@@ -18,7 +18,7 @@ from flask import current_app
 from werkzeug.datastructures import FileStorage
 
 from app.extension import db
-from app.models import Category, Product, ProductAssociation, Variant
+from app.models import Attribute, Category, Product, ProductAssociation, ProductAttribute, Variant
 from app.storage import save_image
 
 log = logging.getLogger(__name__)
@@ -57,6 +57,20 @@ def _set_designs(product, designs):
             variant = Variant(size=name[:30], quantity=1, is_default=position == 0, description="Design")
             db.session.add(variant)
         variant.products.append(product)
+
+
+def _set_attributes(product, values):
+    """Product details from the manifest, e.g. {"Stone": "Moonstone", "Finish": "Oxidised"}."""
+    current = {link.attribute.name: link for link in product.attribute_links}
+    for name, value in values.items():
+        if name in current:
+            current[name].value = str(value)
+            continue
+        attribute = Attribute.query.filter_by(name=name).first()
+        if attribute is None:
+            attribute = Attribute(name=name)
+            db.session.add(attribute)
+        product.attribute_links.append(ProductAttribute(attribute=attribute, value=str(value)))
 
 
 def _import_associations(links):
@@ -117,6 +131,7 @@ def import_catalog(manifest_path, images_dir, update=False):
         product.display = True
         product.categories = [categories[code] for code in item["categories"]]
         _set_designs(product, item.get("designs"))
+        _set_attributes(product, item.get("attributes") or {})
         if not product.main_image:
             for field, filename in zip(IMAGE_FIELDS, item["images"], strict=False):
                 setattr(product, field, _upload(images_dir, filename, "products"))

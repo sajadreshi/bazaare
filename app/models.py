@@ -102,6 +102,12 @@ class Product(db.Model):
     categories = db.relationship(
         "Category", secondary="category_product_rel", backref=db.backref("product", lazy="dynamic")
     )
+    attribute_links = db.relationship(
+        "ProductAttribute",
+        back_populates="product",
+        cascade="all, delete-orphan",
+        order_by="ProductAttribute.id",
+    )
     associations = db.relationship(
         "ProductAssociation",
         foreign_keys="ProductAssociation.source_product_id",
@@ -184,25 +190,36 @@ class ProductAssociation(db.Model):
 
 
 class Attribute(db.Model):
+    """A kind of product detail, e.g. Stone, Metal, Finish. Each product sets its own value."""
+
     __tablename__ = "attribute"
     id = db.Column(db.Integer, primary_key=True)
-    attribute_name = db.Column(db.String(64), index=True, unique=True, nullable=False)
-    attribute_value = db.Column(db.String(300))
+    name = db.Column(db.String(64), index=True, unique=True, nullable=False)
+    position = db.Column(db.Integer, nullable=False, default=0, server_default="0")
 
     def __repr__(self):
-        return self.attribute_name
+        return self.name
 
     def __unicode__(self):
-        return self.attribute_name
+        return self.name
 
 
 class ProductAttribute(db.Model):
+    """One product's value for an attribute, e.g. this ring's Stone is "Moonstone"."""
+
     __tablename__ = "product_attribute_rel"
+    __table_args__ = (db.UniqueConstraint("product_id", "attribute_id", name="uq_product_attribute"),)
     id = db.Column(db.Integer, primary_key=True)
     product_id = db.Column(db.Integer, db.ForeignKey("product.id", ondelete="CASCADE"), nullable=False)
     attribute_id = db.Column(db.Integer, db.ForeignKey("attribute.id", ondelete="CASCADE"), nullable=False)
-    product = db.relationship("Product", backref="attribute_links")
-    attribute = db.relationship("Attribute", backref="product_links")
+    value = db.Column(db.String(300), nullable=False)
+    product = db.relationship("Product", back_populates="attribute_links")
+    attribute = db.relationship(
+        "Attribute", backref=db.backref("product_links", cascade="all, delete-orphan")
+    )
+
+    def __repr__(self):
+        return f"{self.attribute}: {self.value}"
 
 
 class Category(db.Model):

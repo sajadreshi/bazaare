@@ -9,7 +9,7 @@ from wtforms.validators import DataRequired
 from app.adminapp.fields import StorageImageField
 from app.adminapp.security import SecureModelView
 from app.extension import db
-from app.models import ASSOCIATION_TYPES, ORDER_STATUSES, Order, ProductAssociation, utcnow
+from app.models import ASSOCIATION_TYPES, ORDER_STATUSES, Order, ProductAssociation, ProductAttribute, utcnow
 from app.services.shipping import CARRIERS, HAND_DELIVERY
 from app.storage import image_url
 
@@ -29,12 +29,17 @@ def thumbnail(attr):
 
 
 class AttributesView(SecureModelView):
-    form_excluded_columns = ["created_at", "updated_at", "product_links"]
+    """Kinds of product detail (Stone, Metal, Finish...). Values are set on each product's form."""
 
-
-class AttributesRelView(SecureModelView):
-    column_display_pk = False
-    column_list = ("product", "attribute")
+    column_list = ("name", "position", "products")
+    column_labels = {"position": "Order", "products": "Products using it"}
+    column_formatters = {"products": lambda v, c, m, n: len(m.product_links)}
+    column_default_sort = [("position", False), ("name", False)]
+    form_columns = ("name", "position")
+    form_args = {
+        "name": {"label": "Name (e.g. Stone, Metal, Finish, Length)"},
+        "position": {"label": "Order on the product page (lowest first)", "default": 0},
+    }
 
 
 def category_tree(categories):
@@ -165,6 +170,17 @@ class RelatedProductInline(InlineFormAdmin):
     }
 
 
+class ProductAttributeInline(InlineFormAdmin):
+    """One row per product detail on the product form, e.g. Stone: Moonstone."""
+
+    form_columns = ("id", "attribute", "value")
+    form_label = "Details"
+    form_args = {
+        "attribute": {"label": "Attribute", "validators": [DataRequired()]},
+        "value": {"label": "Value", "validators": [DataRequired()]},
+    }
+
+
 class ProductView(SecureModelView):
     form_extra_fields = {
         attr: StorageImageField(label, folder="products") for attr, label in PRODUCT_IMAGES.items()
@@ -186,7 +202,7 @@ class ProductView(SecureModelView):
     column_searchable_list = ["name", "sku"]
     column_filters = ["sale_price", "is_active"]
     # "Related products" table at the bottom of the product form.
-    inline_models = (RelatedProductInline(ProductAssociation),)
+    inline_models = (ProductAttributeInline(ProductAttribute), RelatedProductInline(ProductAssociation))
 
 
 class VariantView(SecureModelView):

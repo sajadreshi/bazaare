@@ -61,10 +61,10 @@ def catalog(app):
             v.products.append(pendant)
         one.products.append(studs)
 
-        stone = Attribute(attribute_name="Stone", attribute_value="Moonstone")
+        stone = Attribute(name="Stone")
         db.session.add_all([pendant, studs, retired, secret, chain_16, chain_18, one, stone, hidden_cat])
         db.session.flush()
-        db.session.add(ProductAttribute(product_id=pendant.id, attribute_id=stone.id))
+        db.session.add(ProductAttribute(product_id=pendant.id, attribute_id=stone.id, value="Moonstone"))
         db.session.add(
             ProductAssociation(
                 source_product_id=pendant.id,
