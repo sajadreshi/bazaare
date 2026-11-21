@@ -1,0 +1,24 @@
+{# Product tile. Expects `product`. #}
+{% from 'common/_icons.html' import icon %}
+{% set in_wishlist = product.id in wishlist_ids() %}
+<article class="bz-card">
+  <a class="bz-card__media" href="{{ url_for('catalog.product', productId=product.id) }}">
+    <img src="{{ image_url(product.main_image, thumb=True) }}" alt="{{ product.name }}" loading="lazy" width="400" height="400">
+    {% if is_on_sale(product) %}<span class="bz-card__tag">Sale</span>{% endif %}
+  </a>
+  <form class="bz-card__wish" method="post" action="{{ url_for('catalog.toggle_wishlist', productId=product.id) }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button type="submit" class="bz-iconbtn {{ 'is-on' if in_wishlist }}" aria-pressed="{{ 'true' if in_wishlist else 'false' }}"
+            title="{{ 'Remove from wishlist' if in_wishlist else 'Add to wishlist' }}">
+      {{ icon('heart', 18) }}<span class="bz-sr">{{ 'Remove from wishlist' if in_wishlist else 'Add to wishlist' }}</span>
+    </button>
+  </form>
+  <div class="bz-card__body">
+    <h3 class="bz-card__name"><a href="{{ url_for('catalog.product', productId=product.id) }}">{{ product.name }}</a></h3>
+    {% if product.material %}<p class="bz-card__meta">{{ product.material }}</p>{% endif %}
+    <p class="bz-price">
+      <span class="bz-price__now">${{ '%.2f' | format(product.sale_price) }}</span>
+      {% if is_on_sale(product) %}<s class="bz-price__was">${{ '%.2f' | format(product.retail_price) }}</s>{% endif %}
+    </p>
+  </div>
+</article>

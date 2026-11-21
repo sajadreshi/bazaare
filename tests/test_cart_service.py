@@ -25,7 +25,7 @@ def test_guest_cart_is_kept_when_logging_in(app, client, product_ids):
         cart = Cart.query.filter_by(customer_id=user_id, status="PENDING").one()
         assert [i.id for i in cart.pending_items] == [guest_item]
         assert cart.total_cart == Decimal("99.99")
-    assert 'badge-warning">1</span>' in client.get("/").get_data(as_text=True)
+    assert 'class="bz-badge">1</span>' in client.get("/").get_data(as_text=True)
 
 
 def test_guest_items_merge_into_existing_user_cart(app, client, product_ids):

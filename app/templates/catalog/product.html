@@ -1,45 +1,26 @@
 {% extends 'common/layout.html' %}
-
-{% block title %}Product{% endblock %}
+{% block title %}{{ product.name if product else 'Product' }}{% endblock %}
+{% block meta_description %}{{ ((product.description or product.name) if product else 'BazaarE') | truncate(150) }}{% endblock %}
 {% block header %}{% include 'common/header.html' %}{% endblock %}
 {% block content %}
-{% with messages = get_flashed_messages() %}
-  {% if messages %}
-    {% for message in messages %}
-        <div class="alert alert-warning alert-dismissible fade show" role="alert">
-              <div class="flash-msg">{{message}}</div>
-			  <span type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></span>
-        </div>
-    {% endfor %}
-  {% endif %}
-{% endwith %}
-<!-- content -->
-<section class="mini_cart_section">
-  {% if cart and cart.pending_items %}
-     {% include 'catalog/minishoppingcart.html'%}
-  {% endif %} 
-</section>
-<section class="product_section layout_padding">
-  {% if product and product is defined %} 
-    {% include 'catalog/productdetails.html'%}
+{% if cart and cart.pending_items %}
+<section class="mini_cart_section">{% include 'catalog/minishoppingcart.html' %}</section>
+{% endif %}
+<section class="bz-section">
+  {% if product %}
+    {% include 'catalog/productdetails.html' %}
   {% else %}
-    <h2>
-      Product does not exist or is currently out of stock
-    </h2>
-    <div class="btn-box">
-        <a href="{{ url_for('catalog.collection') }}">
-          View More Options
-        </a>
-      </div>
-  </div>
- {% endif %} 
+    <div class="bz-empty">
+      <h2>Product does not exist or is currently out of stock</h2>
+      <a class="bz-btn" href="{{ url_for('catalog.category', slug='new') }}">See new arrivals</a>
+    </div>
+  {% endif %}
 </section>
-<section class="related_product_section layout_padding-bottom">
-    {% if xsells is defined and xsells | length > 0 %}
-      {% include 'catalog/relatedproducts.html'%}
-    {% endif %}
-   </section>
-<!-- content -->
+{% if xsells %}
+<section class="bz-section">
+  <h2 class="bz-title">You may also like</h2>
+  {% with products = xsells %}{% include 'catalog/_grid.html' %}{% endwith %}
+</section>
+{% endif %}
 {% endblock %}
-  
 {% block footer %}{% include 'common/footer.html' %}{% endblock %}

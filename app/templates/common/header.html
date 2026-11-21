@@ -1,50 +1,86 @@
- <!-- header section strats -->
- <header class="header_section">
-    <div class="container">
-      <nav class="navbar navbar-expand-lg custom_nav-container ">
-        <a class="navbar-brand" href="{{ url_for('main.home') }}">
-          <span>
-            Bazaare
-          </span>
-        </a>
-        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-          <span class=""> </span>
-        </button>
+{% from 'common/_icons.html' import icon %}
+{% set menu = shop_menu() %}
+{% set wish_count = wishlist_ids() | length %}
+{% set bag_count = cart_item_count() %}
+<header class="bz-header" id="top">
+  <div class="bz-header__bar">
+    <button class="bz-iconbtn bz-header__menu-btn" type="button" aria-controls="bz-menu" aria-expanded="false" data-bz-menu-toggle>
+      {{ icon('menu') }}<span class="bz-sr">Menu</span>
+    </button>
 
-        <div class="collapse navbar-collapse" id="navbarSupportedContent">
-          <ul class="navbar-nav  mx-auto ">
-            <li class="nav-item active">
-              <a class="nav-link" href="{{ url_for('main.home') }}">Home <span class="sr-only">(current)</span></a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="{{ url_for('catalog.collection') }}">Collection</a> 
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="{{ url_for('main.about') }}">About</a> 
-            </li>
-         
-          {%  if current_user.is_authenticated %}
-              
-            <li class="nav-item">
-              <a class="nav-link" href="{{ url_for('customer.profile') }}">Account</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="{{ url_for('auth.logout') }}">Logout</a>
-            </li>
+    <a class="bz-brand" href="{{ url_for('main.home') }}" aria-label="BazaarE' home">
+      <span class="bz-brand__name">BazaarE<span class="bz-brand__mark">’</span></span>
+      <span class="bz-brand__tagline">Jewellery · Craft · Culture</span>
+    </a>
 
-          {% else %}
-            <li class="nav-item">
-              <a class="nav-link" href="{{ url_for('auth.login') }}">Login</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="{{ url_for('auth.register') }}">Register</a>
-            </li>
-          {% endif %}
-            <li class="nav-item">
-              <a class="nav-link" href="{{ url_for('checkout.shopcart') }}"  id="cart"><i class="fa fa-shopping-cart"></i> Cart <span class="badge  badge-warning">{{ cart_item_count() }}</span></a>
-            </li>
+    <nav class="bz-header__tools" aria-label="Shop tools">
+      <a class="bz-iconbtn bz-hide-sm" href="{{ url_for('catalog.search') }}" data-bz-search-toggle>{{ icon('search') }}<span class="bz-sr">Search</span></a>
+      <a class="bz-iconbtn" href="{{ url_for('catalog.wishlist') }}">{{ icon('heart') }}<span class="bz-sr">Wishlist</span>{% if wish_count %}<span class="bz-badge">{{ wish_count }}</span>{% endif %}</a>
+      <a class="bz-iconbtn" href="{{ url_for('checkout.shopcart') }}" id="cart">{{ icon('bag') }}<span class="bz-sr">Bag</span>{% if bag_count %}<span class="bz-badge">{{ bag_count }}</span>{% endif %}</a>
+      <a class="bz-iconbtn bz-hide-sm" href="{{ url_for('customer.profile') if current_user.is_authenticated else url_for('auth.login') }}">{{ icon('user') }}<span class="bz-sr">{{ 'Account' if current_user.is_authenticated else 'Sign in' }}</span></a>
+    </nav>
+  </div>
+
+  <form class="bz-search" action="{{ url_for('catalog.search') }}" method="get" role="search" data-bz-search hidden>
+    {{ icon('search', 18) }}
+    <input type="search" name="q" placeholder="Search jhumkas, kundan, bangles…" aria-label="Search the shop" value="{{ query or '' }}">
+    <button type="submit">Search</button>
+  </form>
+
+  {# Desktop: one row with dropdowns. Mobile: a panel with an icon grid, like the client's mock-up. #}
+  <nav class="bz-nav" id="bz-menu" aria-label="Main menu">
+    <div class="bz-nav__panel">
+      <ul class="bz-nav__list">
+        <li class="bz-nav__item">
+          <a class="bz-nav__link" href="{{ url_for('main.home') }}"><span class="bz-nav__icon">{{ icon('home') }}</span><span>Home</span></a>
+        </li>
+        {% for category, children in menu %}
+        <li class="bz-nav__item {{ 'has-children' if children }}">
+          <a class="bz-nav__link" href="{{ url_for('catalog.category', slug=category.slug) }}" {% if children %}aria-haspopup="true"{% endif %}>
+            <span class="bz-nav__icon">{{ icon(category.code) }}</span><span>{{ category.name }}</span>
+          </a>
+          {% if children %}
+          <ul class="bz-nav__dropdown" aria-label="{{ category.name }}">
+            {% for child in children %}
+            <li><a href="{{ url_for('catalog.category', slug=child.slug) }}">{{ child.name }}</a></li>
+            {% endfor %}
+            <li class="bz-nav__all"><a href="{{ url_for('catalog.category', slug=category.slug) }}">Shop all {{ category.name | lower }}</a></li>
           </ul>
-        </div>
-      </nav>
+          {% endif %}
+        </li>
+        {% endfor %}
+      </ul>
+
+      <div class="bz-nav__subs">
+        {% for category, children in menu if children %}
+        <details class="bz-nav__group">
+          <summary>{{ category.name }} {{ icon('chevron', 16) }}</summary>
+          <ul>
+            {% for child in children %}<li><a href="{{ url_for('catalog.category', slug=child.slug) }}">{{ child.name }}</a></li>{% endfor %}
+          </ul>
+        </details>
+        {% endfor %}
+      </div>
+
+      <div class="bz-nav__tools">
+        <a href="{{ url_for('catalog.search') }}">{{ icon('search', 18) }} Search</a>
+        <a href="{{ url_for('catalog.wishlist') }}">{{ icon('heart', 18) }} Wishlist{% if wish_count %} ({{ wish_count }}){% endif %}</a>
+        <a href="{{ url_for('checkout.shopcart') }}">{{ icon('bag', 18) }} Bag{% if bag_count %} ({{ bag_count }}){% endif %}</a>
+        {% if current_user.is_authenticated %}
+        <a href="{{ url_for('customer.profile') }}">{{ icon('user', 18) }} Account</a>
+        <a href="{{ url_for('auth.logout') }}">Sign out</a>
+        {% else %}
+        <a href="{{ url_for('auth.login') }}">{{ icon('user', 18) }} Sign in</a>
+        {% endif %}
+      </div>
     </div>
-  </header>
+  </nav>
+</header>
+
+{% with messages = get_flashed_messages() %}
+{% if messages %}
+<div class="bz-flashes" role="status">
+  {% for message in messages %}<p class="bz-flash">{{ message }}</p>{% endfor %}
+</div>
+{% endif %}
+{% endwith %}

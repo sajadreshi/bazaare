@@ -27,6 +27,12 @@ def app(tmp_path_factory):
             "ADMIN_EMAIL": ADMIN_EMAIL,
             "ADMIN_PASSWORD": ADMIN_PASSWORD,
             "UPLOAD_DIR": str(tmp_path_factory.mktemp("uploads")),
+            # Never touch a real bucket from tests, even if .env has R2 keys.
+            "R2_ACCOUNT_ID": None,
+            "R2_ACCESS_KEY_ID": None,
+            "R2_SECRET_ACCESS_KEY": None,
+            "R2_BUCKET": None,
+            "R2_PUBLIC_URL": None,
         }
     )
     with app.app_context():
@@ -47,7 +53,7 @@ def client(app):
 @pytest.fixture(scope="session")
 def product_ids(app):
     with app.app_context():
-        rings = Category.query.filter_by(code="RINGS").one()
+        rings = Category.query.filter_by(code="ACC-RINGS").one()
         small = Variant(size="Ring size 6", quantity=1, is_default=True)
         large = Variant(size="Ring size 9", quantity=Decimal("1.10"))
         product = Product(

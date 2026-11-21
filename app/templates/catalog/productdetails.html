@@ -1,74 +1,74 @@
-{# Product page body. Expects `product` (Product), `images` (filenames) and `options` (VariantOption list). #}
-<div class="container">
-  <div class="row gx-5">
-    <aside class="col-lg-6">
-      <div class="border rounded-4 mb-3 d-flex justify-content-center">
-        <img id="productImage" class="rounded-4 fit main-img" alt="{{ product.name }}"
-             src="{{ image_url(images[0] if images else None) }}" />
-      </div>
-      {% if images | length > 1 %}
-      <div class="d-flex justify-content-center mb-3">
-        {% for image in images %}
-        <a href="javascript:void(0)" class="thumbnail">
-          <img class="rounded-2 alt-img" alt="" src="{{ image_url(image, thumb=True) }}" data-full="{{ image_url(image) }}" />
-        </a>
-        {% endfor %}
-      </div>
-      {% endif %}
-    </aside>
-    <main class="col-lg-6">
-      <div class="ps-lg-3">
-        <h2 class="title text-dark">{{ product.name }}</h2>
-        <p>{{ product.description or '' }}</p>
+{# Product page body. Expects `product`, `images` (keys) and `options` (VariantOption list). #}
+{% from 'common/_icons.html' import icon %}
+{% set crumb = primary_category(product) %}
+{% set in_wishlist = product.id in wishlist_ids() %}
+<div class="bz-product">
+  <div class="bz-gallery">
+    <div class="bz-gallery__main">
+      <img id="productImage" src="{{ image_url(images[0] if images else None) }}" alt="{{ product.name }}">
+    </div>
+    {% if images | length > 1 %}
+    <div class="bz-gallery__thumbs">
+      {% for image in images %}
+      <button type="button" class="bz-gallery__thumb {{ 'is-active' if loop.first }}" data-bz-thumb data-full="{{ image_url(image) }}" aria-label="Show photo {{ loop.index }}">
+        <img src="{{ image_url(image, thumb=True) }}" alt="">
+      </button>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
 
-        <div class="row">
-          <dt class="col-3">Material:</dt>
-          <dd class="col-9">{{ product.material or '-' }}</dd>
-          <dt class="col-3">Sustainable:</dt>
-          <dd class="col-9">{{ '&#x2714;' | safe if product.is_sustainable else '&#x2718;' | safe }}</dd>
-          <dt class="col-3">Handmade:</dt>
-          <dd class="col-9">{{ '&#x2714;' | safe if product.is_handmade else '&#x2718;' | safe }}</dd>
-          {% for link in product.attribute_links %}
-          <dt class="col-3">{{ link.attribute.attribute_name }}:</dt>
-          <dd class="col-9">{{ link.attribute.attribute_value or '' }}</dd>
-          {% endfor %}
-        </div>
-        <hr />
-        {% if options %}
-        <form name="addToCartFrm" method="post">
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-          <input type="hidden" name="pid" value="{{ product.id }}">
-          <div class="row mb-4">
-            <div class="col-radio-container">
-              <div class="list-group">
-                {% set default_id = (options | selectattr('variant.is_default') | map(attribute='variant.id') | first) or options[0].variant.id %}
-                {% for option in options %}
-                <label class="list-group-item d-flex gap-2 prod-group">
-                  <input class="form-check-input flex-shrink-0" type="radio" name="size" id="sizeGroupRadios{{ loop.index }}"
-                         value="{{ option.variant.id }}" {{ 'checked' if option.variant.id == default_id else '' }}>
-                  <span style="width: 70%;">
-                    {{ option.variant.size }} <span class="dollar-amount">${{ option.price }}</span>
-                    {% if option.variant.description %}
-                    <small class="d-block text-body-secondary">{{ option.variant.description }}</small>
-                    {% endif %}
-                  </span>
-                  {% if option.variant.variant_image %}
-                  <img class="variant-image" alt="" src="{{ image_url(option.variant.variant_image, thumb=True) }}"/>
-                  {% endif %}
-                </label>
-                {% endfor %}
-              </div>
-            </div>
-          </div>
-          <button type="submit" class="btn btn-primary shadow-0"><i class="me-1 fa fa-shopping-basket"></i> Add to cart</button>
-        </form>
-        {% else %}
-        <h5 style="color: red;">Product is currently out of stock</h5>
-        <div class="btn-box">
-          <a href="{{ url_for('catalog.collection') }}">View More Options</a>
-        </div>
-        {% endif %}
+  <div class="bz-product__info">
+    {% if crumb %}
+    <nav class="bz-crumbs" aria-label="Breadcrumb">
+      <a href="{{ url_for('main.home') }}">Home</a><span>/</span>
+      {% if crumb.parent %}<a href="{{ url_for('catalog.category', slug=crumb.parent.slug) }}">{{ crumb.parent.name }}</a><span>/</span>{% endif %}
+      <a href="{{ url_for('catalog.category', slug=crumb.slug) }}">{{ crumb.name }}</a>
+    </nav>
+    {% endif %}
+    <h1 class="bz-product__name">{{ product.name }}</h1>
+    <p class="bz-price bz-price--lg">
+      <span class="bz-price__now" data-bz-price>${{ '%.2f' | format(options[0].price if options else product.sale_price) }}</span>
+      {% if is_on_sale(product) %}<s class="bz-price__was">${{ '%.2f' | format(product.retail_price) }}</s>
+      <span class="bz-price__save">Save ${{ '%.0f' | format(product.retail_price - product.sale_price) }}</span>{% endif %}
+    </p>
+    <p class="bz-product__desc">{{ product.description or '' }}</p>
+    <dl class="bz-specs">
+      {% if product.material %}<dt>Material</dt><dd>{{ product.material }}</dd>{% endif %}
+      {% if product.is_handmade %}<dt>Craft</dt><dd>Handmade</dd>{% endif %}
+      {% for link in product.attribute_links %}<dt>{{ link.attribute.attribute_name }}</dt><dd>{{ link.attribute.attribute_value or '' }}</dd>{% endfor %}
+      <dt>SKU</dt><dd>{{ product.sku }}</dd>
+    </dl>
+
+    {% if options %}
+    <form name="addToCartFrm" method="post" class="bz-buy">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="pid" value="{{ product.id }}">
+      {% set default_id = (options | selectattr('variant.is_default') | map(attribute='variant.id') | first) or options[0].variant.id %}
+      {% if options | length > 1 or options[0].variant.size != 'One Size' %}
+      <fieldset class="bz-options">
+        <legend>{{ 'Design' if options[0].variant.description == 'Design' else 'Choose an option' }}</legend>
+        {% for option in options %}
+        <label class="bz-option">
+          <input type="radio" name="size" value="{{ option.variant.id }}" data-price="{{ '%.2f' | format(option.price) }}" {{ 'checked' if option.variant.id == default_id }}>
+          <span>{{ option.variant.size }}{% if option.price != product.sale_price %} · ${{ '%.2f' | format(option.price) }}{% endif %}
+            {%- if option.variant.description and option.variant.description != 'Design' %}<small> · {{ option.variant.description }}</small>{% endif %}</span>
+        </label>
+        {% endfor %}
+      </fieldset>
+      {% else %}
+      <input type="hidden" name="size" value="{{ options[0].variant.id }}">
+      {% endif %}
+      <div class="bz-buy__actions">
+        <button type="submit" class="bz-btn bz-btn--wide">{{ icon('bag', 18) }} Add to bag</button>
       </div>
-    </main>
+    </form>
+    <form method="post" action="{{ url_for('catalog.toggle_wishlist', productId=product.id) }}" class="bz-wishform">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button type="submit" class="bz-btn bz-btn--ghost bz-btn--wide {{ 'is-on' if in_wishlist }}">{{ icon('heart', 18) }} {{ 'Saved to wishlist' if in_wishlist else 'Add to wishlist' }}</button>
+    </form>
+    {% else %}
+    <p class="bz-soldout">Currently out of stock</p>
+    {% endif %}
   </div>
 </div>

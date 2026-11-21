@@ -1,5 +1,6 @@
 """Catalog and home page rendering from the catalog service."""
 
+import re
 from decimal import Decimal
 
 import pytest
@@ -21,7 +22,7 @@ from app.models import (
 @pytest.fixture(scope="module")
 def catalog(app):
     with app.app_context():
-        necklaces = Category.query.filter_by(code="NECKLACES").one()
+        necklaces = Category.query.filter_by(code="NECK-NECKLACES").one()
         earrings = Category.query.filter_by(code="EARRINGS").one()
         hidden_cat = Category(code="HIDDEN", name="Hidden Things", is_active=False)
         jewellery = Collection.query.filter_by(name="Jewellery").one()
@@ -95,22 +96,24 @@ def catalog(app):
         return {"pendant": pendant.id, "studs": studs.id, "retired": retired.id, "chain_18": chain_18.id}
 
 
-def test_collection_page_shows_only_active_categories_and_products(client, catalog):
-    html = client.get("/catalog/collection").get_data(as_text=True)
-    assert "Moon Pendant" in html and "Pearl Studs" in html
+def test_category_pages_show_only_active_categories_and_products(client, catalog):
+    html = client.get("/catalog/c/neckpieces").get_data(as_text=True)  # parent page includes children
+    assert "Moon Pendant" in html
+    html = client.get("/catalog/c/earrings").get_data(as_text=True)
+    assert "Pearl Studs" in html
     assert "Retired Hoop" not in html  # inactive product
-    assert "Secret Ring" not in html and "Hidden Things" not in html  # inactive category
-    assert 'data-filter=".cat-necklaces"' in html
+    assert client.get("/catalog/c/hidden").status_code == 404  # inactive category
+    assert client.get("/catalog/collection").headers["Location"].endswith("/catalog/c/collections")
 
 
 def test_product_page_shows_variants_attributes_and_cross_sells(client, catalog):
     html = client.get(f"/catalog/product/{catalog['pendant']}").get_data(as_text=True)
     assert "Moon Pendant" in html and "Silver" in html and "Moonstone" in html
     assert "$64.50" in html and "$77.40" in html  # 18 inch = 1.20 x 64.50
-    assert f'value="{catalog["chain_18"]}" checked' in html  # default variant preselected
+    assert re.search(rf'value="{catalog["chain_18"]}"[^>]*checked', html)  # default variant preselected
     assert "Most popular" in html
     assert "moon-side.png" in html  # alternate image thumbnail
-    assert "Related Products" in html and "Pearl Studs" in html
+    assert "You may also like" in html and "Pearl Studs" in html
     assert "Retired Hoop" not in html  # inactive cross-sell hidden
 
 
@@ -124,6 +127,6 @@ def test_home_page_renders_slides_featured_and_collection(client, catalog):
     assert "New Moon Collection" in html and "Pearls are back" in html
     assert "Hand made" in html and "<b>made</b>" not in html  # rich text shown as plain text
     assert html.count('data-slide-to="') == 2
-    assert "Pearl Studs" in html  # featured category (earrings)
-    assert "Moon Pendant" in html  # collection shelves
+    assert "Pearl Studs" in html  # featured category chosen in the admin (earrings)
+    assert 'href="/catalog/c/neckpieces"' in html  # shop-by-category tiles
     assert "Secret Ring" not in html

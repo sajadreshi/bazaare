@@ -164,8 +164,8 @@ def test_admin_can_put_a_product_in_categories(app, client):
     from app.models import Category, Product
 
     with app.app_context():
-        rings = Category.query.filter_by(code="RINGS").one().id
-        bracelets = Category.query.filter_by(code="BRACELETS").one().id
+        rings = Category.query.filter_by(code="ACC-RINGS").one().id
+        bracelets = Category.query.filter_by(code="ACC-BANGLES").one().id
     login(client, ADMIN_EMAIL, ADMIN_PASSWORD)
     page = client.get("/admin/product/new/").get_data(as_text=True)
     assert 'name="categories"' in page
@@ -180,4 +180,4 @@ def test_admin_can_put_a_product_in_categories(app, client):
     assert client.post("/admin/product/new/", data=data).status_code == 302
     with app.app_context():
         product = Product.query.filter_by(sku="ADMIN-CAT-1").one()
-        assert sorted(c.code for c in product.categories) == ["BRACELETS", "RINGS"]
+        assert sorted(c.code for c in product.categories) == ["ACC-BANGLES", "ACC-RINGS"]

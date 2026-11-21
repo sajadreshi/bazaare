@@ -12,6 +12,9 @@ extend-exclude = ["venv", "migrations/versions"]
 # E/W: pycodestyle, F: pyflakes, I: import order, B: bugbear (likely bugs)
 select = ["E", "W", "F", "I", "B"]
 
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["E501"]  # long literals in test data are fine
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 filterwarnings = ["ignore::DeprecationWarning"]

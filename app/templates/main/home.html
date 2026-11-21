@@ -1,40 +1,91 @@
 {% extends 'common/layout.html' %}
-
-{% block title %}Home{% endblock %}
+{% block title %}Handcrafted jewellery{% endblock %}
 {% block header %}{% include 'common/header.html' %}{% endblock %}
 {% block content %}
-{% with messages = get_flashed_messages() %}
-  {% if messages %}
-    {% for message in messages %}
-        <div class="alert alert-warning alert-dismissible fade show" role="alert">
-              <div class="flash-msg">{{message}}</div>
-			  <span type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></span>
-        </div>
-    {% endfor %}
-  {% endif %}
-{% endwith %}
+<section class="bz-hero bz-hero--home {{ 'has-image' if hero and hero.banner_image }}">
+  {% if hero and hero.banner_image %}<img class="bz-hero__img" src="{{ image_url(hero.banner_image) }}" alt="">{% endif %}
+  <div class="bz-hero__text">
+    <p class="bz-eyebrow">Jewellery · Craft · Culture</p>
+    <h1>Heritage, made to be worn every day</h1>
+    <p>Jhumkas, chandbalis, haslis and kadas, inspired by India's craft traditions and finished by hand.</p>
+    <div class="bz-hero__ctas">
+      <a class="bz-btn" href="{{ url_for('catalog.category', slug='new') }}">Shop new arrivals</a>
+      <a class="bz-btn bz-btn--ghost" href="{{ url_for('catalog.category', slug='collections') }}">Explore collections</a>
+    </div>
+  </div>
+</section>
 
- <!-- slider section -->
- <section class="slider_section ">
-  {% if home.slides %}
-     {% include 'main/carousel.html' %}
-  {% endif %}
- </section>
-<!-- end slider section -->
- <!-- start of featured products section-->
- <section class="offer_section layout_padding-bottom">
-  {% if home.featured %}
-    {% include 'main/featured.html'%}
-  {% endif %}
- </section>
- <!-- End featured products section-->
- <!-- Collection section start-->
- <section class="product_section layout_padding-bottom">
-  {% if home.shelves %}
-    {% include 'main/collection.html'%}
-  {% endif %}
- </section>
- <!-- Collection section End-->
-  {% endblock %}
-  
-  {% block footer %}{% include 'common/footer.html' %}{% endblock %}
+{% if home.slides %}
+<section class="slider_section">{% include 'main/carousel.html' %}</section>
+{% endif %}
+
+{% if home.featured %}
+<section class="bz-section">
+  <h2 class="bz-title">Featured</h2>
+  {% with products = home.featured[:8] %}{% include 'catalog/_grid.html' %}{% endwith %}
+</section>
+{% endif %}
+
+{% if shop_by %}
+<section class="bz-section">
+  <h2 class="bz-title">Shop by category</h2>
+  <div class="bz-tiles bz-tiles--3">
+    {% for category, image in shop_by %}
+    <a class="bz-tile" href="{{ url_for('catalog.category', slug=category.slug) }}">
+      <img src="{{ image_url(image) }}" alt="" loading="lazy">
+      <span class="bz-tile__label">{{ category.name }}</span>
+    </a>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+{% if new_arrivals %}
+<section class="bz-section">
+  <div class="bz-section__head">
+    <h2 class="bz-title">Just launched</h2>
+    <a class="bz-link" href="{{ url_for('catalog.category', slug='new') }}">View all</a>
+  </div>
+  {% with products = new_arrivals %}{% include 'catalog/_grid.html' %}{% endwith %}
+</section>
+{% endif %}
+
+{% if crafts %}
+<section class="bz-section bz-section--tinted">
+  <h2 class="bz-title">Shop by craft</h2>
+  <div class="bz-tiles bz-tiles--5">
+    {% for category, image in crafts %}
+    <a class="bz-tile bz-tile--round" href="{{ url_for('catalog.category', slug=category.slug) }}">
+      <img src="{{ image_url(image, thumb=True) }}" alt="" loading="lazy">
+      <span class="bz-tile__label">{{ category.name }}</span>
+    </a>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+{% if bestsellers %}
+<section class="bz-section">
+  <div class="bz-section__head">
+    <h2 class="bz-title">Bestsellers</h2>
+    <a class="bz-link" href="{{ url_for('catalog.category', slug='bestsellers') }}">View all</a>
+  </div>
+  {% with products = bestsellers %}{% include 'catalog/_grid.html' %}{% endwith %}
+</section>
+{% endif %}
+
+{% if gifting %}
+<section class="bz-section bz-gifting">
+  <h2 class="bz-title">Gifting, sorted</h2>
+  <div class="bz-tiles bz-tiles--3">
+    {% for category, image in gifting %}
+    <a class="bz-tile bz-tile--short" href="{{ url_for('catalog.category', slug=category.slug) }}">
+      <img src="{{ image_url(image, thumb=True) }}" alt="" loading="lazy">
+      <span class="bz-tile__label">{{ category.name }}</span>
+    </a>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+{% endblock %}
+{% block footer %}{% include 'common/footer.html' %}{% endblock %}
