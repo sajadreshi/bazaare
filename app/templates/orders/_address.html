@@ -1,0 +1,14 @@
+{# Renders one Address model as `address`. #}
+<div class="address-sec">
+  {% if address %}
+    <span class="add-elem-top">{{ address.first_name }} {{ address.last_name }}</span>
+    <span class="add-elem">{{ address.address1 }}</span>
+    {% if address.address2 %}<span class="add-elem">{{ address.address2 }}</span>{% endif %}
+    <span class="add-elem">{{ address.city }} {{ address.state }}</span>
+    <span class="add-elem">{{ address.zip }} {{ address.country }}</span>
+    <span class="add-elem">{{ address.email }}</span>
+    <span class="add-elem">{{ address.phone }}</span>
+  {% else %}
+    <span class="add-elem">Not provided</span>
+  {% endif %}
+</div>

@@ -1,11 +1,10 @@
 import logging
 
-from flask import abort, flash, redirect, render_template, request, url_for
+from flask import abort, flash, redirect, render_template, request, session, url_for
 
 from app.checkout import checkout
 from app.checkout.addressHelper import save_billing_address, save_shipping_address
 from app.checkout.checkoutHelper import fetchSizeForProduct, updateVariantSize
-from app.checkout.confirmationHelper import get_cart
 from app.checkout.deliveryDateHelper import saveDeliveryDate
 from app.checkout.forms import (
     BillingForm,
@@ -17,6 +16,7 @@ from app.checkout.forms import (
     prepopulateShippingForm,
 )
 from app.checkout.getcarthelper import get_current_cart
+from app.checkout.orders import get_customer_order
 from app.checkout.placeOrderHelper import placeOrder
 from app.checkout.removeitem import delete_item
 
@@ -73,7 +73,7 @@ def order():
                     flash(status.error)
                     return back()
                 else:
-                    return redirect(url_for("checkout.confirm", cartId=status.cartId))
+                    return redirect(url_for("checkout.confirm", orderId=status.orderId))
     cur_cart = get_current_cart()
     shipping_form = prepopulateShippingForm(cur_cart, shipping_form)
     billing_form = prepopulateBillingForm(cur_cart, billing_form)
@@ -88,13 +88,12 @@ def order():
     )
 
 
-@checkout.route("/confirm/<int:cartId>")
-def confirm(cartId):
-    # get_cart only returns carts owned by the current customer.
-    cart = get_cart(cartId)
-    if not cart:
+@checkout.route("/confirm/<int:orderId>")
+def confirm(orderId):
+    order = get_customer_order(orderId, session.get("customer_id"))
+    if order is None:
         abort(404)
-    return render_template("checkout/confirmation.html", cart=cart)
+    return render_template("checkout/confirmation.html", order=order)
 
 
 @checkout.route("/size/<int:productId>")

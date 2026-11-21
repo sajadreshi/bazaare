@@ -17,9 +17,9 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(100), index=True, unique=True, nullable=False)
     password = db.Column(db.String(300), nullable=False)
     is_admin = db.Column(db.Boolean, nullable=False, default=False)
-    marketting_email = db.Column(db.Boolean, nullable=True, default=False)
+    marketing_email = db.Column(db.Boolean, nullable=True, default=False)
     transactional_email = db.Column(db.Boolean, nullable=True, default=True)
-    marketting_sms = db.Column(db.Boolean, nullable=True, default=False)
+    marketing_sms = db.Column(db.Boolean, nullable=True, default=False)
     transactional_sms = db.Column(db.Boolean, nullable=True, default=True)
     cell_number = db.Column(db.String(20))
     roles = db.relationship("Role", secondary="user_roles")
@@ -94,7 +94,6 @@ class Product(db.Model):
     unit_quantity = db.Column(db.Integer)
     created_at = db.Column(db.DateTime, index=True, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, index=True, default=datetime.utcnow)
-    variant_id = db.Column(db.Integer, db.ForeignKey("variant.id"))
     categories = db.relationship(
         "Category", secondary="category_product_rel", backref=db.backref("product", lazy="dynamic")
     )
@@ -163,8 +162,8 @@ class ProductAttribute(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     product_id = db.Column(db.Integer, db.ForeignKey("product.id", ondelete="CASCADE"), nullable=False)
     attribute_id = db.Column(db.Integer, db.ForeignKey("attribute.id", ondelete="CASCADE"), nullable=False)
-    product = db.relationship("Product", backref="product")
-    attribute = db.relationship("Attribute", backref="attribute")
+    product = db.relationship("Product", backref="attribute_links")
+    attribute = db.relationship("Attribute", backref="product_links")
 
 
 class Category(db.Model):
@@ -176,7 +175,6 @@ class Category(db.Model):
     is_active = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, index=True, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, index=True, default=datetime.utcnow)
-    product_id = db.Column(db.Integer, db.ForeignKey("product.id"))
     collection = db.relationship(
         "Collection", secondary="collection_category_rel", backref=db.backref("category", lazy="dynamic")
     )
@@ -204,7 +202,6 @@ class Collection(db.Model):
     is_active = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, index=True, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, index=True, default=datetime.utcnow)
-    category_id = db.Column(db.Integer, db.ForeignKey("category.id"))
     home = db.relationship("HomePageContent", backref=db.backref("collection", uselist=False))
 
     def __repr__(self):
@@ -221,14 +218,14 @@ class CollectionCategory(db.Model):
     category_id = db.Column(db.Integer, db.ForeignKey("category.id", ondelete="CASCADE"), nullable=False)
 
 
-class Carousal(db.Model):
-    __tablename__ = "carousal"
+class Carousel(db.Model):
+    __tablename__ = "carousel"
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64), nullable=False)
     header = db.Column(db.String(500), nullable=False)
     text = db.Column(db.Text, nullable=False)
     home = db.relationship(
-        "HomePageContent", secondary="home_carousal_rel", backref=db.backref("carousal", lazy="dynamic")
+        "HomePageContent", secondary="home_carousel_rel", backref=db.backref("carousel", lazy="dynamic")
     )
     created_at = db.Column(db.DateTime, index=True, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, index=True, default=datetime.utcnow)
@@ -245,7 +242,6 @@ class HomePageContent(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     hero_image = db.Column(db.Unicode(128))
     is_active = db.Column(db.Boolean, default=False)
-    carousal_id = db.Column(db.Integer, db.ForeignKey("carousal.id"))
     category_id = db.Column(db.Integer, db.ForeignKey("category.id"))
     collection_id = db.Column(db.Integer, db.ForeignKey("collection.id"))
     updated_at = db.Column(db.DateTime, index=True, default=datetime.utcnow)
@@ -255,13 +251,13 @@ class HomePageContent(db.Model):
         return self.hero_image
 
 
-class HomeCarousal(db.Model):
-    __tablename__ = "home_carousal_rel"
+class HomeCarousel(db.Model):
+    __tablename__ = "home_carousel_rel"
     id = db.Column(db.Integer, primary_key=True)
     home_content_id = db.Column(
         db.Integer, db.ForeignKey("home_content.id", ondelete="CASCADE"), nullable=False
     )
-    carousal_id = db.Column(db.Integer, db.ForeignKey("carousal.id", ondelete="CASCADE"), nullable=False)
+    carousel_id = db.Column(db.Integer, db.ForeignKey("carousel.id", ondelete="CASCADE"), nullable=False)
 
 
 class Cart(db.Model):
@@ -305,20 +301,6 @@ class Item(db.Model):
     created_at = db.Column(db.DateTime, index=True, default=datetime.utcnow)
 
 
-class ItemArr(db.Model):
-    __tablename__ = "item_attr"
-    id = db.Column(db.Integer, primary_key=True)
-    attr_name = db.Column(db.String(64), index=True, unique=True, nullable=False)
-    attr_value = db.Column(db.String(300))
-
-
-class ItemAttrRel(db.Model):
-    __tablename__ = "item_attr_rel"
-    id = db.Column(db.Integer, primary_key=True)
-    item_id = db.Column(db.Integer, db.ForeignKey("item.id", ondelete="CASCADE"), nullable=False)
-    attribute_id = db.Column(db.Integer, db.ForeignKey("item_attr.id", ondelete="CASCADE"), nullable=False)
-
-
 class Customer(db.Model):
     __tablename__ = "customer"
     id = db.Column(db.BigInteger, primary_key=True)
@@ -357,6 +339,7 @@ class Payment(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     payment_method = db.Column(db.String(200), nullable=False)
     cart_id = db.Column(db.Integer, db.ForeignKey("cart.id"))
+    order_id = db.Column(db.Integer, db.ForeignKey("orders.id"), index=True)
     transaction_id = db.Column(db.String(500))
     transaction_status = db.Column(db.String(500))
     auth_code = db.Column(db.String(500))
@@ -364,3 +347,72 @@ class Payment(db.Model):
     approved_amount = db.Column(db.Numeric(10, 2), default=0.00)
     updated_at = db.Column(db.DateTime, index=True, default=datetime.utcnow)
     created_at = db.Column(db.DateTime, index=True, default=datetime.utcnow)
+
+
+# Order lifecycle. A cart becomes an Order when it is paid for; after that the
+# cart is history and the order is what customers and admins look at.
+ORDER_STATUSES = ("PLACED", "SHIPPED", "DELIVERED", "CANCELLED")
+
+
+class Order(db.Model):
+    """A placed order: a snapshot of the cart, its prices and addresses at checkout."""
+
+    __tablename__ = "orders"  # "order" is a reserved word in SQL
+    id = db.Column(db.Integer, primary_key=True)
+    customer_id = db.Column(db.BigInteger, db.ForeignKey("customer.id"), index=True, nullable=False)
+    cart_id = db.Column(db.Integer, db.ForeignKey("cart.id"), unique=True)
+    status = db.Column(db.String(32), index=True, nullable=False, default="PLACED")
+    total_merchandise = db.Column(db.Numeric(10, 2), nullable=False, default=0)
+    total_shipping = db.Column(db.Numeric(10, 2), nullable=False, default=0)
+    total_taxes = db.Column(db.Numeric(10, 2), nullable=False, default=0)
+    total_discount = db.Column(db.Numeric(10, 2), nullable=False, default=0)
+    total = db.Column(db.Numeric(10, 2), nullable=False, default=0)
+    delivery_date = db.Column(db.DateTime)
+    delivery_window = db.Column(db.String(64))
+    # Addresses are never edited in place (a change saves a new row), so these
+    # keep pointing at the address the order was shipped to.
+    shipping_address_id = db.Column(db.Integer, db.ForeignKey("address.id"))
+    billing_address_id = db.Column(db.Integer, db.ForeignKey("address.id"))
+    placed_at = db.Column(db.DateTime, index=True, nullable=False, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    customer = db.relationship("Customer")
+    shipping_address = db.relationship("Address", foreign_keys=[shipping_address_id])
+    billing_address = db.relationship("Address", foreign_keys=[billing_address_id])
+    items = db.relationship(
+        "OrderItem", back_populates="order", cascade="all, delete-orphan", order_by="OrderItem.id"
+    )
+    payments = db.relationship("Payment", order_by="Payment.id")
+
+    @property
+    def number(self):
+        return f"BZ-{self.id:06d}"
+
+    def __repr__(self):
+        return self.number if self.id else "<new order>"
+
+
+class OrderItem(db.Model):
+    """One line of an order. Product details are copied so later catalog edits don't rewrite history."""
+
+    __tablename__ = "order_item"
+    id = db.Column(db.Integer, primary_key=True)
+    order_id = db.Column(
+        db.Integer, db.ForeignKey("orders.id", ondelete="CASCADE"), index=True, nullable=False
+    )
+    product_id = db.Column(db.Integer, db.ForeignKey("product.id", ondelete="SET NULL"))
+    variant_id = db.Column(db.Integer, db.ForeignKey("variant.id", ondelete="SET NULL"))
+    sku = db.Column(db.String(64), nullable=False)
+    name = db.Column(db.String(300), nullable=False)
+    variant_name = db.Column(db.String(30))
+    image = db.Column(db.Unicode(128))
+    price = db.Column(db.Numeric(10, 2), nullable=False, default=0)
+    shipping = db.Column(db.Numeric(10, 2), nullable=False, default=0)
+    tax = db.Column(db.Numeric(10, 2), nullable=False, default=0)
+    discount = db.Column(db.Numeric(10, 2), nullable=False, default=0)
+
+    order = db.relationship("Order", back_populates="items")
+
+    @property
+    def total(self):
+        return self.price + self.shipping + self.tax - self.discount

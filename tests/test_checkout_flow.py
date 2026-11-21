@@ -6,32 +6,9 @@ from decimal import Decimal
 import pytest
 
 from app.extension import db
-from app.models import Cart, Category, Item, Payment, Product, Variant
+from app.models import Cart, Item, Order, Payment, Product, Variant
 
 REFERER = {"Referer": "http://localhost/checkout/order"}
-
-
-@pytest.fixture(scope="module")
-def product_ids(app):
-    with app.app_context():
-        rings = Category.query.filter_by(code="RINGS").one()
-        small = Variant(size="Ring size 6", quantity=1, is_default=True)
-        large = Variant(size="Ring size 9", quantity=Decimal("1.10"))
-        product = Product(
-            sku="FLOW-RING",
-            name="Gold Signet",
-            retail_price=Decimal("120.00"),
-            sale_price=Decimal("99.99"),
-            material="18k gold",
-            is_active=True,
-            display=True,
-        )
-        product.categories.append(rings)
-        small.products.append(product)
-        large.products.append(product)
-        db.session.add_all([product, small, large])
-        db.session.commit()
-        return product.id, small.id, large.id
 
 
 def add_to_cart(client, pid, vid):
@@ -115,14 +92,15 @@ def test_place_order_requires_shipping_address(app, client, product_ids):
     assert "Please complete your shipping address" in messages
 
 
-def test_full_guest_checkout(app, client, product_ids):
+def checkout(app, client, product_ids, delivery_days=7):
+    """Run a full guest checkout and return (cart_id, order_id)."""
     pid, small, _ = product_ids
     with app.app_context():
         cart_id = add_to_cart(client, pid, small).id
 
     assert client.post("/checkout/order", data=address("shipping_form"), headers=REFERER).status_code == 302
     assert client.post("/checkout/order", data=address("billing_form"), headers=REFERER).status_code == 302
-    delivery = (datetime.date.today() + datetime.timedelta(days=7)).isoformat()
+    delivery = (datetime.date.today() + datetime.timedelta(days=delivery_days)).isoformat()
     resp = client.post(
         "/checkout/order",
         data={"form_id": "delivery_form", "delivery_date": delivery, "delivery_window": "Morning"},
@@ -134,8 +112,14 @@ def test_full_guest_checkout(app, client, product_ids):
         "/checkout/order", data={"form_id": "place_order_form", "payment_method": "COD"}, headers=REFERER
     )
     assert resp.status_code == 302
-    assert resp.headers["Location"].endswith(f"/checkout/confirm/{cart_id}")
+    with app.app_context():
+        order = Order.query.filter_by(cart_id=cart_id).one()
+    assert resp.headers["Location"].endswith(f"/checkout/confirm/{order.id}")
+    return cart_id, order.id
 
+
+def test_full_guest_checkout(app, client, product_ids):
+    cart_id, order_id = checkout(app, client, product_ids)
     with app.app_context():
         cart = db.session.get(Cart, cart_id)
         assert cart.status == "COMPLETED"
@@ -143,10 +127,27 @@ def test_full_guest_checkout(app, client, product_ids):
         payment = Payment.query.filter_by(cart_id=cart_id).one()
         assert payment.transaction_status == "APPROVED"
         assert payment.approved_amount == Decimal("99.99")
+        assert payment.order_id == order_id
 
-    resp = client.get(f"/checkout/confirm/{cart_id}")
+        order = db.session.get(Order, order_id)
+        assert order.status == "PLACED"
+        assert order.total == Decimal("99.99")
+        assert order.delivery_window == "Morning"
+        assert order.shipping_address.city == "Albany"
+        assert order.billing_address.last_name == "Lovelace"
+        [line] = order.items
+        assert (line.sku, line.name, line.variant_name, line.price) == (
+            "FLOW-RING",
+            "Gold Signet",
+            "Ring size 6",
+            Decimal("99.99"),
+        )
+
+    resp = client.get(f"/checkout/confirm/{order_id}")
     assert resp.status_code == 200
-    assert b"Gold Signet" in resp.data
+    html = resp.get_data(as_text=True)
+    assert f"BZ-{order_id:06d}" in html
+    assert "Gold Signet" in html and "Ring size 6" in html and "Albany" in html
 
 
 @pytest.fixture(scope="module")
@@ -207,25 +208,21 @@ def test_cart_badge_counts_items(app, client, product_ids):
 
 
 def test_cannot_view_another_customers_confirmation(app, client, product_ids):
-    test_full_guest_checkout(app, client, product_ids)
-    with app.app_context():
-        cart_id = Cart.query.filter_by(status="COMPLETED").order_by(Cart.id.desc()).first().id
-    assert client.get(f"/checkout/confirm/{cart_id}").status_code == 200
+    _, order_id = checkout(app, client, product_ids)
+    assert client.get(f"/checkout/confirm/{order_id}").status_code == 200
     other = app.test_client()
     other.get("/")
-    assert other.get(f"/checkout/confirm/{cart_id}").status_code == 404
+    assert other.get(f"/checkout/confirm/{order_id}").status_code == 404
 
 
 def test_order_cannot_be_placed_twice(app, client, product_ids):
-    test_full_guest_checkout(app, client, product_ids)
-    with app.app_context():
-        cart_id = Cart.query.filter_by(status="COMPLETED").order_by(Cart.id.desc()).first().id
-        payments = Payment.query.filter_by(cart_id=cart_id).count()
+    cart_id, _ = checkout(app, client, product_ids)
     client.post(
         "/checkout/order", data={"form_id": "place_order_form", "payment_method": "COD"}, headers=REFERER
     )
     with app.app_context():
-        assert Payment.query.filter_by(cart_id=cart_id).count() == payments == 1
+        assert Payment.query.filter_by(cart_id=cart_id).count() == 1
+        assert Order.query.filter_by(cart_id=cart_id).count() == 1
 
 
 def test_earliest_offered_delivery_date_is_accepted(app, client, product_ids):

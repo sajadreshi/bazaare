@@ -11,9 +11,9 @@ def updateProfile(proForm):
             "first_name": proForm.first_name.data,
             "last_name": proForm.last_name.data,
             "cell_number": proForm.cell_number.data,
-            "marketting_email": proForm.marketting_email.data,
+            "marketing_email": proForm.marketing_email.data,
             "transactional_email": proForm.transactional_email.data,
-            "marketting_sms": proForm.marketting_sms.data,
+            "marketing_sms": proForm.marketing_sms.data,
             "transactional_sms": proForm.transactional_sms.data,
         }
     )

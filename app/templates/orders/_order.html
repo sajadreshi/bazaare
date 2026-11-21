@@ -1,0 +1,74 @@
+{# Full view of one Order model as `order`: used by the confirmation page and "My orders". #}
+{% macro section(title) %}
+<div class="worked checkout-sec">
+  <div class="completed-sec">
+    <h5 class="mb-0"><span class="heading">{{ title }}</span></h5>
+    <div class="card-body">{{ caller() }}</div>
+  </div>
+</div>
+{% endmacro %}
+<div class="checkout-section mt-150 mb-150">
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-8">
+        <div class="checkout-accordion-wrap">
+          {% call section("Order Details") %}
+          <div class="order-sec">
+            <div class="order-ref">Order Number : {{ order.number }}</div>
+            <span class="add-elem">Status : {{ order.status | title }}</span>
+            <span class="add-elem">Placed : {{ order.placed_at.strftime('%a, %d %b %Y') }}</span>
+            {% for payment in order.payments %}
+            <span class="add-elem">Payment Method : {{ payment.payment_method }}</span>
+            <span class="add-elem">Payment Amount : ${{ payment.approved_amount }}</span>
+            {% endfor %}
+          </div>
+          {% endcall %}
+          {% call section("Delivery Date") %}
+          <div class="address-sec">
+            <span class="add-elem">{{ order.delivery_date.strftime('%a, %d %b %Y') if order.delivery_date else 'Not set' }}</span>
+            <span class="add-elem">{{ order.delivery_window or '' }}</span>
+          </div>
+          {% endcall %}
+          {% call section("Items") %}
+          <div class="cart-table-wrap">
+            <table class="cart-table">
+              <tbody>
+                {% for item in order.items %}
+                <tr class="table-body-row">
+                  <td class="product-image">
+                    <img src="{{ url_for('static', filename='images/' + (item.image or 'default.jpg')) }}" alt="{{ item.name }}">
+                  </td>
+                  <td>
+                    <span class="td-content">{{ item.name }}</span><br>
+                    <span class="td-content">${{ item.price }}</span><br>
+                    <span class="td-content">{{ item.variant_name or '' }}</span>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% endcall %}
+          {% call section("Shipping Address") %}{% with address = order.shipping_address %}{% include 'orders/_address.html' %}{% endwith %}{% endcall %}
+          {% call section("Billing Address") %}{% with address = order.billing_address %}{% include 'orders/_address.html' %}{% endwith %}{% endcall %}
+        </div>
+      </div>
+      <div class="col-lg-4">
+        <div class="total-section">
+          <table class="total-table">
+            <thead class="total-table-head">
+              <tr class="total-data-header"><th colspan="2">Order Total</th></tr>
+            </thead>
+            <tbody>
+              <tr class="total-data"><td><strong>Subtotal: </strong></td><td><span class="td-content">${{ order.total_merchandise }}</span></td></tr>
+              <tr class="total-data"><td><strong>Shipping: </strong></td><td><span class="td-content">${{ order.total_shipping }}</span></td></tr>
+              <tr class="total-data"><td><strong>Taxes: </strong></td><td><span class="td-content">${{ order.total_taxes }}</span></td></tr>
+              <tr class="total-data"><td><strong>Discounts: </strong></td><td><span class="td-content">-${{ order.total_discount }}</span></td></tr>
+              <tr class="total-data"><td><strong>Total: </strong></td><td><span class="td-content">${{ order.total }}</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -15,11 +15,11 @@ class ProfileForm(FlaskForm):
     cell_number = StringField(
         "Cell Phone", validators=[Length(max=20)], render_kw={"placeholder": "Cell Phone"}
     )
-    marketting_email = BooleanField("Marketting Email", render_kw={"placeholder": "Receive Marketting email"})
+    marketing_email = BooleanField("Marketing Email", render_kw={"placeholder": "Receive Marketing email"})
     transactional_email = BooleanField(
         "Transactional Email", render_kw={"placeholder": "Receive Transactional email"}
     )
-    marketting_sms = BooleanField("Marketting SMS", render_kw={"placeholder": "Receive Marketting SMS"})
+    marketing_sms = BooleanField("Marketing SMS", render_kw={"placeholder": "Receive Marketing SMS"})
     transactional_sms = BooleanField(
         "Transactional SMS", render_kw={"placeholder": "Receive Transactional SMS"}
     )
@@ -81,9 +81,9 @@ def populateProfileForm(proform, user):
         proform.first_name.data = user.first_name
         proform.last_name.data = user.last_name
         proform.cell_number.data = user.cell_number
-        proform.marketting_email.data = user.marketting_email
+        proform.marketing_email.data = user.marketing_email
         proform.transactional_email.data = user.transactional_email
-        proform.marketting_sms.data = user.marketting_sms
+        proform.marketing_sms.data = user.marketing_sms
         proform.transactional_sms.data = user.transactional_sms
 
     return proform

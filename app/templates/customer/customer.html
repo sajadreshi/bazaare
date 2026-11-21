@@ -21,7 +21,6 @@
 {% endif %}
 {% endwith %}
 {% include 'customer/customerNavigation.html' %}
-<div>{{page}}</div>
 <section class="customer-details">
     {% if page and page=='profile' %}    
       {% include 'customer/profile.html' %}
@@ -38,11 +37,8 @@
 {% if page and page=='orders' %}    
      {% include 'customer/ordersDisplay.html' %}
 {% endif %}
-{% if page and page=='ordersDetails' %}  
-{% set cart_obj = cart.values() | first %} 
-   {% if cart_obj and cart_obj | length > 0 %} 
+{% if page and page=='ordersDetails' %}
      {% include 'customer/orderDetails.html' %}
-    {%endif%}
 {% endif %}
 </section>
 {% endblock %}

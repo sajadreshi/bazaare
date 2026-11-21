@@ -1,7 +1,7 @@
-from flask import flash, redirect, render_template, request, url_for
+from flask import abort, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 
-from app.checkout.confirmationHelper import get_cart
+from app.checkout.orders import get_customer_order, list_customer_orders
 from app.customer import customer
 from app.customer.addressHelper import (
     getCurrentBillingAddress,
@@ -9,7 +9,7 @@ from app.customer.addressHelper import (
     updateBillingAddress,
     updateShippingAddress,
 )
-from app.customer.customerUtil import fetchOrdersForCustomer, updatePassword
+from app.customer.customerUtil import findCurrentCustomer, updatePassword
 from app.customer.forms import (
     BillingForm,
     ChangePassword,
@@ -126,23 +126,19 @@ def security():
     return redirect(url_for("auth.login"))
 
 
-@customer.route("/orders", methods=["GET", "POST"])
+@customer.route("/orders")
 @login_required
 def orders():
-    # Check if user is loggedin
-    if current_user.is_authenticated:
-        orders = fetchOrdersForCustomer()
-        return render_template("customer/customer.html", page="orders", orders=orders)
-    # User is not loggedin redirect to login page
-    return redirect(url_for("auth.login"))
+    customer = findCurrentCustomer()
+    orders = list_customer_orders(customer.id) if customer else []
+    return render_template("customer/customer.html", page="orders", orders=orders)
 
 
-@customer.route("/orderDetails/<orderId>", methods=["GET", "POST"])
+@customer.route("/orderDetails/<int:orderId>")
 @login_required
 def orderDetails(orderId):
-    if current_user.is_authenticated:
-        if orderId:
-            order = get_cart(orderId)
-            return render_template("customer/customer.html", page="ordersDetails", cart=order)
-    # User is not loggedin redirect to login page
-    return redirect(url_for("auth.login"))
+    customer = findCurrentCustomer()
+    order = get_customer_order(orderId, customer.id if customer else None)
+    if order is None:
+        abort(404)
+    return render_template("customer/customer.html", page="ordersDetails", order=order)

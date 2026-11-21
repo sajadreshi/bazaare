@@ -78,6 +78,22 @@ hand-written forms. Flask-Admin adds the token to admin forms on its own.
 Seeded catalog: a **Jewellery** collection with Rings, Necklaces, Earrings and
 Bracelets categories.
 
+### Carts and orders
+
+- A **Cart** (with **Item** rows) is the shopper's working basket. Prices and
+  totals are recalculated as items change.
+- Placing an order turns the paid cart into an **Order** (`orders` table) with
+  **OrderItem** rows. These copy the SKU, name, size, image and prices, and
+  point at the shipping/billing addresses used. Later catalog edits don't
+  rewrite past orders. The cart stays behind with status `COMPLETED`.
+- Order status: `PLACED` → `SHIPPED` → `DELIVERED` (or `CANCELLED`).
+  Admins change it under **Orders** in `/admin`, and customers see it under
+  **Account → Orders**. Order numbers display as `BZ-000123`.
+- Each relationship is stored once, in its link table: product↔variant
+  (`variant_product_rel`), product↔category (`category_product_rel`),
+  collection↔category (`collection_category_rel`), home page↔carousel
+  (`home_carousel_rel`).
+
 ## Still to do
 
 - Replace the food photos in `app/static/images/` with jewellery photography.

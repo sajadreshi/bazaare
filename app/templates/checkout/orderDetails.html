@@ -1,9 +1,0 @@
-<div class="order-sec">
-<div class="order-ref">Order Number : {{cart_obj.cart_id}}</div>
-{% if cart_obj.payments%}
-{% for payment_key, payment_value in cart_obj.payments.items() %}
-<span class="add-elem">Payment Method : {{payment_value.payment_method}}</span>
-<span class="add-elem">Payment Amount : ${{payment_value.approved_amount}} </span>
-{% endfor%}
-{% endif%}
-</div>

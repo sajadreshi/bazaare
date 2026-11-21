@@ -54,3 +54,8 @@ jobs:
           flask --app server db upgrade
           flask --app server db downgrade 7f1820355e10
           flask --app server db upgrade
+      - name: Models and migrations agree (PostgreSQL)
+        run: |
+          export DATABASE_URL=$PG_URL
+          flask --app server db migrate -m ci-check 2>&1 | tee migrate.log
+          grep -q "No changes in schema detected" migrate.log
