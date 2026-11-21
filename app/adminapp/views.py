@@ -13,7 +13,7 @@ from markupsafe import Markup
 from sqlalchemy.event import listens_for
 
 from app.adminapp.security import SecureModelView
-from app.models import HomePageContent, Product, Variant
+from app.models import ORDER_STATUSES, HomePageContent, Product, Variant
 
 # Create directory for file fields to use
 images_dir = "images/"
@@ -41,7 +41,7 @@ def remove_image_from_dir(targetPath):
 
 # Attribute Model Start
 class AttributesView(SecureModelView):
-    form_excluded_columns = ["created_at", "updated_at"]
+    form_excluded_columns = ["created_at", "updated_at", "product_links"]
 
 
 # Attribute Relationship view
@@ -60,7 +60,7 @@ class CollectionView(SecureModelView):
     column_display_pk = False
 
 
-class CarousalView(SecureModelView):
+class CarouselView(SecureModelView):
     form_excluded_columns = ["created_at", "updated_at", "home"]
     column_display_pk = False
     form_overrides = dict(text=CKEditorField)
@@ -167,7 +167,7 @@ class ProductView(SecureModelView):
         ),
     }
 
-    form_excluded_columns = ["created_at", "updated_at", "categories", "product"]
+    form_excluded_columns = ["created_at", "updated_at", "categories", "attribute_links"]
     column_searchable_list = ["name", "sku"]
     column_filters = ["sale_price"]
     edit_modal = True
@@ -226,3 +226,24 @@ class RoleView(SecureModelView):
 
 class HolidayView(SecureModelView):
     column_display_pk = False
+
+
+class OrderView(SecureModelView):
+    """Orders are created by checkout; admins can only move them through their statuses."""
+
+    can_create = False
+    can_delete = False
+    column_default_sort = ("placed_at", True)
+    column_list = ("id", "status", "customer_id", "total", "delivery_date", "delivery_window", "placed_at")
+    column_filters = ("status", "placed_at")
+    column_searchable_list = ("id",)
+    form_columns = ("status",)
+    form_choices = {"status": [(s, s.title()) for s in ORDER_STATUSES]}
+
+
+class OrderItemView(SecureModelView):
+    can_create = False
+    can_edit = False
+    can_delete = False
+    column_list = ("order", "sku", "name", "variant_name", "price", "shipping", "tax", "discount")
+    column_filters = ("order_id", "sku")

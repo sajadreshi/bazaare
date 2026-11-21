@@ -3,6 +3,7 @@ from datetime import datetime
 
 from app.checkout.commonutil import getCartObj
 from app.checkout.getcarthelper import get_current_cart
+from app.checkout.orders import create_order_from_cart
 from app.checkout.PaymentHelper import doPayment
 from app.checkout.placeOrderStatus import PlaceOrderStatus
 from app.extension import db
@@ -28,9 +29,9 @@ def placeOrder(place_order_frm):
 
 
 def processCart(place_order_frm, current_cart, status):
-    """Charge and complete the cart in a single transaction.
+    """Charge the cart and turn it into an Order in a single transaction.
 
-    Either everything is saved (payment, items COMPLETED, cart COMPLETED) or
+    Either everything is saved (order + items, payment, cart COMPLETED) or
     nothing is: any failure rolls back and the cart stays PENDING.
     """
     cart_id = getCartObj(current_cart).get("cart_id")
@@ -48,11 +49,13 @@ def processCart(place_order_frm, current_cart, status):
             status.error = payment_status.error or "Payment was not approved."
             return status
 
+        order = create_order_from_cart(cart)
         now = datetime.now()
         db.session.add(
             Payment(
                 payment_method=payment_status.paymentMethod,
                 cart_id=cart_id,
+                order_id=order.id,
                 transaction_id=payment_status.transactionId,
                 transaction_status=payment_status.transactionStatus,
                 auth_code=payment_status.authCode,
@@ -74,4 +77,5 @@ def processCart(place_order_frm, current_cart, status):
 
     status.isSuccess = True
     status.cartId = cart_id
+    status.orderId = order.id
     return status

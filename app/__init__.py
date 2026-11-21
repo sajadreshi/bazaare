@@ -6,11 +6,13 @@ from flask import Flask, render_template
 from app.adminapp.views import (
     AttributesRelView,
     AttributesView,
-    CarousalView,
+    CarouselView,
     CategoryView,
     CollectionView,
     HolidayView,
     HomePageView,
+    OrderItemView,
+    OrderView,
     ProductAssociationView,
     ProductView,
     RoleView,
@@ -28,11 +30,13 @@ from .config import Config
 from .extension import admin, ckeditor, csrf, db, login_manager, mail, migrate
 from .models import (
     Attribute,
-    Carousal,
+    Carousel,
     Category,
     Collection,
     Holiday,
     HomePageContent,
+    Order,
+    OrderItem,
     Product,
     ProductAssociation,
     ProductAttribute,
@@ -82,7 +86,7 @@ def create_app(config_overrides=None):
     admin.add_view(AttributesRelView(ProductAttribute, db.session, category="Attributes"))
     admin.add_view(CategoryView(Category, db.session, category="Category"))
     admin.add_view(CollectionView(Collection, db.session, category="Category"))
-    admin.add_view(CarousalView(Carousal, db.session, category="Content"))
+    admin.add_view(CarouselView(Carousel, db.session, category="Content"))
     admin.add_view(HomePageView(HomePageContent, db.session, category="Content"))
     admin.add_view(ProductView(Product, db.session, category="Product"))
     admin.add_view(VariantView(Variant, db.session, category="Product"))
@@ -90,6 +94,8 @@ def create_app(config_overrides=None):
     admin.add_view(RoleView(Role, db.session, category="User"))
     admin.add_view(ProductAssociationView(ProductAssociation, db.session, category="Attributes"))
     admin.add_view(HolidayView(Holiday, db.session, category="Holidays"))
+    admin.add_view(OrderView(Order, db.session, category="Orders"))
+    admin.add_view(OrderItemView(OrderItem, db.session, category="Orders", name="Order items"))
 
     @app.cli.command("seed")
     def seed_command():

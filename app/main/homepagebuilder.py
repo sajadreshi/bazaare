@@ -1,8 +1,8 @@
 s_query = "select  \
     h.hero_image as hero_banner, \
-    c.name as carousal_name,\
-    c.header as carousal_header,\
-    c.text as carousal_text,\
+    c.name as carousel_name,\
+    c.header as carousel_header,\
+    c.text as carousel_text,\
     c1.id as collection_category_id,\
     c1.code as collection_category_code,\
     c1.name as collection_category_name,\
@@ -40,8 +40,8 @@ s_query = "select  \
     p2.is_handmade as featured_product_is_handmade,\
     p2.display as featured_product_display\
     from home_content h \
-    left outer join home_carousal_rel hcr on hcr.home_content_id = h.id\
-    left outer join carousal c on c.id = hcr.carousal_id\
+    left outer join home_carousel_rel hcr on hcr.home_content_id = h.id\
+    left outer join carousel c on c.id = hcr.carousel_id\
     left outer join collection m on m.id = h.collection_id and m.is_active=true\
     left outer join collection_category_rel mcr on mcr.collection_id = m.id\
     left outer join category c1 on c1.id = mcr.category_id\
@@ -169,23 +169,23 @@ def build_categories(row, collection_dic):
     return categories_dic
 
 
-def create_carousal(row, carousal_dic):
-    if row.carousal_name in carousal_dic:
-        carousal_obj = carousal_dic.get(row.carousal_name)
+def create_carousel(row, carousel_dic):
+    if row.carousel_name in carousel_dic:
+        carousel_obj = carousel_dic.get(row.carousel_name)
     else:
-        carousal_obj = {}
-    carousal_obj["header"] = row.carousal_header
-    carousal_obj["text"] = row.carousal_text
-    return carousal_obj
+        carousel_obj = {}
+    carousel_obj["header"] = row.carousel_header
+    carousel_obj["text"] = row.carousel_text
+    return carousel_obj
 
 
-def build_carousal(row, home):
-    if "carousal" in home:
-        carousal_dic = home.get("carousal")
+def build_carousel(row, home):
+    if "carousel" in home:
+        carousel_dic = home.get("carousel")
     else:
-        carousal_dic = {}
-    carousal_dic[row.carousal_name] = create_carousal(row, carousal_dic)
-    return carousal_dic
+        carousel_dic = {}
+    carousel_dic[row.carousel_name] = create_carousel(row, carousel_dic)
+    return carousel_dic
 
 
 def build_collection_category(row, home):
@@ -203,7 +203,7 @@ def build_home_page(result):
     for row in result:
         # set hero image for home page
         home["heroImage"] = row.hero_banner
-        home["carousal"] = build_carousal(row, home)
+        home["carousel"] = build_carousel(row, home)
         home["collection"] = build_collection_category(row, home)
         home["featured"] = build_featured_category(row, home)
 

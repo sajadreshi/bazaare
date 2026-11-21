@@ -13,17 +13,12 @@
 {% endfor %}
 {% endif %}
 {% endwith %}
-{% set cart_obj = cart.values() | first %}
 <section class="">
     {% include 'checkout/confirmationbreadcrumb.html'%}
 </section>
 <section class="checkout-details">
-    {% if cart_obj and cart_obj | length > 0 %}
-       {% include 'checkout/confirmationdetails.html'%}
-     {% else %}
-       {% include 'checkout/emptyCart.html'%}
-   {% endif %}
-  </section>
+    {% include 'orders/_order.html' %}
+</section>
 {% endblock %}
 
 {% block footer %}{% include 'common/footer.html' %}{% endblock %}

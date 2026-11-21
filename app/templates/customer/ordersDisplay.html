@@ -21,17 +21,17 @@
                                                             <dt class="col">Order Number</dt>
                                                             <dd class="col">
                                                                 <a href="{{ url_for('customer.orderDetails',orderId=order.id) }}">
-                                                                    {{order.id}}
+                                                                    {{order.number}}
                                                                 </a>
                                                             </dd>
                                                         </dl>
                                                         <dl class="row">
                                                             <dt class="col">Status</dt>
-                                                            <dd class="col"> {{order.status}}</dd>
+                                                            <dd class="col"> {{order.status | title}} · ${{order.total}}</dd>
                                                         </dl>
                                                         <dl class="row">
                                                             <dt class="col">Order Date</dt>
-                                                            <dd class="col">{{order.updated_at.strftime('%m-%d-%Y') }}</dd>
+                                                            <dd class="col">{{order.placed_at.strftime('%m-%d-%Y') }}</dd>
                                                         </dl>
                                                     </td>
                                                 </tr>
@@ -39,6 +39,8 @@
                                             </tbody>
                                         </table>
                                     </div>
+                                    {% else %}
+                                    <p>You haven't placed any orders yet.</p>
                                     {% endif %}
                                 </div>
                             </div>
