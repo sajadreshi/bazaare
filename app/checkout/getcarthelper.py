@@ -1,8 +1,14 @@
 from flask import session
 from sqlalchemy import text
+
+from app.checkout.commonutil import (
+    check_billing_address,
+    check_delivery_date,
+    check_shipping_address,
+    getDateFormattedForDisplay,
+)
 from app.extension import db
-from app.checkout.commonutil import check_billing_address, check_shipping_address, check_delivery_date,getFormatedDate
-from app.checkout.commonutil import getDateFormattedForDisplay
+
 get_cart_query = "select \
 crt.id as cart_id,\
 crt.total_merchandise as total_merchandise,\
@@ -80,152 +86,156 @@ order by itm.created_at desc"
 
 
 def get_current_cart():
-   cart = {}
-   curr_customer_id = session.get('customer_id')
-   value={"customerId":curr_customer_id} 
-   sql = text(get_cart_query)
-   result = db.session.execute(sql,value)
-   for row in result:
+    cart = {}
+    curr_customer_id = session.get("customer_id")
+    value = {"customerId": curr_customer_id}
+    sql = text(get_cart_query)
+    result = db.session.execute(sql, value)
+    for row in result:
         if row.cart_id in cart:
             cart_obj = cart.get(row.cart_id)
-        else:    
-         cart_obj = {}
-        cart[row.cart_id]  = build_main_cart(cart_obj,row)
-   cart["is_billing_complete"] = check_billing_address(cart)
-   cart["is_shipping_complete"] = check_shipping_address(cart)
-   cart["is_delivery_complete"] = check_delivery_date(cart)   
-   return cart
+        else:
+            cart_obj = {}
+        cart[row.cart_id] = build_main_cart(cart_obj, row)
+    cart["is_billing_complete"] = check_billing_address(cart)
+    cart["is_shipping_complete"] = check_shipping_address(cart)
+    cart["is_delivery_complete"] = check_delivery_date(cart)
+    return cart
 
-def build_main_cart(cart_obj,row):
-    cart_obj['cart_id']= row.cart_id
-    cart_obj['total_merchandise']= row.total_merchandise
-    cart_obj['total_shipping']= row.total_shipping
-    cart_obj['total_taxes']= row.total_taxes
-    cart_obj['total_discount']= row.total_discount
-    cart_obj['total_cart']= row.total_cart
-    cart_obj['cart_status']= row.cart_status
-    cart_obj['delivery_date'] = row.delivery_date
-    cart_obj['formatted_delivery_date'] = getDateFormattedForDisplay(row.delivery_date)
-    cart_obj['delivery_window'] = row.delivery_window
-    cart_obj['customer']= build_customer(row,cart_obj)
-    cart_obj['cart_items'] = build_cart_items(row,cart_obj)
-    
+
+def build_main_cart(cart_obj, row):
+    cart_obj["cart_id"] = row.cart_id
+    cart_obj["total_merchandise"] = row.total_merchandise
+    cart_obj["total_shipping"] = row.total_shipping
+    cart_obj["total_taxes"] = row.total_taxes
+    cart_obj["total_discount"] = row.total_discount
+    cart_obj["total_cart"] = row.total_cart
+    cart_obj["cart_status"] = row.cart_status
+    cart_obj["delivery_date"] = row.delivery_date
+    cart_obj["formatted_delivery_date"] = getDateFormattedForDisplay(row.delivery_date)
+    cart_obj["delivery_window"] = row.delivery_window
+    cart_obj["customer"] = build_customer(row, cart_obj)
+    cart_obj["cart_items"] = build_cart_items(row, cart_obj)
+
     return cart_obj
 
-def build_cart_items(row,cart_obj):
-    if 'cart_items' in cart_obj:
-        items_obj = cart_obj.get('cart_items')
-    else:    
-       items_obj = {}
-    items_obj[row.item_id] = build_item_obj(row,items_obj)
-    return items_obj 
 
-def build_item_obj(row,items_obj):
+def build_cart_items(row, cart_obj):
+    if "cart_items" in cart_obj:
+        items_obj = cart_obj.get("cart_items")
+    else:
+        items_obj = {}
+    items_obj[row.item_id] = build_item_obj(row, items_obj)
+    return items_obj
+
+
+def build_item_obj(row, items_obj):
     if row.item_id in items_obj:
-        item_obj = items_obj.get('row.item_id')
-    else:    
-       item_obj = {}
-    item_obj['item_id'] = row.item_id
-    item_obj['item_product_price']= row.item_product_price
-    item_obj['item_status'] = row.item_status
-    item_obj['item_delivery_date']= row.item_delivery_date
-    item_obj['item_shipping_base_charge'] = row.item_shipping_base_charge
-    item_obj['item_shipping_up_charge']= row.item_shipping_up_charge
-    item_obj['total_shipping'] = row.total_shipping
-    item_obj['item_shipping_tax']= row.item_shipping_tax
-    item_obj['item_merchandise_tax'] = row.item_merchandise_tax
-    item_obj['item_total_tax']= row.item_total_tax
-    item_obj['item_merchandise_discount'] = row.item_merchandise_discount
-    item_obj['item_shipping_discount']= row.item_shipping_discount
-    item_obj['item_total_discount'] = row.item_total_discount
-    item_obj['product']= build_product(row,item_obj)
+        item_obj = items_obj.get("row.item_id")
+    else:
+        item_obj = {}
+    item_obj["item_id"] = row.item_id
+    item_obj["item_product_price"] = row.item_product_price
+    item_obj["item_status"] = row.item_status
+    item_obj["item_delivery_date"] = row.item_delivery_date
+    item_obj["item_shipping_base_charge"] = row.item_shipping_base_charge
+    item_obj["item_shipping_up_charge"] = row.item_shipping_up_charge
+    item_obj["total_shipping"] = row.total_shipping
+    item_obj["item_shipping_tax"] = row.item_shipping_tax
+    item_obj["item_merchandise_tax"] = row.item_merchandise_tax
+    item_obj["item_total_tax"] = row.item_total_tax
+    item_obj["item_merchandise_discount"] = row.item_merchandise_discount
+    item_obj["item_shipping_discount"] = row.item_shipping_discount
+    item_obj["item_total_discount"] = row.item_total_discount
+    item_obj["product"] = build_product(row, item_obj)
     return item_obj
 
-def build_product(row,item_obj):
+
+def build_product(row, item_obj):
     if row.product_id in item_obj:
         product_obj = item_obj.get(row.product_id)
-    else:    
-       product_obj = {}
+    else:
+        product_obj = {}
     product_obj[row.product_id] = build_product_from_row(row)
     return product_obj
 
+
 def build_product_from_row(row):
     product = {}
-    product['product_id'] = row.product_id
-    product['product_sku'] = row.product_sku
-    product['product_name'] = row.product_name
-    product['product_description'] = row.product_description
-    product['product_retail_price'] = row.product_retail_price
-    product['product_sale_price'] = row.product_sale_price
-    product['product_image'] = row.product_image
-    product['product_is_active'] = row.product_is_active
-    product['product_is_sustainable'] = row.product_is_sustainable
-    product['product_is_active'] = row.product_is_active
-    product['size'] = create_size_from_row(row)
+    product["product_id"] = row.product_id
+    product["product_sku"] = row.product_sku
+    product["product_name"] = row.product_name
+    product["product_description"] = row.product_description
+    product["product_retail_price"] = row.product_retail_price
+    product["product_sale_price"] = row.product_sale_price
+    product["product_image"] = row.product_image
+    product["product_is_active"] = row.product_is_active
+    product["product_is_sustainable"] = row.product_is_sustainable
+    product["product_is_active"] = row.product_is_active
+    product["size"] = create_size_from_row(row)
     return product
 
+
 def create_size_from_row(row):
-   size={}
-   size['size_id']=row.variant_id
-   size['product_size'] = row.product_size
-   size['product_quantity']= row.product_quantity
-   size['size_description'] = row.size_description
-   size['size_image']= row.size_image
-   size['default_size']=row.default_size
-   return size
+    size = {}
+    size["size_id"] = row.variant_id
+    size["product_size"] = row.product_size
+    size["product_quantity"] = row.product_quantity
+    size["size_description"] = row.size_description
+    size["size_image"] = row.size_image
+    size["default_size"] = row.default_size
+    return size
 
 
-def build_customer(row,cart_obj):
-    if 'customer' in cart_obj:
-        customer_obj = cart_obj.get('customer')
-    else:    
-       customer_obj = {}
-    customer_obj['customer_id'] = row.customer_id
-    customer_obj['customer_type'] = row.customer_type
-    customer_obj['billing_address'] = build_billing_address(customer_obj,row)
-    customer_obj['shipping_address'] = build_shipping_address(customer_obj,row)  
+def build_customer(row, cart_obj):
+    if "customer" in cart_obj:
+        customer_obj = cart_obj.get("customer")
+    else:
+        customer_obj = {}
+    customer_obj["customer_id"] = row.customer_id
+    customer_obj["customer_type"] = row.customer_type
+    customer_obj["billing_address"] = build_billing_address(customer_obj, row)
+    customer_obj["shipping_address"] = build_shipping_address(customer_obj, row)
     return customer_obj
 
+
 def build_billing_address(customer_obj, row):
-    if 'billing_address' in customer_obj:
-        billing_add_obj = customer_obj.get('billing_address')
-    else:    
-       billing_add_obj = {}
+    if "billing_address" in customer_obj:
+        billing_add_obj = customer_obj.get("billing_address")
+    else:
+        billing_add_obj = {}
     if row.billing_address_id:
-        billing_add_obj['billing_address_id'] = row.billing_address_id
-        billing_add_obj['billing_first_name'] = row.billing_first_name
-        billing_add_obj['billing_last_name']  = row.billing_last_name
-        billing_add_obj['billing_address1'] = row.billing_address1
-        billing_add_obj['billing_address2'] = row.billing_address2
-        billing_add_obj['billing_city'] = row.billing_city
-        billing_add_obj['billing_state'] = row.billing_state
-        billing_add_obj['billing_zip'] = row.billing_zip
-        billing_add_obj['billing_country'] = row.billing_country
-        billing_add_obj['billing_phone'] = row.billing_phone
-        billing_add_obj['billing_email'] = row.billing_email
+        billing_add_obj["billing_address_id"] = row.billing_address_id
+        billing_add_obj["billing_first_name"] = row.billing_first_name
+        billing_add_obj["billing_last_name"] = row.billing_last_name
+        billing_add_obj["billing_address1"] = row.billing_address1
+        billing_add_obj["billing_address2"] = row.billing_address2
+        billing_add_obj["billing_city"] = row.billing_city
+        billing_add_obj["billing_state"] = row.billing_state
+        billing_add_obj["billing_zip"] = row.billing_zip
+        billing_add_obj["billing_country"] = row.billing_country
+        billing_add_obj["billing_phone"] = row.billing_phone
+        billing_add_obj["billing_email"] = row.billing_email
         return billing_add_obj
     return None
 
+
 def build_shipping_address(customer_obj, row):
-    if 'shipping_address' in customer_obj:
-        shipping_add_obj = customer_obj.get('shipping_address')
-    else:    
-       shipping_add_obj = {}
-    if row.shipping_address_id:   
-        shipping_add_obj['shipping_address_id'] = row.shipping_address_id
-        shipping_add_obj['shipping_first_name'] = row.shipping_first_name
-        shipping_add_obj['shipping_last_name']  = row.shipping_last_name
-        shipping_add_obj['shipping_address1'] = row.shipping_address1
-        shipping_add_obj['shipping_address2'] = row.shipping_address2
-        shipping_add_obj['shipping_city'] = row.shipping_city
-        shipping_add_obj['shipping_state'] = row.shipping_state
-        shipping_add_obj['shipping_zip'] = row.shipping_zip
-        shipping_add_obj['shipping_country'] = row.shipping_country
-        shipping_add_obj['shipping_phone'] = row.shipping_phone
-        shipping_add_obj['shipping_email'] = row.shipping_email
+    if "shipping_address" in customer_obj:
+        shipping_add_obj = customer_obj.get("shipping_address")
+    else:
+        shipping_add_obj = {}
+    if row.shipping_address_id:
+        shipping_add_obj["shipping_address_id"] = row.shipping_address_id
+        shipping_add_obj["shipping_first_name"] = row.shipping_first_name
+        shipping_add_obj["shipping_last_name"] = row.shipping_last_name
+        shipping_add_obj["shipping_address1"] = row.shipping_address1
+        shipping_add_obj["shipping_address2"] = row.shipping_address2
+        shipping_add_obj["shipping_city"] = row.shipping_city
+        shipping_add_obj["shipping_state"] = row.shipping_state
+        shipping_add_obj["shipping_zip"] = row.shipping_zip
+        shipping_add_obj["shipping_country"] = row.shipping_country
+        shipping_add_obj["shipping_phone"] = row.shipping_phone
+        shipping_add_obj["shipping_email"] = row.shipping_email
         return shipping_add_obj
     return None
-
-
-
-

@@ -1,18 +1,19 @@
 class PaymentStatus:
-
-    def __init__(self, isSuccess: bool,
-                 error: str,
-                 paymentMethod: str,
-                 accountNumber: str,
-                 accountName: str,
-                 expiryMonth: int,
-                 expiryYear: int,
-                 transactionId: str,
-                 transactionStatus: str,
-                 authCode: str,
-                 requestedAmount: float,
-                 approvedAmount: float,
-                 ):
+    def __init__(
+        self,
+        isSuccess: bool,
+        error: str,
+        paymentMethod: str,
+        accountNumber: str,
+        accountName: str,
+        expiryMonth: int,
+        expiryYear: int,
+        transactionId: str,
+        transactionStatus: str,
+        authCode: str,
+        requestedAmount: float,
+        approvedAmount: float,
+    ):
         self._isSuccess = isSuccess
         self._errors = error
         self._paymentMethod = paymentMethod
@@ -33,11 +34,11 @@ class PaymentStatus:
     @property
     def error(self):
         return self._error
-    
+
     @property
     def paymentMethod(self):
         return self._paymentMethod
-    
+
     @property
     def accountNumber(self):
         return self._accountNumber
@@ -81,10 +82,10 @@ class PaymentStatus:
     @error.setter
     def error(self, error):
         self._error = error
-        
+
     @paymentMethod.setter
-    def paymentMethod(self,paymentMethod):
-        self._paymentMethod = paymentMethod    
+    def paymentMethod(self, paymentMethod):
+        self._paymentMethod = paymentMethod
 
     @accountNumber.setter
     def accountNumber(self, accountNumber):

@@ -3,9 +3,11 @@
 Launch scope is jewellery only. Apparel can be added later by creating
 new categories and a new collection in the admin.
 """
+
 from werkzeug.security import generate_password_hash
+
 from app.extension import db
-from app.models import User, Role, Category, Collection
+from app.models import Category, Collection, Role, User
 
 JEWELLERY_CATEGORIES = [
     ("RINGS", "Rings", "Everyday and statement rings."),
@@ -48,7 +50,9 @@ def seed_jewellery_catalog():
 
     collection = Collection.query.filter_by(name="Jewellery").first()
     if not collection:
-        collection = Collection(name="Jewellery", description="The Bazaare jewellery collection.", is_active=True)
+        collection = Collection(
+            name="Jewellery", description="The Bazaare jewellery collection.", is_active=True
+        )
         db.session.add(collection)
     for category in categories:
         if category not in collection.category:

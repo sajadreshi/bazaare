@@ -2,9 +2,9 @@ from decimal import Decimal
 
 from flask_login import AnonymousUserMixin
 
+from app.checkout.calculatecart import perform_calculation
 from app.extension import db
 from app.models import Cart, Customer, Item, User
-from app.checkout.calculatecart import perform_calculation
 
 
 def test_user_flags_are_real(app):
@@ -28,9 +28,16 @@ def test_cart_total_subtracts_discount_exactly(app):
         db.session.flush()
         # 0.1 + 0.2 style amounts that drift with floats.
         for price in ("10.10", "20.20", "0.30"):
-            db.session.add(Item(cart_id=cart.id, product_sku="X", product_price=Decimal(price),
-                                shipping_base_charge=Decimal("1.10"), merchandise_discount=Decimal("0.10"),
-                                status="PENDING"))
+            db.session.add(
+                Item(
+                    cart_id=cart.id,
+                    product_sku="X",
+                    product_price=Decimal(price),
+                    shipping_base_charge=Decimal("1.10"),
+                    merchandise_discount=Decimal("0.10"),
+                    status="PENDING",
+                )
+            )
         db.session.commit()
         perform_calculation(db.session.query(Cart).filter(Cart.id == cart.id))
         cart = db.session.get(Cart, cart.id)

@@ -1,33 +1,36 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, BooleanField, SubmitField
-from wtforms.validators import DataRequired, Email,ValidationError,EqualTo
+from wtforms import BooleanField, PasswordField, StringField, SubmitField
+from wtforms.validators import DataRequired, Email, EqualTo, ValidationError
+
 from app.models import User
 
+
 class LoginForm(FlaskForm):
-    email = StringField('Email',validators=[DataRequired(), Email()])
-    password = PasswordField('Password',validators=[DataRequired()])
-    remember_me = BooleanField('Remeber Me')
-    submit = SubmitField('Sign In')
+    email = StringField("Email", validators=[DataRequired(), Email()])
+    password = PasswordField("Password", validators=[DataRequired()])
+    remember_me = BooleanField("Remeber Me")
+    submit = SubmitField("Sign In")
+
 
 class RegistrationForm(FlaskForm):
     first_name = StringField("First Name", validators=[DataRequired()])
     last_name = StringField("Last Name", validators=[DataRequired()])
     email = StringField("Email", validators=[DataRequired(), Email()])
-    password = PasswordField("Password",validators=[DataRequired()])
-    submit = SubmitField('Register')
+    password = PasswordField("Password", validators=[DataRequired()])
+    submit = SubmitField("Register")
 
-    def validate_email(self,email):
-        user= User.query.filter_by(email=email.data).first()
+    def validate_email(self, email):
+        user = User.query.filter_by(email=email.data).first()
         if user is not None:
-            raise ValidationError('Email already taken. Please use different email')
+            raise ValidationError("Email already taken. Please use different email")
+
 
 class ResetPasswordRequestForm(FlaskForm):
-    email = StringField('Email', validators=[DataRequired(), Email()])
-    submit = SubmitField('Reset Password')
-    
+    email = StringField("Email", validators=[DataRequired(), Email()])
+    submit = SubmitField("Reset Password")
+
+
 class ResetPasswordForm(FlaskForm):
-    password = PasswordField('Password', validators=[DataRequired()])
-    password2 = PasswordField(
-        'Repeat Password', validators=[DataRequired(), EqualTo('password')])
-    submit = SubmitField('Request Password Reset')
-    
+    password = PasswordField("Password", validators=[DataRequired()])
+    password2 = PasswordField("Repeat Password", validators=[DataRequired(), EqualTo("password")])
+    submit = SubmitField("Request Password Reset")
