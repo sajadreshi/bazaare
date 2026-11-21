@@ -30,5 +30,6 @@ SQLAlchemy==2.0.15
 typing_extensions==4.6.1
 urllib3==2.0.2
 Werkzeug==2.3.4
-WTForms==3.0.1psycopg2-binary==2.9.10
+WTForms==3.0.1
+psycopg2-binary==2.9.10
 python-dotenv==1.0.1
