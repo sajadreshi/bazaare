@@ -39,8 +39,8 @@ class User(UserMixin, db.Model):
     def verify_reset_password_token(token):
         try:
             id = jwt.decode(token, app.config["SECRET_KEY"], algorithms=["HS256"])["reset_password"]
-        except:
-            return
+        except (jwt.PyJWTError, KeyError):
+            return None
         return db.session.get(User, id)
 
     def check_password(self, password):
@@ -357,10 +357,6 @@ class Payment(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     payment_method = db.Column(db.String(200), nullable=False)
     cart_id = db.Column(db.Integer, db.ForeignKey("cart.id"))
-    account_number = db.Column(db.String(500))
-    account_name = db.Column(db.String(500))
-    expiry_month = db.Column(db.Integer)
-    expiry_year = db.Column(db.Integer)
     transaction_id = db.Column(db.String(500))
     transaction_status = db.Column(db.String(500))
     auth_code = db.Column(db.String(500))

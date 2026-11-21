@@ -10,10 +10,16 @@ from app.models import Customer, User
 from .forms import LoginForm, RegistrationForm, ResetPasswordForm, ResetPasswordRequestForm
 
 
+def is_safe_next(target):
+    """Only allow redirects to a path on this site (blocks //evil.com, /\\evil.com, http://...)."""
+    if not target or not target.startswith("/") or target.startswith("//") or "\\" in target:
+        return False
+    parsed = url_parse(target)
+    return not parsed.scheme and not parsed.netloc
+
+
 @bp.route("/login", methods=["GET", "POST"])
 def login():
-    cust_id = session.get("customer_id") if "customer_id" in session else "nothing"
-    print("cust_id   " + str(cust_id))
     if current_user.is_authenticated:
         return redirect(url_for("main.home"))
     form = LoginForm()
@@ -25,7 +31,7 @@ def login():
         login_user(user, remember=form.remember_me.data)
         session["customer_id"] = current_user.id
         next_page = request.args.get("next")
-        if not next_page or url_parse(next_page).netloc != "":
+        if not is_safe_next(next_page):
             next_page = url_for("main.home")
         return redirect(next_page)
 

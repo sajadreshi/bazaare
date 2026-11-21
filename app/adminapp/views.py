@@ -1,15 +1,13 @@
 import os
 import os.path as op
 
-from flask import redirect, request, url_for
+from flask import url_for
 from flask_admin import form
-from flask_admin.contrib import sqla
-from flask_admin.form import SecureForm
 from flask_ckeditor import CKEditorField
-from flask_login import current_user
 from markupsafe import Markup
 from sqlalchemy.event import listens_for
 
+from app.adminapp.security import SecureModelView
 from app.models import HomePageContent, Product, Variant
 
 # Create directory for file fields to use
@@ -19,14 +17,6 @@ try:
     os.mkdir(image_path)
 except OSError:
     pass
-
-
-def is_admin_user():
-    roles = current_user.roles
-    for role in roles:
-        if role.name.lower() == "admin":
-            return True
-    return False
 
 
 # Product Model Start
@@ -39,85 +29,39 @@ def remove_image_from_dir(targetPath):
             pass
         # remove thumbnail
         try:
-            print("removing thumbnail")
             os.remove(op.join(image_path, form.thumbgen_filename(targetPath)))
         except OSError:
             pass
 
 
 # Attribute Model Start
-class AttributesView(sqla.ModelView):
-    def is_accessible(self):
-        return current_user.is_authenticated and is_admin_user()
-
-    def inaccessible_callback(self, name, **kwargs):
-        # redirect to login page if user doesn't have access
-        return redirect(url_for("auth.login", next=request.url))
-
-    form_base_class = SecureForm
+class AttributesView(SecureModelView):
     form_excluded_columns = ["created_at", "updated_at"]
-    column_hide_backrefs = False
 
 
 # Attribute Relationship view
-class AttributesRelView(sqla.ModelView):
-    def is_accessible(self):
-        return current_user.is_authenticated and is_admin_user()
-
-    def inaccessible_callback(self, name, **kwargs):
-        # redirect to login page if user doesn't have access
-        return redirect(url_for("auth.login", next=request.url))
-
-    form_base_class = SecureForm
+class AttributesRelView(SecureModelView):
     column_display_pk = False  # optional, but I like to see the IDs in the list
-    column_hide_backrefs = False
     column_list = ("product", "attribute")
 
 
 # Attribute Model Start
-class CategoryView(sqla.ModelView):
-    def is_accessible(self):
-        return current_user.is_authenticated and is_admin_user()
-
-    def inaccessible_callback(self, name, **kwargs):
-        # redirect to login page if user doesn't have access
-        return redirect(url_for("auth.login", next=request.url))
-
-    form_base_class = SecureForm
+class CategoryView(SecureModelView):
     form_excluded_columns = ["created_at", "updated_at", "collection", "home"]
-    column_hide_backrefs = False
 
 
-class CollectionView(sqla.ModelView):
-    def is_accessible(self):
-        return current_user.is_authenticated and is_admin_user()
-
-    def inaccessible_callback(self, name, **kwargs):
-        # redirect to login page if user doesn't have access
-        return redirect(url_for("auth.login", next=request.url))
-
-    form_base_class = SecureForm
+class CollectionView(SecureModelView):
     form_excluded_columns = ["created_at", "updated_at", "home"]
     column_display_pk = False
-    column_hide_backrefs = False
 
 
-class CarousalView(sqla.ModelView):
-    def is_accessible(self):
-        return current_user.is_authenticated and is_admin_user()
-
-    def inaccessible_callback(self, name, **kwargs):
-        # redirect to login page if user doesn't have access
-        return redirect(url_for("auth.login", next=request.url))
-
-    form_base_class = SecureForm
+class CarousalView(SecureModelView):
     form_excluded_columns = ["created_at", "updated_at", "home"]
     column_display_pk = False
-    column_hide_backrefs = False
     form_overrides = dict(text=CKEditorField)
 
 
-class HomePageView(sqla.ModelView):
+class HomePageView(SecureModelView):
     @listens_for(HomePageContent, "after_delete")
     def del_image(mapper, connection, target):
         if target.hero_image:
@@ -132,13 +76,6 @@ class HomePageView(sqla.ModelView):
             % url_for("static", filename=form.thumbgen_filename(op.join(images_dir, model.hero_image)))
         )
 
-    def is_accessible(self):
-        return current_user.is_authenticated and is_admin_user()
-
-    def inaccessible_callback(self, name, **kwargs):
-        # redirect to login page if user doesn't have access
-        return redirect(url_for("auth.login", next=request.url))
-
     column_formatters = {"hero_image": _list_thumbnail_hero_image}
 
     form_extra_fields = {
@@ -146,13 +83,11 @@ class HomePageView(sqla.ModelView):
             "Hero Image", base_path=image_path, thumbnail_size=(100, 100, True)
         )
     }
-    form_base_class = SecureForm
     form_excluded_columns = ["home", "created_at", "updated_at"]
     column_display_pk = False
-    column_hide_backrefs = False
 
 
-class ProductView(sqla.ModelView):
+class ProductView(SecureModelView):
     @listens_for(Product, "after_delete")
     def del_image(mapper, connection, target):
         if target.main_image:
@@ -200,13 +135,6 @@ class ProductView(sqla.ModelView):
             % url_for("static", filename=form.thumbgen_filename(op.join(images_dir, model.alt3_image)))
         )
 
-    def is_accessible(self):
-        return current_user.is_authenticated and is_admin_user()
-
-    def inaccessible_callback(self, name, **kwargs):
-        # redirect to login page if user doesn't have access
-        return redirect(url_for("auth.login", next=request.url))
-
     column_formatters = {
         "main_image": _list_thumbnail_main,
         "alt1_image": _list_thumbnail_alt1,
@@ -234,15 +162,13 @@ class ProductView(sqla.ModelView):
         ),
     }
 
-    form_base_class = SecureForm
     form_excluded_columns = ["created_at", "updated_at", "categories", "product"]
     column_searchable_list = ["name", "sku"]
     column_filters = ["sale_price"]
     edit_modal = True
-    column_hide_backrefs = False
 
 
-class VariantView(sqla.ModelView):
+class VariantView(SecureModelView):
     @listens_for(Variant, "after_delete")
     def del_image(mapper, connection, target):
         if target.variant_image:
@@ -257,13 +183,6 @@ class VariantView(sqla.ModelView):
             % url_for("static", filename=form.thumbgen_filename(op.join(images_dir, model.variant_image)))
         )
 
-    def is_accessible(self):
-        return current_user.is_authenticated and is_admin_user()
-
-    def inaccessible_callback(self, name, **kwargs):
-        # redirect to login page if user doesn't have access
-        return redirect(url_for("auth.login", next=request.url))
-
     column_formatters = {"variant_image": _list_thumbnail_variant_image}
 
     form_extra_fields = {
@@ -271,27 +190,16 @@ class VariantView(sqla.ModelView):
             "Variant Image", base_path=image_path, thumbnail_size=(100, 100, True)
         )
     }
-    form_base_class = SecureForm
     form_excluded_columns = ["created_at", "updated_at", "products"]
     column_display_pk = False
-    column_hide_backrefs = False
 
 
-class ProductAssociationView(sqla.ModelView):
-    def is_accessible(self):
-        return current_user.is_authenticated and is_admin_user()
-
-    def inaccessible_callback(self, name, **kwargs):
-        # redirect to login page if user doesn't have access
-        return redirect(url_for("auth.login", next=request.url))
-
-    form_base_class = SecureForm
+class ProductAssociationView(SecureModelView):
     column_display_pk = False  # optional, but I like to see the IDs in the list
-    column_hide_backrefs = False
     column_list = ("source_product", "target_product", "is_active", "association_type")
 
 
-class UserView(sqla.ModelView):
+class UserView(SecureModelView):
     """
     @listens_for(User.password, 'set', retval=True)
     def hash_user_password(target, value, oldvalue, initiator):
@@ -300,43 +208,16 @@ class UserView(sqla.ModelView):
         return value
     """
 
-    def is_accessible(self):
-        return current_user.is_authenticated and is_admin_user()
-
-    def inaccessible_callback(self, name, **kwargs):
-        # redirect to login page if user doesn't have access
-        return redirect(url_for("auth.login", next=request.url))
-
-    form_base_class = SecureForm
     column_searchable_list = ["email", "last_name"]
     column_filters = ["email"]
     column_exclude_list = ["password", "created_at"]
     form_excluded_columns = ["created_at", "updated_at"]
     column_display_pk = False
-    column_hide_backrefs = False
 
 
-class RoleView(sqla.ModelView):
-    def is_accessible(self):
-        return current_user.is_authenticated and is_admin_user()
-
-    def inaccessible_callback(self, name, **kwargs):
-        # redirect to login page if user doesn't have access
-        return redirect(url_for("auth.login", next=request.url))
-
-    form_base_class = SecureForm
+class RoleView(SecureModelView):
     column_display_pk = False
-    column_hide_backrefs = False
 
 
-class HolidayView(sqla.ModelView):
-    def is_accessible(self):
-        return current_user.is_authenticated and is_admin_user()
-
-    def inaccessible_callback(self, name, **kwargs):
-        # redirect to login page if user doesn't have access
-        return redirect(url_for("auth.login", next=request.url))
-
-    form_base_class = SecureForm
+class HolidayView(SecureModelView):
     column_display_pk = False
-    column_hide_backrefs = False

@@ -1,5 +1,3 @@
-import pprint
-
 from flask import flash, redirect, render_template, request, url_for
 
 from app.catalog import catalog
@@ -12,7 +10,6 @@ from app.checkout.getcarthelper import get_current_cart
 @catalog.route("/collection", methods=["GET"])
 def collection():
     collection = build_collection()
-    pprint.pprint(collection)
     return render_template("catalog/collection.html", collection=collection)
 
 

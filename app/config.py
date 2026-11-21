@@ -14,10 +14,29 @@ def _database_url():
     return url
 
 
+def env_flag(name, default=False):
+    value = os.environ.get(name)
+    if value is None:
+        return default
+    return value.strip().lower() in ("1", "true", "yes", "on")
+
+
 class Config(object):
-    SECRET_KEY = os.environ.get("SECRET_KEY") or "dev-only-change-me"
+    # No fallback: a guessable key would let anyone forge login sessions.
+    # create_app() refuses to start without it (tests pass their own).
+    SECRET_KEY = os.environ.get("SECRET_KEY")
     SQLALCHEMY_DATABASE_URI = _database_url()
     FLASK_ADMIN_SWATCH = "cyborg"
-    MAIL_SERVER = "localhost"
-    MAIL_PORT = "25"
-    ADMINS = ["your-email@example.com"]
+    MAIL_SERVER = os.environ.get("MAIL_SERVER", "localhost")
+    MAIL_PORT = int(os.environ.get("MAIL_PORT", 25))
+    ADMINS = [os.environ.get("MAIL_SENDER", "no-reply@bazaare.local")]
+
+    # The seeded admin account. Nothing is created unless both are set.
+    ADMIN_EMAIL = os.environ.get("ADMIN_EMAIL")
+    ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD")
+
+    SESSION_COOKIE_HTTPONLY = True
+    SESSION_COOKIE_SAMESITE = "Lax"
+    SESSION_COOKIE_SECURE = env_flag("SESSION_COOKIE_SECURE")
+    REMEMBER_COOKIE_HTTPONLY = True
+    REMEMBER_COOKIE_SECURE = env_flag("SESSION_COOKIE_SECURE")

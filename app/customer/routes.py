@@ -23,6 +23,7 @@ from app.customer.profileHelper import getCurrentUserProfile, updateProfile
 
 
 @customer.route("/profile", methods=["GET", "POST"])
+@login_required
 def profile():
     # Check if user is loggedin
     proForm = ProfileForm()
@@ -47,6 +48,7 @@ def profile():
 
 
 @customer.route("/billing", methods=["GET", "POST"])
+@login_required
 def billing():
     billingForm = BillingForm()
     display = "billing"
@@ -76,6 +78,7 @@ def billing():
 
 
 @customer.route("/shipping", methods=["GET", "POST"])
+@login_required
 def shipping():
     shippingForm = ShippingForm()
     display = "shipping"

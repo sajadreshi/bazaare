@@ -12,8 +12,10 @@
                 </td>
                 <td><span class="td-content">{{c_product.product_name}}</span><br>
                     <span class="td-content">${{item_value.item_product_price}}</span><br>
-                    <span class="td-content"><a href="{{ url_for('checkout.remove',itemId=item_key) }}"><i
-                                class="fa fa-trash" aria-hidden="true"> Remove</i></a></span>
+                    <span class="td-content"><form method="post" action="{{ url_for('checkout.remove',itemId=item_key) }}" class="d-inline">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-link p-0"><i class="fa fa-trash" aria-hidden="true"> Remove</i></button>
+                    </form></span>
                     <div class="size-display" id="size-display-{{item_id}}" style="display: block;">
                         <span class="td-content">{{c_size.product_size}}</span><br>
                         <span class="td-content"><a href="javascript:eidt_item_size({{item_id}})">

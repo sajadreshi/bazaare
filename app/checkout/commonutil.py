@@ -1,22 +1,34 @@
 import datetime
+import logging
 
 from flask import session
 
 from app.extension import db
 from app.models import Cart, Customer
 
+log = logging.getLogger(__name__)
+
+# Days between ordering and the earliest delivery date we offer.
+DELIVERY_LEAD_DAYS = 3
+
 
 def get_current_pending_cart():
-    curr_customer_id = session.get("customer_id")
-    if curr_customer_id:
-        cart = db.session.query(Cart).filter(Cart.customer_id == curr_customer_id, Cart.status == "PENDING")
-    if cart or cart.count() == 1:
+    """Query for the current customer's single PENDING cart, or None.
+
+    Callers use ``.first()`` / ``.update()`` on the returned query.
+    """
+    customer_id = session.get("customer_id")
+    if not customer_id:
+        return None
+    cart = db.session.query(Cart).filter(Cart.customer_id == customer_id, Cart.status == "PENDING")
+    count = cart.count()
+    if count == 1:
         return cart
-    elif cart.count() > 1:
+    if count > 1:
+        log.warning("Customer %s had %s pending carts; cancelling them", customer_id, count)
         cart.update({"status": "CANCELLED"})
         db.session.commit()
-        return None
-    return
+    return None
 
 
 def get_current_customer():
@@ -142,18 +154,19 @@ def getDeliveryWindowFromCart(cart):
 
 
 def convertDate(dateStr, format):
+    """Parse a date string; values that are already datetimes (Postgres) pass through."""
+    if not isinstance(dateStr, str):
+        return dateStr
     try:
         return datetime.datetime.strptime(dateStr, format)
-    except:
+    except ValueError:
         return dateStr
 
 
 def getFormatedDate(dttm, format):
-    try:
-        formatted_date = dttm.strftime(format)
-        return formatted_date
-    except:
+    if not hasattr(dttm, "strftime"):
         return dttm
+    return dttm.strftime(format)
 
 
 def check_billing_address(cart):
@@ -194,11 +207,12 @@ def check_shipping_address(cart):
 
 def check_delivery_date(cart):
     isComplete = False
-    lead_time_date = datetime.date.today() + datetime.timedelta(3)
+    earliest = datetime.date.today() + datetime.timedelta(DELIVERY_LEAD_DAYS)
     del_date = getDeliveryDateFromCart(cart)
     if del_date:
         cd = convertDate(del_date, "%Y-%m-%d %H:%M:%S.%f")
-        isComplete = True if cd and cd.date() > lead_time_date else False
+        # Same rule as fetchDeliveryDays(): the earliest date offered is valid.
+        isComplete = hasattr(cd, "date") and cd.date() >= earliest
     return isComplete
 
 

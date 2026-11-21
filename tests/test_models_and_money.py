@@ -5,11 +5,12 @@ from flask_login import AnonymousUserMixin
 from app.checkout.calculatecart import perform_calculation
 from app.extension import db
 from app.models import Cart, Customer, Item, User
+from tests.conftest import ADMIN_EMAIL
 
 
 def test_user_flags_are_real(app):
     with app.app_context():
-        admin = User.query.filter_by(email="user@admin.com").one()
+        admin = User.query.filter_by(email=ADMIN_EMAIL).one()
         # is_admin is a stored column again, not a shadowing method.
         assert admin.is_admin is True
         assert "is_admin" in User.__table__.columns

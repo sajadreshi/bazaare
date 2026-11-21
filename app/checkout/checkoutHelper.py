@@ -4,8 +4,9 @@ from decimal import ROUND_HALF_UP, Decimal
 from sqlalchemy import text
 
 from app.checkout.calculatecart import calculate_cart
+from app.checkout.commonutil import get_current_pending_cart
 from app.extension import db
-from app.models import Item, Product, Variant
+from app.models import Item, Product, Variant, VariantProduct
 
 fetch_size_query = "select  \
    t.id, t.size, t.description  \
@@ -15,38 +16,36 @@ fetch_size_query = "select  \
 
 
 def fetchSizeForProduct(productId):
-    response = []
-    value = {"productId": productId}
-    sql = text(fetch_size_query)
-    result = db.session.execute(sql, value)
-    if not result.returns_rows:
-        response = []
-    else:
-        for row in result.all():
-            response.append(list(row))
-        d = json.dumps(response)
-        print(response)
-        return d
+    rows = db.session.execute(text(fetch_size_query), {"productId": productId}).all()
+    return json.dumps([list(row) for row in rows])
 
 
-def updateVariantSize(itemId, sizeId, productId):
-    if itemId and sizeId and productId:
-        produc_price = fetchProductPrice(productId)
-        size_qty = fetchSizeDetails(sizeId)
-        new_price = (Decimal(str(size_qty)) * Decimal(str(produc_price))).quantize(
-            Decimal("0.01"), rounding=ROUND_HALF_UP
-        )
-        item = db.session.query(Item).filter(Item.id == itemId)
-        item.update({"size_id": sizeId, "product_price": new_price})
-        db.session.commit()
-        calculate_cart()
+def updateVariantSize(itemId, sizeId, productId=None):
+    """Switch a cart item to another size of the same product and reprice it.
 
-
-def fetchProductPrice(productId):
-    productDetails = db.session.query(Product).filter(Product.id == productId).first()
-    return productDetails.sale_price if productDetails else 0.00
-
-
-def fetchSizeDetails(sizeId):
-    sizeDetails = db.session.query(Variant).filter(Variant.id == sizeId).first()
-    return sizeDetails.quantity if sizeDetails else 0
+    ``productId`` comes from the browser and is ignored: the price always comes
+    from the item's own product, and the item must be in the current customer's
+    pending cart.
+    """
+    cart = get_current_pending_cart()
+    if not (cart and itemId and sizeId):
+        return False
+    item = db.session.query(Item).filter(Item.id == itemId, Item.cart_id == cart.first().id).first()
+    if item is None:
+        return False
+    product = db.session.get(Product, item.product_id)
+    variant = (
+        db.session.query(Variant)
+        .join(VariantProduct, VariantProduct.variant_id == Variant.id)
+        .filter(VariantProduct.product_id == item.product_id, Variant.id == sizeId)
+        .first()
+    )
+    if product is None or variant is None:
+        return False
+    item.size_id = variant.id
+    item.product_price = (Decimal(str(product.sale_price)) * Decimal(str(variant.quantity))).quantize(
+        Decimal("0.01"), rounding=ROUND_HALF_UP
+    )
+    db.session.commit()
+    calculate_cart()
+    return True

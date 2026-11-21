@@ -1,6 +1,6 @@
-import pprint
+import logging
 
-from flask import flash, redirect, render_template, request, url_for
+from flask import abort, flash, redirect, render_template, request, url_for
 
 from app.checkout import checkout
 from app.checkout.addressHelper import save_billing_address, save_shipping_address
@@ -20,12 +20,18 @@ from app.checkout.getcarthelper import get_current_cart
 from app.checkout.placeOrderHelper import placeOrder
 from app.checkout.removeitem import delete_item
 
+log = logging.getLogger(__name__)
 
-@checkout.route("/remove/<int:itemId>", methods=["GET", "POST"])
+
+def back(fragment=""):
+    """Redirect to the page the form was posted from (or the cart if unknown)."""
+    return redirect((request.referrer or url_for("checkout.shopcart")) + fragment)
+
+
+@checkout.route("/remove/<int:itemId>", methods=["POST"])
 def remove(itemId):
-    if itemId:
-        delete_item(itemId)
-        return redirect(request.referrer)
+    delete_item(itemId)
+    return back()
 
 
 @checkout.route("/shopcart", methods=["GET", "POST"])
@@ -36,7 +42,6 @@ def shopcart():
         item_id = request.form.get("itemId", type=int)
         updateVariantSize(item_id, new_size, product_id)
     cur_cart = get_current_cart()
-    pprint.pprint(cur_cart)
     return render_template("checkout/shopcart.html", cart=cur_cart)
 
 
@@ -52,28 +57,27 @@ def order():
         if formId == "shipping_form":
             if shipping_form.validate_on_submit():
                 save_shipping_address(shipping_form)
-                return redirect(request.referrer)
+                return back()
         elif formId == "billing_form":
             if billing_form.validate_on_submit():
                 save_billing_address(billing_form)
-                return redirect(request.referrer)
+                return back()
         elif formId == "delivery_form":
             if delivery_form.validate_on_submit():
                 saveDeliveryDate(delivery_form)
-                return redirect(request.referrer + "#collapseFour")
+                return back("#collapseFour")
         elif formId == "place_order_form":
             if place_order_form.validate_on_submit():
                 status = placeOrder(place_order_form)
                 if not status.isSuccess:
                     flash(status.error)
-                    return redirect(request.referrer)
+                    return back()
                 else:
                     return redirect(url_for("checkout.confirm", cartId=status.cartId))
     cur_cart = get_current_cart()
     shipping_form = prepopulateShippingForm(cur_cart, shipping_form)
     billing_form = prepopulateBillingForm(cur_cart, billing_form)
     delivery_form = prepopulateDeliveryForm(cur_cart, delivery_form)
-    pprint.pprint(cur_cart)
     return render_template(
         "checkout/checkout.html",
         cart=cur_cart,
@@ -84,19 +88,15 @@ def order():
     )
 
 
-@checkout.route("/confirm/<cartId>", methods=["GET", "POST"])
+@checkout.route("/confirm/<int:cartId>")
 def confirm(cartId):
-    if cartId:
-        cart = get_cart(cartId)
-        print("confirmation cart")
-        pprint.pprint(cart)
+    # get_cart only returns carts owned by the current customer.
+    cart = get_cart(cartId)
+    if not cart:
+        abort(404)
     return render_template("checkout/confirmation.html", cart=cart)
 
 
-@checkout.route("/size/<productId>", methods=["GET", "POST"])
+@checkout.route("/size/<int:productId>")
 def size(productId):
-    if productId:
-        sizes = fetchSizeForProduct(productId)
-        print("confirmation cart")
-        pprint.pprint(sizes)
-        return sizes
+    return fetchSizeForProduct(productId)

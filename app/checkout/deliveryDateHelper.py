@@ -1,25 +1,19 @@
 import datetime
 
-from app.checkout.commonutil import convertDate, get_current_pending_cart
+from app.checkout.commonutil import DELIVERY_LEAD_DAYS, convertDate, get_current_pending_cart
 from app.extension import db
 from app.models import Holiday
 
 
 def fetchDeliveryDays():
     delivery_dates = []
-    try:
-        start_date = datetime.date.today() + datetime.timedelta(3)
-        end_date = start_date + datetime.timedelta(90)
-        off_days = getHolidays()
-        for deldate in range((end_date - start_date).days + 1):
-            result_date = start_date + datetime.timedelta(deldate)
-            if getFormatedDate(result_date) not in off_days:
-                formatted_date = result_date.strftime("%a, %d  %b  %Y")
-                final_date = (result_date, formatted_date)
-                delivery_dates.append(final_date)
-        print(delivery_dates)
-    except:
-        return delivery_dates
+    start_date = datetime.date.today() + datetime.timedelta(DELIVERY_LEAD_DAYS)
+    end_date = start_date + datetime.timedelta(90)
+    off_days = getHolidays()
+    for deldate in range((end_date - start_date).days + 1):
+        result_date = start_date + datetime.timedelta(deldate)
+        if getFormatedDate(result_date) not in off_days:
+            delivery_dates.append((result_date, result_date.strftime("%a, %d  %b  %Y")))
     return delivery_dates
 
 
@@ -33,11 +27,9 @@ def getHolidays():
 
 
 def getFormatedDate(dttm):
-    try:
-        formatted_date = dttm.strftime("%m-%d-%Y")
-        return formatted_date
-    except:
+    if not hasattr(dttm, "strftime"):
         return dttm
+    return dttm.strftime("%m-%d-%Y")
 
 
 def saveDeliveryDate(delivery_form):

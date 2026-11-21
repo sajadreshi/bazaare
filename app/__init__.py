@@ -1,4 +1,7 @@
-from flask import Flask
+import logging
+
+import click
+from flask import Flask, render_template
 
 from app.adminapp.views import (
     AttributesRelView,
@@ -19,11 +22,10 @@ from app.catalog import catalog as catalog_bp
 from app.checkout import checkout as checkout_bp
 from app.checkout.cartcounthelper import get_cart_count
 from app.customer import customer as customer_bp
-from app.errors import bp as error_bp
 from app.main import main
 
 from .config import Config
-from .extension import admin, ckeditor, db, login_manager, mail, migrate
+from .extension import admin, ckeditor, csrf, db, login_manager, mail, migrate
 from .models import (
     Attribute,
     Carousal,
@@ -45,12 +47,26 @@ def create_app(config_overrides=None):
     app.config.from_object(Config)
     if config_overrides:
         app.config.update(config_overrides)
+    if not app.config.get("SECRET_KEY"):
+        raise RuntimeError("SECRET_KEY is not set. Add it to .env (see .env.example).")
+    if not app.debug:
+        logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s [%(name)s] %(message)s")
     db.init_app(app)
     login_manager.init_app(app)
     admin.init_app(app)
     migrate.init_app(app, db)
     ckeditor.init_app(app)
     mail.init_app(app)
+    csrf.init_app(app)  # every POST (site and /admin) must carry a CSRF token
+
+    @app.errorhandler(404)
+    def not_found(error):
+        return render_template("errors/404.html"), 404
+
+    @app.errorhandler(500)
+    def server_error(error):
+        db.session.rollback()
+        return render_template("errors/500.html"), 500
 
     @login_manager.user_loader
     def load_user(user_id):
@@ -58,7 +74,6 @@ def create_app(config_overrides=None):
 
     app.jinja_env.globals.update(cart_count=get_cart_count)
     app.register_blueprint(main)
-    app.register_blueprint(error_bp, url_prefix="/error")
     app.register_blueprint(auth_bp, url_prefix="/auth")
     app.register_blueprint(catalog_bp, url_prefix="/catalog")
     app.register_blueprint(checkout_bp, url_prefix="/checkout")
@@ -82,6 +97,6 @@ def create_app(config_overrides=None):
         from app.seed import seed_all
 
         seed_all()
-        print("Seed data is in place.")
+        click.echo("Seed data is in place.")
 
     return app

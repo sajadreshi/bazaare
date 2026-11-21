@@ -18,10 +18,6 @@ cust.id as customer_id,\
 cust.customer_type as customer_type,\
 pymt.id as  payment_id, \
 pymt.payment_method as  payment_method, \
-pymt.account_number as  account_number, \
-pymt.account_name as  account_name, \
-pymt.expiry_month as  expiry_month, \
-pymt.expiry_year as  expiry_year, \
 pymt.transaction_id as  transaction_id, \
 pymt.transaction_status as  transaction_status, \
 pymt.approved_amount as  approved_amount, \
@@ -147,10 +143,6 @@ def build_payment_obj(row, payments_obj):
         payment_obj = {}
     payment_obj["payment_id"] = row.payment_id
     payment_obj["payment_method"] = row.payment_method
-    payment_obj["account_number"] = row.account_number
-    payment_obj["account_name"] = row.account_name
-    payment_obj["expiry_month"] = row.expiry_month
-    payment_obj["expiry_year"] = row.expiry_year
     payment_obj["transaction_id"] = row.transaction_id
     payment_obj["transaction_status"] = row.transaction_status
     payment_obj["approved_amount"] = row.approved_amount
