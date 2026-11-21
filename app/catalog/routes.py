@@ -1,10 +1,9 @@
 from flask import flash, redirect, render_template, request, url_for
 
 from app.catalog import catalog
-from app.catalog.addtocarthelper import add_item_to_cart, get_size
 from app.catalog.collectionbuilder import build_collection
 from app.catalog.productbuilder import build_crossells, build_product
-from app.checkout.getcarthelper import get_current_cart
+from app.services import cart as cart_service
 
 
 @catalog.route("/collection", methods=["GET"])
@@ -13,21 +12,18 @@ def collection():
     return render_template("catalog/collection.html", collection=collection)
 
 
-@catalog.route("/product/<productId>", methods=["GET", "POST"])
+@catalog.route("/product/<int:productId>", methods=["GET", "POST"])
 def product(productId):
-    cur_cart = {}
+    cart = None
     if request.method == "POST":
-        pid = request.form.get("pid", "")
-        size_id = request.form.get("size", "")
-        current_product = build_product(pid)
-        product_size = get_size(current_product, size_id)
-        # if no sizes are available, then throw out of stock message
-        if product_size is None:
-            flash("Product is currently out of stock")
+        # Related-product cards post their own product id as "pid".
+        pid = request.form.get("pid", type=int) or productId
+        try:
+            cart_service.add_item(pid, request.form.get("size", type=int))
+        except cart_service.CartError as error:
+            flash(str(error))
             return redirect(url_for("catalog.product", productId=productId))
-
-        add_item_to_cart(current_product, product_size)
-        cur_cart = get_current_cart()
+        cart = cart_service.get_cart()
     product = build_product(productId)
     xsells = build_crossells(productId)
-    return render_template("catalog/product.html", product=product, xsells=xsells, cart=cur_cart)
+    return render_template("catalog/product.html", product=product, xsells=xsells, cart=cart)

@@ -4,14 +4,14 @@
             <div class="col-lg-8">
                 <div class="checkout-accordion-wrap">
                     <div class="accordion" id="accordionExample">
-                        {% set shipping_expanded = '' if cart.is_shipping_complete else 'show' %}
-                        {% set billing_expanded = '' if shipping_expanded=='show' or cart.is_billing_complete else 'show' %}
-                        {% set delivery_expanded = '' if (shipping_expanded=='show' or billing_expanded=='show' or cart.is_delivery_complete) else 'show' %}
+                        {% set shipping_expanded = '' if status.shipping else 'show' %}
+                        {% set billing_expanded = '' if shipping_expanded=='show' or status.billing else 'show' %}
+                        {% set delivery_expanded = '' if (shipping_expanded=='show' or billing_expanded=='show' or status.delivery) else 'show' %}
                         {% set placeorder_expanded = '' if (shipping_expanded=='show' or billing_expanded=='show' or delivery_expanded=='show') else 'show' %}
-                        {% set worked_ship_address_display = 'block' if cart.is_shipping_complete else 'none' %}
-                        {% set ship_address_form_display = 'none' if cart.is_shipping_complete else 'block' %}
-                        {% set worked_bill_address_display = 'block' if cart.is_billing_complete else 'none' %}
-                        {% set bill_address_form_display = 'none' if cart.is_billing_complete else 'block' %}
+                        {% set worked_ship_address_display = 'block' if status.shipping else 'none' %}
+                        {% set ship_address_form_display = 'none' if status.shipping else 'block' %}
+                        {% set worked_bill_address_display = 'block' if status.billing else 'none' %}
+                        {% set bill_address_form_display = 'none' if status.billing else 'block' %}
                         <div class="worked checkout-sec" id="ship-worked" style="display: {{worked_ship_address_display}};">
                             <div class="completed-sec">
                                 <h5 class="mb-0">
@@ -46,8 +46,8 @@
                             </div>
                         </div>
         
-                        {% set worked_bill_address_display = 'block' if cart.is_billing_complete else 'none' %}
-                        {% set bill_address_form_display = 'none' if cart.is_billing_complete else 'block' %}
+                        {% set worked_bill_address_display = 'block' if status.billing else 'none' %}
+                        {% set bill_address_form_display = 'none' if status.billing else 'block' %}
                         <div class="worked checkout-sec" id="bill-worked" style="display: {{worked_bill_address_display}};">
                             <div class="completed-sec">
                                 <h5 class="mb-0">
@@ -80,8 +80,8 @@
                                 </div>
                             </div>
                         </div>
-                        {% set worked_delivery_date_display = 'block' if cart.is_delivery_complete else 'none' %}
-                        {% set delivery_date_form_display = 'none' if cart.is_delivery_complete else 'block' %}
+                        {% set worked_delivery_date_display = 'block' if status.delivery else 'none' %}
+                        {% set delivery_date_form_display = 'none' if status.delivery else 'block' %}
                         <div class="worked checkout-sec" id="delivery-worked" style="display: {{worked_delivery_date_display}};">
                             <div class="completed-sec">
                                 <h5 class="mb-0">

@@ -6,7 +6,9 @@ from flask_login import current_user, login_user, logout_user
 from app.auth import bp
 from app.auth.resetPassword import send_password_reset_email
 from app.extension import db
-from app.models import Customer, User
+from app.models import User
+from app.services.cart import adopt_guest_cart
+from app.services.customers import get_or_create_user_customer
 
 from .forms import LoginForm, RegistrationForm, ResetPasswordForm, ResetPasswordRequestForm
 
@@ -29,8 +31,11 @@ def login():
         if user is None or not user.check_password(form.password.data):
             flash("Invalid username or password")
             return redirect(url_for("auth.login"))
+        guest_customer_id = session.get("customer_id")
         login_user(user, remember=form.remember_me.data)
-        session["customer_id"] = current_user.id
+        customer = get_or_create_user_customer(user)
+        session["customer_id"] = customer.id
+        adopt_guest_cart(guest_customer_id, customer)  # keep what they added before signing in
         next_page = request.args.get("next")
         if not is_safe_next(next_page):
             next_page = url_for("main.home")
@@ -60,7 +65,8 @@ def register():
         db.session.add(user)
         db.session.flush()
         db.session.commit()
-        createCustomerEntry(user)
+        get_or_create_user_customer(user)
+        db.session.commit()
         flash("You have successfully registered. Pleaser login here")
         return redirect(url_for("auth.login"))
     return render_template("auth/register.html", title="Register", form=form)
@@ -94,9 +100,3 @@ def reset_password(token):
         flash("Your password has been reset.")
         return redirect(url_for("auth.login"))
     return render_template("auth/resetPassword.html", form=form)
-
-
-def createCustomerEntry(user):
-    customer = Customer(id=user.id, customer_type="REGISTERED", user_id=user.id)
-    db.session.add(customer)
-    db.session.commit()

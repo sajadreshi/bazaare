@@ -2,7 +2,7 @@ from flask_wtf import FlaskForm
 from wtforms import BooleanField, HiddenField, PasswordField, SelectField, StringField, SubmitField
 from wtforms.validators import DataRequired, Email, EqualTo, Length
 
-from app.checkout.commonutil import getUSStates
+from app.us_states import US_STATES
 
 
 class ProfileForm(FlaskForm):
@@ -38,7 +38,7 @@ class ShippingForm(FlaskForm):
     )
     address2 = StringField("Address Line2", render_kw={"placeholder": "Address Line 2 (Optional)"})
     city = StringField("City", validators=[DataRequired()], render_kw={"placeholder": "City"})
-    state = SelectField("State", validators=[DataRequired()], choices=getUSStates())
+    state = SelectField("State", validators=[DataRequired()], choices=US_STATES)
     zip = StringField("Zip", validators=[Length(max=10), DataRequired()], render_kw={"placeholder": "Zip"})
     email = StringField("Email", validators=[DataRequired(), Email()], render_kw={"placeholder": "Email"})
     phone = StringField(
@@ -60,7 +60,7 @@ class BillingForm(FlaskForm):
     )
     address2 = StringField("Address Line2", render_kw={"placeholder": "Address Line 2 (Optional)"})
     city = StringField("City", validators=[DataRequired()], render_kw={"placeholder": "City"})
-    state = SelectField("State", validators=[DataRequired()], choices=getUSStates())
+    state = SelectField("State", validators=[DataRequired()], choices=US_STATES)
     zip = StringField("Zip", validators=[Length(max=10), DataRequired()], render_kw={"placeholder": "Zip"})
     email = StringField("Email", validators=[DataRequired(), Email()], render_kw={"placeholder": "Email"})
     phone = StringField(

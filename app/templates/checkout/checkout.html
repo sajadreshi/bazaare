@@ -13,13 +13,12 @@
 {% endfor %}
 {% endif %}
 {% endwith %}
-{% set cart_obj = cart.values() | first %}
 <section class="">
     {% include 'checkout/checkoutbreadcrumb.html'%}
 </section>
 
 <section class="checkout-details">
-  {% if cart_obj and cart_obj | length > 0 %}
+  {% if cart and cart.pending_items %}
      {% include 'checkout/checkoutdetails.html'%}
    {% else %}
      {% include 'checkout/emptyCart.html'%}

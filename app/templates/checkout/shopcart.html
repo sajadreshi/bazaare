@@ -18,13 +18,8 @@
   {% include 'checkout/shopcartbreadcrubm.html'%}
 </section>
 <section class="shopping-cart-details">
-  {% if cart and cart | length > 0 %}
-  {% set cart_obj = cart.values() | first %}
-  {% if cart_obj and cart_obj.items %}
+  {% if cart and cart.pending_items %}
   {% include 'checkout/cartdetails.html'%}
-  {% else %}
-  {% include 'checkout/emptyCart.html'%}
-  {% endif %}
   {% else %}
   {% include 'checkout/emptyCart.html'%}
   {% endif %}

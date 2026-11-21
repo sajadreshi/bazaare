@@ -5,9 +5,9 @@
             <select class="checkout-drop-down" name="size" id="variantsizelist-{{item_id}}">
             </select>
         </p>
-        <input type="hidden" name="productId" value="{{c_product.product_id}}">
+        <input type="hidden" name="productId" value="{{ item.product_id }}">
         <input type="hidden" name="itemId" value="{{item_id}}">
-        <input type="hidden" name="siz-url" id="siz-url-{{item_id}}" value="{{ url_for('checkout.size',productId=c_product.product_id) }}">
+        <input type="hidden" name="siz-url" id="siz-url-{{item_id}}" value="{{ url_for('checkout.size', productId=item.product_id) }}">
         <p>
             <input
                 type="submit"

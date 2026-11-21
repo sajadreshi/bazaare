@@ -280,6 +280,13 @@ class Cart(db.Model):
     updated_at = db.Column(db.DateTime, index=True, default=utcnow)
     created_at = db.Column(db.DateTime, index=True, default=utcnow)
 
+    customer = db.relationship("Customer")
+    items = db.relationship("Item", back_populates="cart", order_by="Item.id", cascade="all, delete-orphan")
+
+    @property
+    def pending_items(self):
+        return [item for item in self.items if item.status == "PENDING"]
+
 
 class Item(db.Model):
     __tablename__ = "item"
@@ -305,6 +312,10 @@ class Item(db.Model):
     updated_at = db.Column(db.DateTime, index=True, default=utcnow)
     created_at = db.Column(db.DateTime, index=True, default=utcnow)
 
+    cart = db.relationship("Cart", back_populates="items")
+    product = db.relationship("Product")
+    variant = db.relationship("Variant", foreign_keys=[size_id])
+
 
 class Customer(db.Model):
     __tablename__ = "customer"
@@ -315,6 +326,10 @@ class Customer(db.Model):
     billing_address_id = db.Column(db.Integer, db.ForeignKey("address.id"))
     updated_at = db.Column(db.DateTime, index=True, default=utcnow)
     created_at = db.Column(db.DateTime, index=True, default=utcnow)
+
+    user = db.relationship("User")
+    shipping_address = db.relationship("Address", foreign_keys=[shipping_address_id])
+    billing_address = db.relationship("Address", foreign_keys=[billing_address_id])
 
 
 class Address(db.Model):

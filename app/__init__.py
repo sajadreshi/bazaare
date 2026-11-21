@@ -22,9 +22,9 @@ from app.adminapp.views import (
 from app.auth import bp as auth_bp
 from app.catalog import catalog as catalog_bp
 from app.checkout import checkout as checkout_bp
-from app.checkout.cartcounthelper import get_cart_count
 from app.customer import customer as customer_bp
 from app.main import main
+from app.services.cart import item_count
 
 from .config import Config
 from .extension import admin, ckeditor, csrf, db, login_manager, mail, migrate
@@ -76,7 +76,7 @@ def create_app(config_overrides=None):
     def load_user(user_id):
         return db.session.get(User, int(user_id))
 
-    app.jinja_env.globals.update(cart_count=get_cart_count)
+    app.jinja_env.globals.update(cart_item_count=item_count)
     app.register_blueprint(main)
     app.register_blueprint(auth_bp, url_prefix="/auth")
     app.register_blueprint(catalog_bp, url_prefix="/catalog")
