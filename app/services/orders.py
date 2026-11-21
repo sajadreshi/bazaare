@@ -1,7 +1,7 @@
-"""Turning a paid cart into an Order, and reading orders back for their owner."""
+"""Orders: created from a paid cart, then read back by their owner."""
 
 from app.extension import db
-from app.models import Customer, Item, Order, OrderItem, Product, Variant
+from app.models import Order, OrderItem
 
 
 def create_order_from_cart(cart):
@@ -9,7 +9,7 @@ def create_order_from_cart(cart):
 
     Runs inside the caller's transaction (no commit here).
     """
-    customer = db.session.get(Customer, cart.customer_id)
+    customer = cart.customer
     order = Order(
         customer_id=cart.customer_id,
         cart_id=cart.id,
@@ -24,10 +24,8 @@ def create_order_from_cart(cart):
         shipping_address_id=customer.shipping_address_id if customer else None,
         billing_address_id=customer.billing_address_id if customer else None,
     )
-    items = db.session.query(Item).filter(Item.cart_id == cart.id).order_by(Item.id)
-    for item in items:
-        product = db.session.get(Product, item.product_id) if item.product_id else None
-        variant = db.session.get(Variant, item.size_id) if item.size_id else None
+    for item in cart.pending_items:
+        product, variant = item.product, item.variant
         order.items.append(
             OrderItem(
                 product_id=item.product_id,

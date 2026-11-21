@@ -1,7 +1,6 @@
 from flask import abort, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 
-from app.checkout.orders import get_customer_order, list_customer_orders
 from app.customer import customer
 from app.customer.addressHelper import (
     getCurrentBillingAddress,
@@ -20,6 +19,7 @@ from app.customer.forms import (
     populateshippingAddressForm,
 )
 from app.customer.profileHelper import getCurrentUserProfile, updateProfile
+from app.services.orders import get_customer_order, list_customer_orders
 
 
 @customer.route("/profile", methods=["GET", "POST"])

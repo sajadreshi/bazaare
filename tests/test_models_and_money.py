@@ -2,9 +2,9 @@ from decimal import Decimal
 
 from flask_login import AnonymousUserMixin
 
-from app.checkout.calculatecart import perform_calculation
 from app.extension import db
 from app.models import Cart, Customer, Item, User
+from app.services.cart import recalculate
 from tests.conftest import ADMIN_EMAIL
 
 
@@ -40,7 +40,8 @@ def test_cart_total_subtracts_discount_exactly(app):
                 )
             )
         db.session.commit()
-        perform_calculation(db.session.query(Cart).filter(Cart.id == cart.id))
+        recalculate(db.session.get(Cart, cart.id))
+        db.session.commit()
         cart = db.session.get(Cart, cart.id)
         assert cart.total_merchandise == Decimal("30.60")
         assert cart.total_shipping == Decimal("3.30")

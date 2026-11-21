@@ -1,6 +1,4 @@
-{% set delivery_date = cart_obj.formatted_delivery_date%}
-{% set delivery_window = cart_obj.delivery_window%}
 <div class="address-sec">
-    <span class="add-elem">{{delivery_date}}</span>
-    <span class="add-elem">{{delivery_window}}</span>
+    <span class="add-elem">{{ cart.delivery_date.strftime('%a, %d %b %Y') if cart.delivery_date else '' }}</span>
+    <span class="add-elem">{{ cart.delivery_window or '' }}</span>
 </div>

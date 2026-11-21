@@ -226,12 +226,12 @@ def test_order_cannot_be_placed_twice(app, client, product_ids):
 
 
 def test_earliest_offered_delivery_date_is_accepted(app, client, product_ids):
-    from app.checkout.deliveryDateHelper import fetchDeliveryDays
+    from app.services.checkout import delivery_dates
 
     pid, small, _ = product_ids
     with app.app_context():
         add_to_cart(client, pid, small)
-        earliest = fetchDeliveryDays()[0][0]
+        earliest = delivery_dates()[0]
     for form in ("shipping_form", "billing_form"):
         client.post("/checkout/order", data=address(form), headers=REFERER)
     client.post(
