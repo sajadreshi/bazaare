@@ -162,7 +162,7 @@ class ProductView(SecureModelView):
         ),
     }
 
-    form_excluded_columns = ["created_at", "updated_at", "categories", "attribute_links"]
+    form_excluded_columns = ["created_at", "updated_at", "attribute_links"]
     column_searchable_list = ["name", "sku"]
     column_filters = ["sale_price"]
     edit_modal = True

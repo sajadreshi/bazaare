@@ -181,3 +181,26 @@ def test_admin_product_image_upload_makes_thumbnail(app, client):
         for p in paths:
             if os.path.exists(p):
                 os.remove(p)
+
+
+def test_admin_can_put_a_product_in_categories(app, client):
+    from app.models import Category, Product
+
+    with app.app_context():
+        rings = Category.query.filter_by(code="RINGS").one().id
+        bracelets = Category.query.filter_by(code="BRACELETS").one().id
+    login(client, ADMIN_EMAIL, ADMIN_PASSWORD)
+    page = client.get("/admin/product/new/").get_data(as_text=True)
+    assert 'name="categories"' in page
+    data = {
+        "sku": "ADMIN-CAT-1",
+        "name": "Category Ring",
+        "retail_price": "10",
+        "sale_price": "9",
+        "is_active": "y",
+        "categories": [str(rings), str(bracelets)],
+    }
+    assert client.post("/admin/product/new/", data=data).status_code == 302
+    with app.app_context():
+        product = Product.query.filter_by(sku="ADMIN-CAT-1").one()
+        assert sorted(c.code for c in product.categories) == ["BRACELETS", "RINGS"]
