@@ -388,7 +388,10 @@ class Order(db.Model):
     total = db.Column(db.Numeric(10, 2), nullable=False, default=0)
     shipping_method = db.Column(db.String(20), nullable=False, default="STANDARD", server_default="STANDARD")
     carrier = db.Column(db.String(20))
-    tracking_number = db.Column(db.String(64))
+    tracking_number = db.Column(db.String(64), index=True)
+    # Set when the label was bought through Shippo (the label PDF link expires; refresh via the transaction).
+    shippo_transaction_id = db.Column(db.String(64))
+    label_url = db.Column(db.String(1000))
     shipped_at = db.Column(db.DateTime)
     delivered_at = db.Column(db.DateTime)
     # Addresses are never edited in place (a change saves a new row), so these

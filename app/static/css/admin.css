@@ -98,3 +98,6 @@ a:hover { color: #f1d595; }
 .bz-ship-form { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--bz-line); display: grid; gap: 6px; }
 .bz-ship-form label { font-size: .78rem; color: var(--bz-muted); margin: 4px 0 0; }
 .bz-ship-form .btn { margin-top: 8px; justify-self: start; }
+.bz-shippo { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--bz-line); }
+.bz-rate { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--bz-line); margin: 0; }
+.bz-rate:last-child { border-bottom: 0; }

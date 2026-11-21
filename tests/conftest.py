@@ -33,6 +33,9 @@ def app(tmp_path_factory):
             "R2_SECRET_ACCESS_KEY": None,
             "R2_BUCKET": None,
             "R2_PUBLIC_URL": None,
+            # Never call the real Shippo API from tests.
+            "SHIPPO_API_KEY": None,
+            "SHIPPO_WEBHOOK_TOKEN": "hook-secret",
         }
     )
     with app.app_context():

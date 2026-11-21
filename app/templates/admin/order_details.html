@@ -78,7 +78,35 @@
         {% if order.delivered_at %}<p class="bz-muted">Delivered {{ order.delivered_at.strftime('%d %b %Y, %H:%M') }}</p>{% endif %}
         {% if order.status in ('PLACED', 'SHIPPED') %}<p class="bz-muted">Promised to arrive {{ earliest.strftime('%a %d %b') }}–{{ latest.strftime('%a %d %b') }}</p>{% endif %}
 
+        {% if order.label_url or order.shippo_transaction_id %}
+        <p class="bz-noprint"><a class="btn bz-btn-gold" href="{{ get_url('.print_label', order_id=order.id) }}" target="_blank" rel="noopener">Print shipping label</a></p>
+        {% endif %}
+
+        {% if order.status == 'PLACED' %}
+        <div class="bz-noprint bz-shippo">
+          {% if shippo_ready %}
+            {% if rates %}
+            <p class="bz-muted">Choose a rate to buy the label{% if shippo_test %} (test mode: sample label, nothing is charged){% endif %}:</p>
+            {% for rate in rates %}
+            <form method="post" action="{{ get_url('.buy_label', order_id=order.id) }}" class="bz-rate">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <input type="hidden" name="rate_id" value="{{ rate.object_id }}">
+              <span><strong>{{ rate.provider }}</strong> {{ rate.service }}<br>
+                <small class="bz-muted">{% if rate.days %}{{ rate.days }} day{{ 's' if rate.days != 1 }}{% endif %} {{ rate.terms }}</small></span>
+              <button type="submit" class="btn bz-btn-gold">Buy ${{ money | format(rate.amount) }}</button>
+            </form>
+            {% endfor %}
+            {% else %}
+            <a class="btn bz-btn-gold" href="{{ get_url('.details_view', id=order.id, rates=1) }}">Get shipping rates</a>
+            {% endif %}
+          {% else %}
+            <p class="bz-muted">To buy labels here, add {{ shippo_missing | join(', ') }} to .env.</p>
+          {% endif %}
+        </div>
+        {% endif %}
+
         {% if actions | selectattr(0, 'equalto', 'SHIPPED') | list %}
+        <p class="bz-muted bz-noprint" style="margin-top:12px">Or shipped another way? Enter the tracking number:</p>
         <form class="bz-ship-form bz-noprint" method="post" action="{{ get_url('.set_status', order_id=order.id) }}">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <input type="hidden" name="status" value="SHIPPED">

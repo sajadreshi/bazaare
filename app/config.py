@@ -40,6 +40,26 @@ class Config(object):
     UPLOAD_DIR = os.environ.get("UPLOAD_DIR")
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # reject request bodies (uploads) over 16 MB
 
+    # Shipping labels through Shippo (https://goshippo.com). Without a key, the admin
+    # enters carrier + tracking number by hand when marking an order shipped.
+    SHIPPO_API_KEY = os.environ.get("SHIPPO_API_KEY")
+    # Secret added to the tracking-webhook URL (?token=...) so only Shippo can post updates.
+    SHIPPO_WEBHOOK_TOKEN = os.environ.get("SHIPPO_WEBHOOK_TOKEN")
+    SHIP_FROM = {
+        "name": os.environ.get("SHIP_FROM_NAME", ""),
+        "company": os.environ.get("SHIP_FROM_COMPANY", "BazaarE'"),
+        "street1": os.environ.get("SHIP_FROM_STREET1", ""),
+        "street2": os.environ.get("SHIP_FROM_STREET2", ""),
+        "city": os.environ.get("SHIP_FROM_CITY", ""),
+        "state": os.environ.get("SHIP_FROM_STATE", ""),
+        "zip": os.environ.get("SHIP_FROM_ZIP", ""),
+        "country": "US",
+        "phone": os.environ.get("SHIP_FROM_PHONE", ""),
+        "email": os.environ.get("SHIP_FROM_EMAIL", ""),
+    }
+    # Default parcel: a padded jewellery mailer. Override with SHIP_PARCEL="L,W,H,weight_oz".
+    SHIP_PARCEL = os.environ.get("SHIP_PARCEL", "9,6,1,4")
+
     # The seeded admin account. Nothing is created unless both are set.
     ADMIN_EMAIL = os.environ.get("ADMIN_EMAIL")
     ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD")

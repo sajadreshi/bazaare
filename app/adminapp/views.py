@@ -10,6 +10,7 @@ from app.adminapp.fields import StorageImageField
 from app.adminapp.security import SecureModelView
 from app.extension import db
 from app.models import ASSOCIATION_TYPES, ORDER_STATUSES, Order, ProductAssociation, utcnow
+from app.services import shippo
 from app.services.shipping import CARRIERS
 from app.storage import image_url
 
@@ -324,8 +325,47 @@ class OrderView(SecureModelView):
                 actions=ORDER_ACTIONS.get(order.status, []),
                 carriers=list(CARRIERS),
                 statuses=ORDER_STATUSES,
+                shippo_ready=shippo.is_configured(),
+                shippo_missing=shippo.missing_settings(),
+                shippo_test=shippo.is_test_mode(),
+                rates=None,
             )
+            if request.args.get("rates") and kwargs["shippo_ready"] and order.status == "PLACED":
+                try:
+                    kwargs["rates"] = shippo.get_rates(order)
+                except shippo.ShippoError as error:
+                    flash(str(error), "error")
         return super().render(template, **kwargs)
+
+    @expose("/label/<int:order_id>", methods=["POST"])
+    def buy_label(self, order_id):
+        order = db.session.get(Order, order_id) or abort(404)
+        rate_id = request.form.get("rate_id", "")
+        if order.status != "PLACED" or not rate_id:
+            flash("Labels can only be bought for placed orders.", "error")
+        else:
+            try:
+                shippo.buy_label(order, rate_id)
+                flash(
+                    f"Label bought: {order.carrier} {order.tracking_number}. {order.number} is now Shipped.",
+                    "success",
+                )
+            except shippo.ShippoError as error:
+                db.session.rollback()
+                flash(str(error), "error")
+        return redirect(self.get_url(".details_view", id=order_id))
+
+    @expose("/label/<int:order_id>/print")
+    def print_label(self, order_id):
+        order = db.session.get(Order, order_id) or abort(404)
+        try:
+            url = shippo.fresh_label_url(order)
+        except shippo.ShippoError as error:
+            flash(str(error), "error")
+            url = None
+        if not url:
+            return redirect(self.get_url(".details_view", id=order_id))
+        return redirect(url)
 
     @expose("/status/<int:order_id>", methods=["POST"])
     def set_status(self, order_id):

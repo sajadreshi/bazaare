@@ -30,6 +30,7 @@ from app.services import shipping as shipping_service
 from app.services import wishlist as wishlist_service
 from app.services.cart import item_count
 from app.storage import init_storage
+from app.webhooks import bp as webhooks_bp
 
 from .config import Config
 from .extension import admin, ckeditor, csrf, db, login_manager, mail, migrate
@@ -100,6 +101,7 @@ def create_app(config_overrides=None):
     )
     app.register_blueprint(main)
     app.register_blueprint(admin_auth_bp)
+    app.register_blueprint(webhooks_bp)
     app.register_blueprint(auth_bp, url_prefix="/auth")
     app.register_blueprint(catalog_bp, url_prefix="/catalog")
     app.register_blueprint(checkout_bp, url_prefix="/checkout")
