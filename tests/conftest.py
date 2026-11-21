@@ -16,7 +16,7 @@ ADMIN_PASSWORD = "correct-horse-battery-staple"
 
 
 @pytest.fixture(scope="session")
-def app():
+def app(tmp_path_factory):
     # Flask-Admin views are registered on a module-level Admin, so build the app once.
     app = create_app(
         {
@@ -26,6 +26,7 @@ def app():
             "WTF_CSRF_ENABLED": False,
             "ADMIN_EMAIL": ADMIN_EMAIL,
             "ADMIN_PASSWORD": ADMIN_PASSWORD,
+            "UPLOAD_DIR": str(tmp_path_factory.mktemp("uploads")),
         }
     )
     with app.app_context():

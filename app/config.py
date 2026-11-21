@@ -30,6 +30,16 @@ class Config(object):
     MAIL_PORT = int(os.environ.get("MAIL_PORT", 25))
     ADMINS = [os.environ.get("MAIL_SENDER", "no-reply@bazaare.local")]
 
+    # Image uploads: Cloudflare R2 when all five R2_* settings are set, otherwise a
+    # local folder (UPLOAD_DIR, default instance/uploads) served at /media/.
+    R2_ACCOUNT_ID = os.environ.get("R2_ACCOUNT_ID")
+    R2_ACCESS_KEY_ID = os.environ.get("R2_ACCESS_KEY_ID")
+    R2_SECRET_ACCESS_KEY = os.environ.get("R2_SECRET_ACCESS_KEY")
+    R2_BUCKET = os.environ.get("R2_BUCKET")
+    R2_PUBLIC_URL = os.environ.get("R2_PUBLIC_URL")
+    UPLOAD_DIR = os.environ.get("UPLOAD_DIR")
+    MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # reject request bodies (uploads) over 16 MB
+
     # The seeded admin account. Nothing is created unless both are set.
     ADMIN_EMAIL = os.environ.get("ADMIN_EMAIL")
     ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD")

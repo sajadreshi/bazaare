@@ -61,7 +61,8 @@ $(".client_owl-carousel").owlCarousel({
 });
 
 $('a.thumbnail').click(function () {
-    $('#productImage').attr('src',$(this).children('img').attr('src').replace('60/60','400/200'));
+    var img = $(this).children('img');
+    $('#productImage').attr('src', img.data('full') || img.attr('src'));
 });
 
 $('a.cont_shopping').click(function(){
