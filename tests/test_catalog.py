@@ -149,3 +149,14 @@ def test_admin_home_content_form_explains_each_field(client):
     html = client.get("/admin/homepagecontent/new/").get_data(as_text=True)
     assert "Slides (headline + message rotating in the top banner)" in html
     assert "Featured category" in html and 'type="file"' in html
+
+
+def test_admin_home_content_list_shows_rows_with_slides(client, catalog):
+    from tests.conftest import ADMIN_EMAIL, ADMIN_PASSWORD
+    from tests.test_security import login
+
+    login(client, ADMIN_EMAIL, ADMIN_PASSWORD)
+    resp = client.get("/admin/homepagecontent/")
+    assert resp.status_code == 200
+    html = resp.get_data(as_text=True)
+    assert "s1" in html and "Earrings" in html  # slides and featured category columns
