@@ -114,15 +114,37 @@ class CollectionView(SecureModelView):
 
 
 class CarouselView(SecureModelView):
+    """A slide in the home page's top banner: a headline and a short message."""
+
     form_excluded_columns = ["created_at", "updated_at", "home"]
+    column_list = ("name", "header", "updated_at")
+    form_labels = {"name": "Name (admin only)", "header": "Headline", "text": "Message"}
     column_display_pk = False
     form_overrides = dict(text=CKEditorField)
 
 
 class HomePageView(SecureModelView):
-    column_formatters = {"hero_image": thumbnail("hero_image")}
-    form_extra_fields = {"hero_image": StorageImageField("Hero Image", folder="home")}
-    form_excluded_columns = ["home", "created_at", "updated_at"]
+    """What the home page's top banner and Featured section show. The newest active row is used."""
+
+    column_list = ("is_active", "hero_image", "carousel", "category", "updated_at")
+    column_labels = {
+        "is_active": "Active",
+        "hero_image": "Banner image",
+        "carousel": "Slides",
+        "category": "Featured category",
+        "updated_at": "Updated",
+    }
+    column_formatters = {
+        "hero_image": thumbnail("hero_image"),
+        "carousel": lambda v, c, m, n: ", ".join(s.name for s in m.carousel),
+    }
+    form_columns = ("is_active", "hero_image", "carousel", "category")
+    form_args = {
+        "is_active": {"label": "Active (the newest active row is shown on the home page)"},
+        "carousel": {"label": "Slides (headline + message rotating in the top banner)"},
+        "category": {"label": "Featured category (its products appear under the banner)"},
+    }
+    form_extra_fields = {"hero_image": StorageImageField("Banner image (behind the slides)", folder="home")}
     column_display_pk = False
 
 

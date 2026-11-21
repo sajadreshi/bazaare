@@ -2,26 +2,53 @@
 {% block title %}Handcrafted jewellery{% endblock %}
 {% block header %}{% include 'common/header.html' %}{% endblock %}
 {% block content %}
-<section class="bz-hero bz-hero--home {{ 'has-image' if hero and hero.banner_image }}">
-  {% if hero and hero.banner_image %}<img class="bz-hero__img" src="{{ image_url(hero.banner_image) }}" alt="">{% endif %}
+{# Top banner. Admin → Content → Home Page Content sets the image and the slides;
+   without them it falls back to the Collections banner and the default message. #}
+{% set hero_key = home.hero_image or (hero.banner_image if hero else None) %}
+{% macro hero_ctas() %}
+<div class="bz-hero__ctas">
+  <a class="bz-btn" href="{{ url_for('catalog.category', slug='new') }}">Shop new arrivals</a>
+  <a class="bz-btn bz-btn--ghost" href="{{ url_for('catalog.category', slug='collections') }}">Explore collections</a>
+</div>
+{% endmacro %}
+<section class="bz-hero bz-hero--home {{ 'has-image' if hero_key }}">
+  {% if hero_key %}<img class="bz-hero__img" src="{{ image_url(hero_key) }}" alt="">{% endif %}
+  {% if home.slides %}
+  <div id="bzHeroSlides" class="carousel slide bz-hero__slides" data-ride="carousel" data-interval="6000">
+    <div class="carousel-inner">
+      {% for slide in home.slides %}
+      <div class="carousel-item {{ 'active' if loop.first }}">
+        <div class="bz-hero__text">
+          <p class="bz-eyebrow">Jewellery · Craft · Culture</p>
+          <h1>{{ slide.header }}</h1>
+          {# Slide text comes from the admin's rich-text editor; show it as plain text. #}
+          {% if slide.text %}<p>{{ slide.text | striptags }}</p>{% endif %}
+          {{ hero_ctas() }}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% if home.slides | length > 1 %}
+    <ol class="carousel-indicators bz-hero__dots">
+      {% for slide in home.slides %}
+      <li data-target="#bzHeroSlides" data-slide-to="{{ loop.index0 }}" class="{{ 'active' if loop.first }}" aria-label="Slide {{ loop.index }}"></li>
+      {% endfor %}
+    </ol>
+    {% endif %}
+  </div>
+  {% else %}
   <div class="bz-hero__text">
     <p class="bz-eyebrow">Jewellery · Craft · Culture</p>
     <h1>Heritage, made to be worn every day</h1>
     <p>Jhumkas, chandbalis, haslis and kadas, inspired by India's craft traditions and finished by hand.</p>
-    <div class="bz-hero__ctas">
-      <a class="bz-btn" href="{{ url_for('catalog.category', slug='new') }}">Shop new arrivals</a>
-      <a class="bz-btn bz-btn--ghost" href="{{ url_for('catalog.category', slug='collections') }}">Explore collections</a>
-    </div>
+    {{ hero_ctas() }}
   </div>
+  {% endif %}
 </section>
-
-{% if home.slides %}
-<section class="slider_section">{% include 'main/carousel.html' %}</section>
-{% endif %}
 
 {% if home.featured %}
 <section class="bz-section">
-  <h2 class="bz-title">Featured</h2>
+  <h2 class="bz-title">{{ home.featured_title or 'Featured' }}</h2>
   {% with products = home.featured[:8] %}{% include 'catalog/_grid.html' %}{% endwith %}
 </section>
 {% endif %}
