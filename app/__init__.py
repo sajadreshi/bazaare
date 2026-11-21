@@ -24,9 +24,12 @@ from app.adminapp.views import (
 )
 from app.auth import bp as auth_bp
 from app.catalog import catalog as catalog_bp
+from app.catalog_import import register as register_catalog_import
 from app.checkout import checkout as checkout_bp
 from app.customer import customer as customer_bp
 from app.main import main
+from app.services import catalog as catalog_service
+from app.services import wishlist as wishlist_service
 from app.services.cart import item_count
 from app.storage import init_storage
 
@@ -91,7 +94,13 @@ def create_app(config_overrides=None):
     def load_user(user_id):
         return db.session.get(User, int(user_id))
 
-    app.jinja_env.globals.update(cart_item_count=item_count)
+    app.jinja_env.globals.update(
+        cart_item_count=item_count,
+        shop_menu=catalog_service.menu,
+        wishlist_ids=wishlist_service.ids,
+        is_on_sale=catalog_service.is_on_sale,
+        primary_category=catalog_service.primary_category,
+    )
     app.register_blueprint(main)
     app.register_blueprint(admin_auth_bp)
     app.register_blueprint(auth_bp, url_prefix="/auth")
@@ -115,6 +124,8 @@ def create_app(config_overrides=None):
     if not any(link.name == "Sign out" for link in admin.menu_links()):
         admin.add_link(MenuLink(name="View shop", url="/"))
         admin.add_link(MenuLink(name="Sign out", url="/admin/logout"))
+
+    register_catalog_import(app)
 
     @app.cli.command("seed")
     def seed_command():

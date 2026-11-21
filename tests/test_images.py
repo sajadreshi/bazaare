@@ -174,3 +174,8 @@ def test_r2_is_used_only_when_fully_configured(tmp_path):
     assert isinstance(app.extensions["storage"], LocalStorage)
     with app.test_request_context():
         assert app.extensions["storage"].url("a/b.jpg") == "/media/a/b.jpg"
+
+
+def test_the_test_suite_never_uses_a_real_bucket(app):
+    # .env on a developer machine may hold real R2 keys; tests must still write locally.
+    assert isinstance(app.extensions["storage"], LocalStorage)

@@ -180,10 +180,23 @@ class Category(db.Model):
     is_active = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, index=True, default=utcnow)
     updated_at = db.Column(db.DateTime, index=True, default=utcnow)
+    # Menu tree: top-level categories are the main menu, their children the dropdown.
+    parent_id = db.Column(db.Integer, db.ForeignKey("category.id", ondelete="SET NULL"), index=True)
+    position = db.Column(db.Integer, nullable=False, default=0, server_default="0")
+    show_in_menu = db.Column(db.Boolean, nullable=False, default=True, server_default=db.true())
+    # Optional rule: also list every active product priced at or below this (e.g. "Under $25").
+    max_price = db.Column(db.Numeric(10, 2))
+    banner_image = db.Column(db.Unicode(255))
     collection = db.relationship(
         "Collection", secondary="collection_category_rel", backref=db.backref("category", lazy="dynamic")
     )
     home = db.relationship("HomePageContent", backref=db.backref("category", uselist=False))
+    parent = db.relationship("Category", remote_side=[id], back_populates="children")
+    children = db.relationship("Category", back_populates="parent", order_by="Category.position")
+
+    @property
+    def slug(self):
+        return self.code.lower()
 
     def __repr__(self):
         return self.name

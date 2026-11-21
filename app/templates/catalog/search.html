@@ -1,0 +1,23 @@
+{% extends 'common/layout.html' %}
+{% block title %}{{ 'Search: ' ~ query if query else 'Search' }}{% endblock %}
+{% block header %}{% include 'common/header.html' %}{% endblock %}
+{% block content %}
+<section class="bz-section bz-section--narrow">
+  <h1 class="bz-title">Search</h1>
+  <form class="bz-searchpage" action="{{ url_for('catalog.search') }}" method="get" role="search">
+    <input type="search" name="q" value="{{ query }}" placeholder="Try “jhumka”, “kundan” or “bangle”" aria-label="Search the shop" autofocus>
+    <button class="bz-btn" type="submit">Search</button>
+  </form>
+</section>
+<section class="bz-section">
+  {% if query %}
+    {% if products %}
+      <p class="bz-count">{{ products | length }} result{{ 's' if products | length != 1 }} for “{{ query }}”</p>
+      {% include 'catalog/_grid.html' %}
+    {% else %}
+      <div class="bz-empty"><h2>No pieces match “{{ query }}”</h2><p>Try a broader word, like earrings, necklace or ring.</p></div>
+    {% endif %}
+  {% endif %}
+</section>
+{% endblock %}
+{% block footer %}{% include 'common/footer.html' %}{% endblock %}

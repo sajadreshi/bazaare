@@ -1,0 +1,51 @@
+{% extends 'common/layout.html' %}
+{% block title %}{{ category.name }}{% endblock %}
+{% block meta_description %}{{ category.description or category.name }} – BazaarE' handcrafted jewellery.{% endblock %}
+{% block header %}{% include 'common/header.html' %}{% endblock %}
+{% block content %}
+{% set banner = category.banner_image or (parent.banner_image if parent else None) %}
+<section class="bz-hero bz-hero--category {{ 'has-image' if banner }}">
+  {% if banner %}<img class="bz-hero__img" src="{{ image_url(banner) }}" alt="">{% endif %}
+  <div class="bz-hero__text">
+    <nav class="bz-crumbs" aria-label="Breadcrumb">
+      <a href="{{ url_for('main.home') }}">Home</a>
+      {% if parent %}<span>/</span><a href="{{ url_for('catalog.category', slug=parent.slug) }}">{{ parent.name }}</a>{% endif %}
+      <span>/</span><span aria-current="page">{{ category.name }}</span>
+    </nav>
+    <h1>{{ category.name }}</h1>
+    {% if category.description %}<p>{{ category.description }}</p>{% endif %}
+  </div>
+</section>
+
+<section class="bz-section">
+  <div class="bz-toolbar">
+    {% if siblings %}
+    <ul class="bz-chips" aria-label="{{ (parent or category).name }}">
+      <li><a class="{{ 'is-active' if not parent }}" href="{{ url_for('catalog.category', slug=(parent or category).slug) }}">All</a></li>
+      {% for sub in siblings %}
+      <li><a class="{{ 'is-active' if sub.id == category.id }}" href="{{ url_for('catalog.category', slug=sub.slug) }}">{{ sub.name }}</a></li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+    <form class="bz-sort" method="get">
+      <label for="sort">Sort</label>
+      <select id="sort" name="sort" onchange="this.form.submit()" class="bz-select">
+        {% for value, label in sorts.items() %}<option value="{{ value }}" {{ 'selected' if value == sort }}>{{ label }}</option>{% endfor %}
+      </select>
+      <noscript><button type="submit">Apply</button></noscript>
+    </form>
+  </div>
+
+  {% if products %}
+    <p class="bz-count">{{ products | length }} piece{{ 's' if products | length != 1 }}</p>
+    {% include 'catalog/_grid.html' %}
+  {% else %}
+    <div class="bz-empty">
+      <h2>New pieces are on their way</h2>
+      <p>Nothing here just yet. Explore our latest arrivals in the meantime.</p>
+      <a class="bz-btn" href="{{ url_for('catalog.category', slug='new') }}">See new arrivals</a>
+    </div>
+  {% endif %}
+</section>
+{% endblock %}
+{% block footer %}{% include 'common/footer.html' %}{% endblock %}

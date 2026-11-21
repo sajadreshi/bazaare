@@ -1,0 +1,24 @@
+{# Line icons (24px, currentColor). Usage: {% from 'common/_icons.html' import icon %}{{ icon('gift') }} #}
+{% macro icon(name, size=22, label=None) -%}
+<svg class="bz-icon" width="{{ size }}" height="{{ size }}" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+     stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" {% if label %}role="img" aria-label="{{ label }}"{% else %}aria-hidden="true"{% endif %}>
+{%- if name == 'home' -%}<path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h5v-6h4v6h5V9.5"/>
+{%- elif name == 'NEW' -%}<path d="M12 3l1.6 4.4L18 9l-4.4 1.6L12 15l-1.6-4.4L6 9l4.4-1.6z"/><path d="M18.5 15.5l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7z"/><path d="M5 16l.5 1.3 1.3.5-1.3.5L5 19.6l-.5-1.3-1.3-.5 1.3-.5z"/>
+{%- elif name == 'COLLECTIONS' -%}<path d="M6 3h12l3 6-9 12L3 9z"/><path d="M3 9h18"/><path d="M9 3l3 6 3-6"/><path d="M12 9v12"/>
+{%- elif name == 'EARRINGS' -%}<circle cx="12" cy="4" r="1.5"/><path d="M12 5.5V9"/><path d="M7 14a5 5 0 0 1 10 0c0 2.8-2.2 5-5 7-2.8-2-5-4.2-5-7z"/><path d="M8 13h8"/>
+{%- elif name == 'NECKPIECES' -%}<path d="M4 3c0 7 3.6 11 8 11s8-4 8-11"/><path d="M12 14v2"/><path d="M12 16l-2.5 3L12 22l2.5-3z"/>
+{%- elif name == 'ACCESSORIES' -%}<circle cx="12" cy="14" r="7"/><path d="M9.5 7.5 12 3l2.5 4.5"/><path d="M10 5h4"/>
+{%- elif name == 'BESTSELLERS' -%}<path d="M3 7l4.5 4L12 4l4.5 7L21 7l-2 11H5z"/><path d="M5 21h14"/>
+{%- elif name == 'GIFTING' -%}<rect x="3" y="8" width="18" height="4" rx="1"/><path d="M5 12v9h14v-9"/><path d="M12 8v13"/><path d="M12 8c-2-4-6-4-6-1.5S10 8 12 8zm0 0c2-4 6-4 6-1.5S14 8 12 8z"/>
+{%- elif name == 'SALE' -%}<path d="M3 12V4a1 1 0 0 1 1-1h8l9 9-9 9z"/><circle cx="7.5" cy="7.5" r="1.5"/>
+{%- elif name == 'search' -%}<circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/>
+{%- elif name == 'heart' -%}<path d="M12 20s-7.5-4.6-9.2-9.3C1.6 7.3 3.8 4 7.2 4c2 0 3.6 1.1 4.8 2.8C13.2 5.1 14.8 4 16.8 4c3.4 0 5.6 3.3 4.4 6.7C19.5 15.4 12 20 12 20z"/>
+{%- elif name == 'bag' -%}<path d="M5 8h14l-1 13H6z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/>
+{%- elif name == 'user' -%}<circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/>
+{%- elif name == 'menu' -%}<path d="M4 7h16M4 12h16M4 17h10"/>
+{%- elif name == 'close' -%}<path d="M6 6l12 12M18 6 6 18"/>
+{%- elif name == 'chevron' -%}<path d="m6 9 6 6 6-6"/>
+{%- else -%}<circle cx="12" cy="12" r="8"/>
+{%- endif -%}
+</svg>
+{%- endmacro %}

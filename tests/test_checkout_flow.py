@@ -204,7 +204,7 @@ def test_cart_badge_counts_items(app, client, product_ids):
         add_to_cart(client, pid, small)
         add_to_cart(client, pid, large)
     html = client.get("/").get_data(as_text=True)
-    assert 'badge-warning">2</span>' in html
+    assert 'class="bz-badge">2</span>' in html
 
 
 def test_cannot_view_another_customers_confirmation(app, client, product_ids):

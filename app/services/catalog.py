@@ -6,7 +6,7 @@ Only active collections, categories and products are ever shown to shoppers.
 from dataclasses import dataclass, field
 
 from app.extension import db
-from app.models import Carousel, Category, Collection, HomePageContent, Product, ProductAssociation
+from app.models import Carousel, Category, HomePageContent, Product, ProductAssociation
 from app.services.cart import line_price, product_variants
 
 
@@ -34,22 +34,13 @@ def shelves_for(collection):
     """Active categories of a collection that have at least one active product."""
     if collection is None or not collection.is_active:
         return []
-    categories = collection.category.filter(Category.is_active.is_(True)).order_by(Category.id).all()
-    shelves = [CategoryShelf(category, active_products(category)) for category in categories]
+    categories = (
+        collection.category.filter(Category.is_active.is_(True))
+        .order_by(Category.position, Category.id)
+        .all()
+    )
+    shelves = [CategoryShelf(category, category_products(category)) for category in categories]
     return [shelf for shelf in shelves if shelf.products]
-
-
-def collection_shelves():
-    """Every active collection's shelves, merged (one shelf per category)."""
-    shelves, seen = [], set()
-    for collection in (
-        db.session.query(Collection).filter(Collection.is_active.is_(True)).order_by(Collection.id)
-    ):
-        for shelf in shelves_for(collection):
-            if shelf.category.id not in seen:
-                seen.add(shelf.category.id)
-                shelves.append(shelf)
-    return shelves
 
 
 def get_product(product_id):
@@ -101,3 +92,117 @@ def home_page():
         featured=featured,
         shelves=shelves_for(content.collection),
     )
+
+
+# ---------------------------------------------------------------- menu and category pages
+
+
+def menu():
+    """Top-level menu categories with their active children, cached for the request."""
+    from flask import g
+
+    if "shop_menu" not in g:
+        top = (
+            db.session.query(Category)
+            .filter(
+                Category.parent_id.is_(None), Category.is_active.is_(True), Category.show_in_menu.is_(True)
+            )
+            .order_by(Category.position, Category.id)
+            .all()
+        )
+        g.shop_menu = [
+            (category, [c for c in category.children if c.is_active and c.show_in_menu]) for category in top
+        ]
+    return g.shop_menu
+
+
+def get_category(slug):
+    category = db.session.query(Category).filter(Category.code == slug.upper()).first()
+    return category if category is not None and category.is_active else None
+
+
+def _with_children(category):
+    return [category] + [c for c in category.children if c.is_active]
+
+
+SORTS = {
+    "featured": "Featured",
+    "newest": "Newest",
+    "price-asc": "Price: low to high",
+    "price-desc": "Price: high to low",
+}
+
+
+def category_products(category, sort="featured"):
+    """Active products in a category or its sub-categories, plus any price rule (e.g. Under $25)."""
+    products = {}
+    for cat in _with_children(category):
+        for product in active_products(cat):
+            products[product.id] = product
+        if cat.max_price is not None:
+            cheap = db.session.query(Product).filter(
+                Product.is_active.is_(True), Product.sale_price <= cat.max_price
+            )
+            for product in cheap:
+                products[product.id] = product
+    items = list(products.values())
+    if sort == "newest":
+        items.sort(key=lambda p: -p.id)
+    elif sort == "price-asc":
+        items.sort(key=lambda p: (p.sale_price, p.id))
+    elif sort == "price-desc":
+        items.sort(key=lambda p: (-p.sale_price, p.id))
+    else:
+        items.sort(key=lambda p: p.id)
+    return items
+
+
+def search(query, limit=60):
+    """Active products whose name, description, material, SKU or category matches every word."""
+    words = [w for w in (query or "").split() if w][:6]
+    if not words:
+        return []
+    q = db.session.query(Product).filter(Product.is_active.is_(True))
+    for word in words:
+        like = f"%{word}%"
+        q = q.filter(
+            Product.name.ilike(like)
+            | Product.description.ilike(like)
+            | Product.material.ilike(like)
+            | Product.sku.ilike(like)
+            | Product.categories.any(Category.name.ilike(like))
+        )
+    return q.order_by(Product.id).limit(limit).all()
+
+
+def is_on_sale(product):
+    return (
+        product.retail_price is not None
+        and product.sale_price is not None
+        and product.retail_price > product.sale_price
+    )
+
+
+def new_arrivals(limit=8):
+    category = get_category("NEW")
+    items = category_products(category) if category else []
+    return sorted(items, key=lambda p: -p.id)[:limit]
+
+
+def products_in(code, limit=8):
+    category = get_category(code)
+    return category_products(category)[:limit] if category else []
+
+
+PRODUCT_TYPES = ("EARRINGS", "NECKPIECES", "ACCESSORIES")
+
+
+def primary_category(product):
+    """The category to show in a product's breadcrumb: its type (e.g. Earrings > Jhumkas) if known."""
+    categories = [c for c in product.categories if c.is_active]
+
+    def rank(c):
+        top = c.parent or c
+        return (top.code not in PRODUCT_TYPES, c.parent is None, top.position, c.position)
+
+    return min(categories, key=rank) if categories else None

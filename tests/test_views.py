@@ -5,13 +5,25 @@ from app.models import Category, Collection, Product, Variant
 def test_jewellery_seed(app):
     with app.app_context():
         codes = {c.code for c in Category.query.all()}
-        assert {"RINGS", "NECKLACES", "EARRINGS", "BRACELETS"} <= codes
+        assert {"ACC-RINGS", "NECK-NECKLACES", "EARRINGS", "ACC-BANGLES", "GIFT-UNDER-25"} <= codes
         jewellery = Collection.query.filter_by(name="Jewellery").one()
-        assert {"RINGS", "NECKLACES", "EARRINGS", "BRACELETS"} <= {c.code for c in jewellery.category}
+        assert {"NEW", "EARRINGS", "NECKPIECES", "ACCESSORIES", "SALE"} <= {
+            c.code for c in jewellery.category
+        }
+        rings = Category.query.filter_by(code="ACC-RINGS").one()
+        assert rings.parent.code == "ACCESSORIES"
 
 
 def test_public_pages(client):
-    for url in ["/", "/about", "/catalog/collection", "/auth/login", "/auth/register"]:
+    for url in [
+        "/",
+        "/about",
+        "/catalog/c/collections",
+        "/catalog/search?q=ring",
+        "/catalog/wishlist",
+        "/auth/login",
+        "/auth/register",
+    ]:
         resp = client.get(url)
         assert resp.status_code == 200, url
     assert b"Bazaare" in client.get("/about").data
@@ -19,7 +31,7 @@ def test_public_pages(client):
 
 def test_product_page_shows_jewellery_fields(app, client):
     with app.app_context():
-        rings = Category.query.filter_by(code="RINGS").one()
+        rings = Category.query.filter_by(code="ACC-RINGS").one()
         variant = Variant(size="Ring size 7", quantity=1, is_default=True)
         product = Product(
             sku="RING-001",
@@ -40,7 +52,7 @@ def test_product_page_shows_jewellery_fields(app, client):
     assert resp.status_code == 200
     assert b"Sterling silver" in resp.data
     assert b"Ring size 7" in resp.data
-    resp = client.get("/catalog/collection")
+    resp = client.get("/catalog/c/accessories")
     assert b"Silver Band" in resp.data
 
 

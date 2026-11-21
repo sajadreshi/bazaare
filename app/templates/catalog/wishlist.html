@@ -1,0 +1,18 @@
+{% extends 'common/layout.html' %}
+{% block title %}Wishlist{% endblock %}
+{% block header %}{% include 'common/header.html' %}{% endblock %}
+{% block content %}
+<section class="bz-section">
+  <h1 class="bz-title">Your wishlist</h1>
+  {% if products %}
+    {% include 'catalog/_grid.html' %}
+  {% else %}
+    <div class="bz-empty">
+      <h2>Nothing saved yet</h2>
+      <p>Tap the heart on any piece to keep it here.</p>
+      <a class="bz-btn" href="{{ url_for('catalog.category', slug='bestsellers') }}">Browse bestsellers</a>
+    </div>
+  {% endif %}
+</section>
+{% endblock %}
+{% block footer %}{% include 'common/footer.html' %}{% endblock %}

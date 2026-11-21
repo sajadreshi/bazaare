@@ -13,12 +13,85 @@ from app.models import Category, Collection, Role, User
 
 log = logging.getLogger(__name__)
 
-JEWELLERY_CATEGORIES = [
-    ("RINGS", "Rings", "Everyday and statement rings."),
-    ("NECKLACES", "Necklaces", "Chains, pendants and chokers."),
-    ("EARRINGS", "Earrings", "Studs, hoops and drops."),
-    ("BRACELETS", "Bracelets", "Bangles, cuffs and charm bracelets."),
+# The shop menu: (code, name, description, children, extra settings).
+# Top-level entries are the main menu; children appear in its dropdown.
+MENU = [
+    (
+        "NEW",
+        "New Arrivals",
+        "The latest pieces from our makers.",
+        [
+            ("NEW-JUST", "Just Launched", "Fresh from the workshop."),
+            ("NEW-TRENDING", "Trending Now", "What everyone is wearing this season."),
+        ],
+    ),
+    (
+        "COLLECTIONS",
+        "Collections",
+        "Shop by craft and material.",
+        [
+            ("COLL-BRASS", "Brass", "Antique and matte gold-tone brass."),
+            ("COLL-MEENAKARI", "Meenakari", "Hand-painted enamel in jewel colours."),
+            ("COLL-SILVER", "Silver Look", "Oxidised silver-tone heritage designs."),
+            ("COLL-PEARLS", "Pearls", "Pieces finished with faux pearls."),
+            ("COLL-KUNDAN", "Kundan", "Kundan-style stone settings."),
+        ],
+    ),
+    (
+        "EARRINGS",
+        "Earrings",
+        "Jhumkas, chandbalis, studs and statement drops.",
+        [
+            ("EAR-JHUMKAS", "Jhumkas", "Bell-shaped classics."),
+            ("EAR-CHANDBALIS", "Chandbalis", "Crescent-moon earrings."),
+            ("EAR-STUDS", "Studs", "Everyday studs."),
+            ("EAR-CUFFS", "Ear Cuffs", "No piercing needed."),
+        ],
+    ),
+    (
+        "NECKPIECES",
+        "Neckpieces",
+        "Haslis, necklaces and statement sets.",
+        [
+            ("NECK-HASLI", "Hasli", "Collars, torques and cord pendants."),
+            ("NECK-NECKLACES", "Necklaces", "Pendants, chokers and necklace sets."),
+            ("NECK-STATEMENT", "Statement Pieces", "Bold pieces for big occasions."),
+        ],
+    ),
+    (
+        "ACCESSORIES",
+        "Accessories",
+        "Bangles, rings and more.",
+        [
+            ("ACC-BANGLES", "Bangles", "Kadas, cuffs and bangle sets."),
+            ("ACC-RINGS", "Rings", "Adjustable statement and everyday rings."),
+            ("ACC-HAIR", "Hair Accessories", "Pins, combs and maang tikkas."),
+        ],
+    ),
+    ("BESTSELLERS", "Bestsellers", "Our most-loved pieces.", []),
+    (
+        "GIFTING",
+        "Gifting",
+        "Thoughtful gifts for every budget.",
+        [
+            ("GIFT-UNDER-25", "Under $25", "Gifts at $25 or less.", {"max_price": 25}),
+            ("GIFT-UNDER-50", "Under $50", "Gifts at $50 or less.", {"max_price": 50}),
+            ("GIFT-SPECIAL", "Special Gifts", "Sets made for gifting."),
+        ],
+    ),
+    (
+        "SALE",
+        "Sale",
+        "Offers on selected pieces.",
+        [
+            ("SALE-FESTIVE", "Festive Offers", "Seasonal savings."),
+            ("SALE-LAST", "Last Chance", "Final pieces at their lowest prices."),
+        ],
+    ),
 ]
+
+# Categories from the first seed, before the menu existed; kept out of the menu.
+LEGACY_CATEGORIES = ("RINGS", "NECKLACES", "BRACELETS")
 
 
 def seed_admin():
@@ -53,22 +126,39 @@ def seed_admin():
     db.session.commit()
 
 
-def seed_jewellery_catalog():
-    categories = []
-    for code, name, description in JEWELLERY_CATEGORIES:
-        category = Category.query.filter_by(code=code).first()
-        if not category:
-            category = Category(code=code, name=name, description=description, is_active=True)
-            db.session.add(category)
-        categories.append(category)
+def _upsert_category(code, name, description, parent, position, extra=None):
+    """Create a menu category if missing. Existing ones keep any edits made in the admin,
+    except that a missing parent or position is filled in."""
+    category = Category.query.filter_by(code=code).first()
+    if category is None:
+        category = Category(code=code, name=name, description=description, is_active=True, **(extra or {}))
+        db.session.add(category)
+    if category.parent is None and parent is not None:
+        category.parent = parent
+    if not category.position:
+        category.position = position
+    return category
+
+
+def seed_menu():
+    top_level = []
+    for position, (code, name, description, children) in enumerate(MENU, start=1):
+        parent = _upsert_category(code, name, description, None, position)
+        top_level.append(parent)
+        for child_position, child in enumerate(children, start=1):
+            child_code, child_name, child_description, *extra = child
+            _upsert_category(child_code, child_name, child_description, parent, child_position, *extra)
+
+    for legacy in Category.query.filter(Category.code.in_(LEGACY_CATEGORIES)):
+        legacy.show_in_menu = False
 
     collection = Collection.query.filter_by(name="Jewellery").first()
     if not collection:
         collection = Collection(
-            name="Jewellery", description="The Bazaare jewellery collection.", is_active=True
+            name="Jewellery", description="The BazaarE' jewellery collection.", is_active=True
         )
         db.session.add(collection)
-    for category in categories:
+    for category in top_level:
         if category not in collection.category:
             collection.category.append(category)
     db.session.commit()
@@ -76,4 +166,4 @@ def seed_jewellery_catalog():
 
 def seed_all():
     seed_admin()
-    seed_jewellery_catalog()
+    seed_menu()

@@ -1,0 +1,1039 @@
+{
+  "_note": "Prices are placeholders chosen for the demo store; confirm with the client.",
+  "banners": {
+    "NECKPIECES": "cc8d0ac0-c99e-4477-859a-13ba774ff528.JPG",
+    "EARRINGS": "c70046d7-823a-4e91-b8d1-76fac47cb71d.JPG",
+    "COLLECTIONS": "62c4400e-68b9-45f1-9e7c-521c0621794b.JPG"
+  },
+  "products": [
+    {
+      "sku": "BZ-EAR-001",
+      "name": "Peacock Emerald Pearl Chandbalis",
+      "price": 34,
+      "compare_at": null,
+      "categories": [
+        "EAR-CHANDBALIS",
+        "COLL-SILVER",
+        "COLL-PEARLS",
+        "BESTSELLERS"
+      ],
+      "material": "Oxidised silver-tone metal",
+      "designs": [],
+      "description": "Hexagonal carved studs lead to twin peacocks framing a square emerald-green stone, finished with a fringe of faux pearls. A heritage statement for festive evenings.",
+      "images": [
+        "0bbb76dd-4ca5-4bff-b444-3d00e79ecadb.JPG"
+      ]
+    },
+    {
+      "sku": "BZ-EAR-002",
+      "name": "Pink Stone Peacock Pearl Drops",
+      "price": 36,
+      "compare_at": null,
+      "categories": [
+        "EARRINGS",
+        "COLL-BRASS",
+        "COLL-PEARLS"
+      ],
+      "material": "Antique gold-tone brass",
+      "designs": [],
+      "description": "Pink stone peacock studs sit above an embossed oval disc in antique gold, with clusters of faux pearls swinging beneath.",
+      "images": [
+        "1d958881-95d3-4393-93bc-7b41fc48446e.JPG"
+      ]
+    },
+    {
+      "sku": "BZ-EAR-003",
+      "name": "Emerald Kundan Ghungroo Jhumkas",
+      "price": 38,
+      "compare_at": null,
+      "categories": [
+        "EAR-JHUMKAS",
+        "COLL-KUNDAN",
+        "COLL-SILVER",
+        "NEW-TRENDING"
+      ],
+      "material": "Two-tone (silver & gold-tone) metal",
+      "designs": [],
+      "description": "A green teardrop stud and a gold kundan-style centre set in an oxidised medallion, finished with a dome jhumka and tinkling ghungroo bells.",
+      "images": [
+        "1ee8c08d-fe66-4743-a229-cf4f4d52b470.JPG"
+      ]
+    },
+    {
+      "sku": "BZ-EAR-004",
+      "name": "Matte Gold Petal Studs",
+      "price": 19,
+      "compare_at": null,
+      "categories": [
+        "EAR-STUDS",
+        "COLL-BRASS"
+      ],
+      "material": "Matte gold-tone brass",
+      "designs": [],
+      "description": "Three brushed-gold petals form a light, modern stud. Minimal enough for every day, polished enough for evenings.",
+      "images": [
+        "2366501b-c83a-4fb3-b2cf-64698eb4e50c.JPG"
+      ]
+    },
+    {
+      "sku": "BZ-EAR-005",
+      "name": "Camel Caravan Emerald Chandbalis",
+      "price": 39,
+      "compare_at": null,
+      "categories": [
+        "EAR-CHANDBALIS",
+        "COLL-PEARLS",
+        "BESTSELLERS"
+      ],
+      "material": "Two-tone (silver & gold-tone) metal",
+      "designs": [],
+      "description": "Inspired by desert caravans: gold-tone camels walk across a half-moon of green stone, framed by a fringe of faux pearls and a green teardrop stud.",
+      "images": [
+        "291e4b02-2654-48bf-9768-b252dc22c42e.JPG"
+      ]
+    },
+    {
+      "sku": "BZ-EAR-006",
+      "name": "Heritage Bird Jhumka",
+      "price": 42,
+      "compare_at": null,
+      "categories": [
+        "EAR-JHUMKAS",
+        "COLL-BRASS",
+        "COLL-PEARLS",
+        "BESTSELLERS",
+        "NEW-TRENDING"
+      ],
+      "material": "Antique gold-tone brass",
+      "designs": [],
+      "description": "Vintage-inspired craftsmanship: a jhumka dome above a latticed panel with perched birds, edged with faux pearl drops.",
+      "images": [
+        "30b35550-5438-419c-bafa-8d3e9076a191.JPG"
+      ]
+    },
+    {
+      "sku": "BZ-EAR-007",
+      "name": "Meenakari Jhumka & Onyx Bird Drops",
+      "price": 36,
+      "compare_at": null,
+      "categories": [
+        "EAR-JHUMKAS",
+        "COLL-MEENAKARI",
+        "COLL-PEARLS"
+      ],
+      "material": "Two-tone (silver & gold-tone) metal",
+      "designs": [
+        "Blue Meenakari Jhumka",
+        "Onyx Bird Medallion"
+      ],
+      "description": "Two designs: a cobalt meenakari jhumka with hand-painted birds, or a black onyx-look teardrop above an engraved bird medallion. Both finished with faux pearl drops.",
+      "images": [
+        "340c5a28-6f60-425a-bbed-cf6cb2e94f7e.JPG"
+      ]
+    },
+    {
+      "sku": "BZ-EAR-008",
+      "name": "Aqua Stone Drop Earrings",
+      "price": 34,
+      "compare_at": null,
+      "categories": [
+        "EARRINGS",
+        "COLL-PEARLS"
+      ],
+      "material": "Antique gold-tone brass",
+      "designs": [
+        "Triangle Drop",
+        "Nandi Teardrop"
+      ],
+      "description": "Milky aqua stones set in antique gold with turquoise accents and faux pearls. Choose the triangle drop or the Nandi teardrop.",
+      "images": [
+        "486e5700-e21d-4d0a-b9b6-f0012a403ea3.JPG"
+      ]
+    },
+    {
+      "sku": "BZ-EAR-009",
+      "name": "Tiered Jhumka & Copper Chandbali",
+      "price": 32,
+      "compare_at": 40,
+      "categories": [
+        "EAR-JHUMKAS",
+        "COLL-BRASS",
+        "SALE-FESTIVE"
+      ],
+      "material": "Oxidised & copper-tone metal",
+      "designs": [
+        "Three-Tier Jhumka",
+        "Copper Chandbali"
+      ],
+      "description": "Two designs: a three-tier oxidised jhumka tower, or a copper-tone chandbali with a teardrop pendant and bead drops.",
+      "images": [
+        "5023f7e2-a36d-4847-99b4-ab7a24b89470.JPG"
+      ]
+    },
+    {
+      "sku": "BZ-EAR-010",
+      "name": "Copper Chandbali & Ganesha Earrings",
+      "price": 30,
+      "compare_at": null,
+      "categories": [
+        "EAR-CHANDBALIS",
+        "COLL-MEENAKARI"
+      ],
+      "material": "Copper-tone & oxidised metal",
+      "designs": [
+        "Copper Chandbali",
+        "Ganesha Meenakari"
+      ],
+      "description": "Two designs: a warm copper chandbali with bead drops, or an oxidised Ganesha drop with red, green and black enamel accents.",
+      "images": [
+        "50d8821f-2a87-4935-93ab-52bc76a5c7a3.JPG"
+      ]
+    },
+    {
+      "sku": "BZ-EAR-011",
+      "name": "Two-Tone Peacock Ruby Drops",
+      "price": 38,
+      "compare_at": null,
+      "categories": [
+        "EARRINGS",
+        "COLL-PEARLS"
+      ],
+      "material": "Two-tone (silver & gold-tone) metal",
+      "designs": [],
+      "description": "An engraved silver-tone oval with ruby-red stones, cradled by gold-tone peacocks and finished with faux pearl drops.",
+      "images": [
+        "53e32e79-b9e3-4d2a-ba50-c43be247f653.JPG"
+      ]
+    },
+    {
+      "sku": "BZ-EAR-012",
+      "name": "Ruby Dome Chain Jhumkas",
+      "price": 36,
+      "compare_at": null,
+      "categories": [
+        "EAR-JHUMKAS",
+        "COLL-MEENAKARI",
+        "BESTSELLERS"
+      ],
+      "material": "Gold-tone brass",
+      "designs": [],
+      "description": "A red enamel dome with green stones, long ghungroo chains and a petite jhumka at the end: made to move when you do.",
+      "images": [
+        "5576388d-ecd9-4bfc-8af9-757bce3b6ded.JPG"
+      ]
+    },
+    {
+      "sku": "BZ-EAR-013",
+      "name": "Bird Lattice & Green Kundan Jhumkas",
+      "price": 38,
+      "compare_at": null,
+      "categories": [
+        "EAR-JHUMKAS",
+        "COLL-KUNDAN",
+        "COLL-PEARLS"
+      ],
+      "material": "Antique gold-tone & oxidised metal",
+      "designs": [
+        "Bird Lattice Jhumka",
+        "Green Kundan Jhumka"
+      ],
+      "description": "Two designs: a gold-tone bird lattice jhumka with faux pearls, or an oxidised jhumka with a green stone and kundan-style centre.",
+      "images": [
+        "66fc393c-4e63-44de-a8dc-0994b54a1401.JPG"
+      ]
+    },
+    {
+      "sku": "BZ-EAR-014",
+      "name": "Two-Tone Diamond Cascade Earrings",
+      "price": 27,
+      "compare_at": 36,
+      "categories": [
+        "EARRINGS",
+        "SALE-LAST"
+      ],
+      "material": "Two-tone (silver & gold-tone) metal",
+      "designs": [],
+      "description": "Gold-tone rhombus links cascade over oxidised loops, ending in silver-tone bead drops. Modern geometry with a heritage finish.",
+      "images": [
+        "7fe7737e-c33d-4f22-8ed5-1a9dc3a74b53.JPG"
+      ]
+    },
+    {
+      "sku": "BZ-EAR-015",
+      "name": "Meenakari Leaf & Parrot Jhumkas",
+      "price": 34,
+      "compare_at": null,
+      "categories": [
+        "EAR-JHUMKAS",
+        "COLL-MEENAKARI",
+        "COLL-PEARLS"
+      ],
+      "material": "Gold-tone brass",
+      "designs": [
+        "Leaf Chandelier",
+        "Parrot Jhumka"
+      ],
+      "description": "Hand-painted meenakari in two designs: a leaf-and-bloom chandelier with mint beads, or a parrot-green jhumka with faux pearl edging.",
+      "images": [
+        "811473d4-43ab-4952-81d4-ed89c7eb6a7b.JPG"
+      ]
+    },
+    {
+      "sku": "BZ-EAR-016",
+      "name": "Emerald Kundan Oval Drops",
+      "price": 33,
+      "compare_at": null,
+      "categories": [
+        "EARRINGS",
+        "COLL-KUNDAN"
+      ],
+      "material": "Oxidised silver-tone metal",
+      "designs": [],
+      "description": "A deep green oval set with kundan-style stones in a filigree frame, below a round kundan stud, with a green bead drop.",
+      "images": [
+        "83fb6ddd-9ad2-4307-b1e7-75d24089d52b.JPG"
+      ]
+    },
+    {
+      "sku": "BZ-EAR-017",
+      "name": "Mint Stone & Meenakari Drops",
+      "price": 30,
+      "compare_at": null,
+      "categories": [
+        "EARRINGS",
+        "COLL-MEENAKARI"
+      ],
+      "material": "Antique gold-tone brass",
+      "designs": [
+        "Mint Teardrop",
+        "Meenakari Drop"
+      ],
+      "description": "Two designs: a mint teardrop stone with pastel enamel and a cow motif, or a slim green-and-red meenakari drop with bead tips.",
+      "images": [
+        "a10d9975-0a87-405b-a2e1-fdbb0a6da92a.JPG"
+      ]
+    },
+    {
+      "sku": "BZ-EAR-018",
+      "name": "Meenakari Blossom Shoulder Dusters",
+      "price": 35,
+      "compare_at": null,
+      "categories": [
+        "EARRINGS",
+        "COLL-MEENAKARI",
+        "NEW-JUST"
+      ],
+      "material": "Gold-tone brass",
+      "designs": [],
+      "description": "Long chains of yellow, green and navy enamel flowers ending in a navy meenakari bloom. A bright statement for celebrations.",
+      "images": [
+        "a3846bc5-50f9-4c04-9bda-477f3760f252.JPG"
+      ]
+    },
+    {
+      "sku": "BZ-EAR-019",
+      "name": "Maroon Stone & Red Chandelier Earrings",
+      "price": 34,
+      "compare_at": 42,
+      "categories": [
+        "EARRINGS",
+        "SALE-FESTIVE"
+      ],
+      "material": "Antique gold-tone & oxidised metal",
+      "designs": [
+        "Maroon Rectangle",
+        "Red Chandelier"
+      ],
+      "description": "Two designs: a maroon rectangle stone with ruby accents and faux pearls, or a tiered red-stone chandelier on silver-tone hooks.",
+      "images": [
+        "ac8a849d-ed49-4624-bc6a-07aca00b66d4.JPG"
+      ]
+    },
+    {
+      "sku": "BZ-EAR-020",
+      "name": "Meenakari Cross Motif Drops",
+      "price": 29,
+      "compare_at": null,
+      "categories": [
+        "EARRINGS",
+        "COLL-MEENAKARI"
+      ],
+      "material": "Oxidised silver-tone metal",
+      "designs": [],
+      "description": "Oxidised dotwork crosses with yellow, green and red enamel centres. Folk-inspired and lightweight.",
+      "images": [
+        "e17b668e-19d4-4db3-a637-d8dc5f80e011.JPG"
+      ]
+    },
+    {
+      "sku": "BZ-EAR-021",
+      "name": "Blush Petal Jhumkas",
+      "price": 32,
+      "compare_at": null,
+      "categories": [
+        "EAR-JHUMKAS",
+        "COLL-PEARLS",
+        "NEW-JUST"
+      ],
+      "material": "Rose gold-tone metal",
+      "designs": [],
+      "description": "Blush pink stones open like a fan above a slender stem and a rose-gold jhumka edged with faux pearls.",
+      "images": [
+        "e5f0341e-7345-4c12-a4e8-4f2b6f0ec665.JPG"
+      ]
+    },
+    {
+      "sku": "BZ-EAR-022",
+      "name": "Ruby Hexagon Drop Earrings",
+      "price": 29,
+      "compare_at": null,
+      "categories": [
+        "EARRINGS",
+        "COLL-BRASS"
+      ],
+      "material": "Gold-tone brass",
+      "designs": [],
+      "description": "A faceted ruby-red stone above three open gold-tone hexagons, each holding a tiny faux pearl.",
+      "images": [
+        "eec7ddc8-3de6-4707-a5e3-a286526a9564.JPG"
+      ]
+    },
+    {
+      "sku": "BZ-EAR-023",
+      "name": "Aqua Marble Studs",
+      "price": 18,
+      "compare_at": null,
+      "categories": [
+        "EAR-STUDS",
+        "NEW-JUST"
+      ],
+      "material": "Gold-tone brass",
+      "designs": [],
+      "description": "Round studs of marbled aqua resin wrapped in a sculpted gold-tone frame. Easy colour for every day.",
+      "images": [
+        "f09acda9-b697-4383-84e3-8babb298a55e.JPG"
+      ]
+    },
+    {
+      "sku": "BZ-EAR-024",
+      "name": "Geometric Aqua Hoop Drops",
+      "price": 28,
+      "compare_at": null,
+      "categories": [
+        "EARRINGS",
+        "COLL-BRASS",
+        "NEW-JUST"
+      ],
+      "material": "Matte gold-tone brass",
+      "designs": [],
+      "description": "Matte gold arcs and blue glass cabochons in an architectural drop: modern, light and conversation-starting.",
+      "images": [
+        "f8b997ae-c267-406e-95c3-61be61cc8691.JPG"
+      ]
+    },
+    {
+      "sku": "BZ-EAR-025",
+      "name": "Blush Stone Fringe Hoops",
+      "price": 32,
+      "compare_at": null,
+      "categories": [
+        "EARRINGS",
+        "COLL-BRASS",
+        "NEW-JUST"
+      ],
+      "material": "Gold-tone brass",
+      "designs": [],
+      "description": "A blush teardrop stud, double gold-tone hoops with a moonstone-look centre and a fringe of slim gold bars.",
+      "images": [
+        "ff17dd5f-5efe-415a-8e89-d34ba925eb75.JPG"
+      ]
+    },
+    {
+      "sku": "BZ-NEC-001",
+      "name": "Two-Tone Floral Pendant Necklace Set",
+      "price": 68,
+      "compare_at": null,
+      "categories": [
+        "NECK-NECKLACES",
+        "COLL-SILVER",
+        "GIFT-SPECIAL"
+      ],
+      "material": "Two-tone (silver & gold-tone) metal",
+      "designs": [],
+      "description": "Gold-tone leaves and a pearl-white floral centre on an oxidised chain, with a black stone heart drop and matching floral earrings.",
+      "images": [
+        "1812e816-d18b-4e63-8e05-7d85ae41f41f.JPG"
+      ]
+    },
+    {
+      "sku": "BZ-NEC-002",
+      "name": "Meenakari Pendant Necklace",
+      "price": 29,
+      "compare_at": null,
+      "categories": [
+        "NECK-NECKLACES",
+        "COLL-MEENAKARI"
+      ],
+      "material": "Oxidised silver-tone metal",
+      "designs": [
+        "Floral Parrot",
+        "Coin Medallion",
+        "Parakeet Swing"
+      ],
+      "description": "Fine oxidised chain with a hand-painted meenakari pendant. Choose your design: floral parrot, coin medallion or swinging parakeet.",
+      "images": [
+        "257b2d66-c6d3-489d-b5f7-e27e2d0cf031.JPG"
+      ]
+    },
+    {
+      "sku": "BZ-NEC-003",
+      "name": "Thread-Wrapped Heart Pendant",
+      "price": 32,
+      "compare_at": null,
+      "categories": [
+        "NECK-NECKLACES",
+        "COLL-SILVER"
+      ],
+      "material": "Braided cord with oxidised silver-tone pendant",
+      "designs": [],
+      "description": "A braided teal cord with olive thread wrapping, silver-tone beads and an engraved heart pendant with a carnelian-look drop.",
+      "images": [
+        "29189542-0245-4a2e-8008-3df1af46a903.JPG"
+      ]
+    },
+    {
+      "sku": "BZ-NEC-004",
+      "name": "Minimal Collar with Red Stone Drop",
+      "price": 34,
+      "compare_at": null,
+      "categories": [
+        "NECK-HASLI",
+        "COLL-BRASS"
+      ],
+      "material": "Gold-tone brass",
+      "designs": [],
+      "description": "A sleek gold-tone collar wire with a sculpted loop and a single red stone disc. Modern minimalism with an Indian heart.",
+      "images": [
+        "2d6ef7fb-0a27-4976-bfd0-7d10ae40db9f.JPG",
+        "c7e919cc-494c-45a1-91ae-d3afe2c1b08f.JPG"
+      ]
+    },
+    {
+      "sku": "BZ-NEC-005",
+      "name": "Oxidised Statement Pendant",
+      "price": 28,
+      "compare_at": 36,
+      "categories": [
+        "NECK-NECKLACES",
+        "COLL-SILVER",
+        "SALE-LAST"
+      ],
+      "material": "Oxidised silver-tone metal",
+      "designs": [
+        "Floral Star",
+        "Peacock Arch",
+        "Teardrop"
+      ],
+      "description": "Oxidised pendants on a ball chain, in three designs: floral star with pearls, peacock arch with an amber stone, or a teardrop with a green stone.",
+      "images": [
+        "412c040b-abd3-463d-93d0-8fcf3f5557d9.JPG"
+      ]
+    },
+    {
+      "sku": "BZ-NEC-006",
+      "name": "Ruby & Emerald Collar Necklace Set",
+      "price": 58,
+      "compare_at": null,
+      "categories": [
+        "NECK-NECKLACES",
+        "COLL-SILVER",
+        "GIFT-SPECIAL",
+        "NEW-TRENDING"
+      ],
+      "material": "Oxidised silver-tone metal",
+      "designs": [],
+      "description": "Alternating ruby-pink and emerald-green stones in a graceful silver-tone collar, with matching drop earrings.",
+      "images": [
+        "48906ead-e0b4-491b-bbd3-1d9d8415fe6d.JPG"
+      ]
+    },
+    {
+      "sku": "BZ-NEC-007",
+      "name": "Oxidised Chandbali Bib Necklace Set",
+      "price": 72,
+      "compare_at": null,
+      "categories": [
+        "NECK-STATEMENT",
+        "COLL-SILVER",
+        "NEW-TRENDING"
+      ],
+      "material": "Oxidised silver-tone metal",
+      "designs": [],
+      "description": "Layered crescents, filigree and ghungroo fringes form a dramatic bib, paired with matching chandbali earrings.",
+      "images": [
+        "582d7550-78d6-4889-98f7-c043c669bbcb.JPG"
+      ]
+    },
+    {
+      "sku": "BZ-NEC-008",
+      "name": "Filigree Silver Choker",
+      "price": 46,
+      "compare_at": null,
+      "categories": [
+        "NECK-NECKLACES",
+        "COLL-SILVER"
+      ],
+      "material": "Oxidised silver-tone metal",
+      "designs": [],
+      "description": "Linked filigree panels in oxidised silver-tone with an adjustable chain. Wear it high with a saree or with a crisp white shirt.",
+      "images": [
+        "6a04e973-d127-457f-a08c-c78957b6dfb5.JPG"
+      ]
+    },
+    {
+      "sku": "BZ-NEC-009",
+      "name": "Layered Two-Tone Choker Set",
+      "price": 64,
+      "compare_at": null,
+      "categories": [
+        "NECK-NECKLACES",
+        "COLL-SILVER",
+        "GIFT-SPECIAL"
+      ],
+      "material": "Two-tone (silver & gold-tone) metal",
+      "designs": [],
+      "description": "Five strands of silver-tone tubes meet a gold-tone filigree centrepiece, with matching square filigree studs.",
+      "images": [
+        "d11b2637-7ef5-41f5-b12d-a0a1985a7c31.JPG",
+        "6cf9615b-0ca4-432e-8ba3-90e7cd97a986.JPG"
+      ]
+    },
+    {
+      "sku": "BZ-NEC-010",
+      "name": "Brass Crescent Hasli on Cord",
+      "price": 28,
+      "compare_at": null,
+      "categories": [
+        "NECK-HASLI",
+        "COLL-BRASS"
+      ],
+      "material": "Brass on black cord",
+      "designs": [],
+      "description": "A brushed brass crescent hasli on a twisted black cord. Quietly bold.",
+      "images": [
+        "74c76b21-b357-4cec-9355-d3862c89a930.JPG"
+      ]
+    },
+    {
+      "sku": "BZ-NEC-011",
+      "name": "Peacock Pendant Necklace with Studs",
+      "price": 42,
+      "compare_at": null,
+      "categories": [
+        "NECK-NECKLACES",
+        "COLL-SILVER",
+        "GIFT-SPECIAL"
+      ],
+      "material": "Oxidised silver-tone metal",
+      "designs": [],
+      "description": "A delicate chain with green bead accents and a peacock pendant draped with layered chains, paired with peacock studs.",
+      "images": [
+        "81a0260b-06a2-4893-9b4a-59f7a34268e2.JPG"
+      ]
+    },
+    {
+      "sku": "BZ-NEC-012",
+      "name": "Brass Temple Square Necklace Set",
+      "price": 78,
+      "compare_at": null,
+      "categories": [
+        "NECK-STATEMENT",
+        "COLL-BRASS",
+        "NEW-JUST"
+      ],
+      "material": "Antique gold-tone brass",
+      "designs": [],
+      "description": "Crafted heritage: engraved square temple plaques and floral medallions with bead tassels, with matching square drop earrings.",
+      "images": [
+        "93f7c651-f84e-46d0-bd29-2ad389f823c6.JPG"
+      ]
+    },
+    {
+      "sku": "BZ-NEC-013",
+      "name": "Oxidised Temple Necklace Set",
+      "price": 70,
+      "compare_at": null,
+      "categories": [
+        "NECK-STATEMENT",
+        "COLL-SILVER"
+      ],
+      "material": "Oxidised silver-tone metal",
+      "designs": [],
+      "description": "A temple-motif necklace of mixed stones, black, green, red and amber, with faux pearl drops, paired with amber-stone earrings.",
+      "images": [
+        "9b859a3e-d077-419c-b410-daa9f6b38b07.JPG"
+      ]
+    },
+    {
+      "sku": "BZ-NEC-014",
+      "name": "Ruby Floral Chandbali Necklace Set",
+      "price": 66,
+      "compare_at": null,
+      "categories": [
+        "NECK-NECKLACES",
+        "COLL-SILVER",
+        "COLL-PEARLS",
+        "GIFT-SPECIAL"
+      ],
+      "material": "Oxidised silver-tone metal",
+      "designs": [],
+      "description": "Ruby-red flowers and green accents across a filigree necklace with pearl-drop chandbalis, and matching earrings.",
+      "images": [
+        "9c4af7bd-dbcd-4dea-9ba7-39dc7fd3e17b.JPG"
+      ]
+    },
+    {
+      "sku": "BZ-NEC-015",
+      "name": "Gold Repoussé Pendant on Cord",
+      "price": 54,
+      "compare_at": null,
+      "categories": [
+        "NECK-STATEMENT",
+        "COLL-BRASS",
+        "NEW-TRENDING"
+      ],
+      "material": "Gold-tone brass on navy cord",
+      "designs": [],
+      "description": "A hand-chased floral square pendant over a cascading mesh of ghungroo beads, on a twisted navy cord.",
+      "images": [
+        "bfbdb5eb-6a36-4947-9583-af68db6ff544.JPG"
+      ]
+    },
+    {
+      "sku": "BZ-NEC-016",
+      "name": "Heritage Silver Choker Set",
+      "price": 82,
+      "compare_at": null,
+      "categories": [
+        "NECK-STATEMENT",
+        "COLL-SILVER",
+        "BESTSELLERS",
+        "NEW-JUST"
+      ],
+      "material": "Oxidised silver-tone metal",
+      "designs": [],
+      "description": "From the Heritage Collection: an engraved choker band with a cascading fringe of tiny flowers and bells, and matching drop earrings.",
+      "images": [
+        "dcc7181f-1aa0-4da6-bb37-4e9da365a0a4.JPG"
+      ]
+    },
+    {
+      "sku": "BZ-NEC-017",
+      "name": "Oxidised Repoussé Pendant on Cord",
+      "price": 36,
+      "compare_at": null,
+      "categories": [
+        "NECK-HASLI",
+        "COLL-SILVER"
+      ],
+      "material": "Oxidised silver-tone on black cord",
+      "designs": [
+        "Arch Motif",
+        "Lotus Motif"
+      ],
+      "description": "Embossed oxidised pendants with ghungroo fringes on a soft braided cord. Choose the arch motif or the lotus motif.",
+      "images": [
+        "df771c33-cce0-4017-bfcb-03a3bcdc35cc.JPG"
+      ]
+    },
+    {
+      "sku": "BZ-NEC-018",
+      "name": "Silver Tassel Long Pendant",
+      "price": 40,
+      "compare_at": null,
+      "categories": [
+        "NECK-NECKLACES",
+        "COLL-SILVER"
+      ],
+      "material": "Oxidised silver-tone metal",
+      "designs": [],
+      "description": "A long double chain with a round floral medallion, a turquoise bead and chain tassels tipped with tiny bells.",
+      "images": [
+        "fdc1e1cd-230b-42c3-a717-57efac049fbb.JPG"
+      ]
+    },
+    {
+      "sku": "BZ-NEC-019",
+      "name": "An Ornate Symphony Necklace Set",
+      "price": 88,
+      "compare_at": null,
+      "categories": [
+        "NECK-STATEMENT",
+        "COLL-KUNDAN",
+        "GIFT-SPECIAL",
+        "NEW-JUST"
+      ],
+      "material": "Oxidised silver-tone metal",
+      "designs": [],
+      "description": "A multi-layered silver-tone necklace with ruby and emerald-green beads, kundan accents and a cat's-eye centre pendant, with matching jhumka earrings.",
+      "images": [
+        "ff7b0e0b-0254-46fe-9029-6a08c7f76c11.JPG"
+      ]
+    },
+    {
+      "sku": "BZ-BNG-001",
+      "name": "Heritage Kada Bangle",
+      "price": 58,
+      "compare_at": null,
+      "categories": [
+        "ACC-BANGLES",
+        "COLL-BRASS"
+      ],
+      "material": "Two-tone (silver & gold-tone) metal",
+      "designs": [],
+      "description": "Heritage Collection: a hinged kada in antique gold and silver tones, engraved all round and edged with gold-tone beads.",
+      "images": [
+        "1dadef49-fac6-4339-ac26-d5e9a60e7d7e.JPG"
+      ]
+    },
+    {
+      "sku": "BZ-BNG-002",
+      "name": "Black Stone Oxidised Bangles (Set of 2)",
+      "price": 26,
+      "compare_at": 34,
+      "categories": [
+        "ACC-BANGLES",
+        "COLL-SILVER",
+        "SALE-LAST"
+      ],
+      "material": "Oxidised silver-tone metal",
+      "designs": [],
+      "description": "A pair of slim oxidised bangles set with black stones in clover and leaf shapes. Stack them or wear them apart.",
+      "images": [
+        "29b50566-97c9-41cb-a4c5-3f4b8b818236.JPG",
+        "b520d0f9-520b-4475-87e5-513f9c1e5c26.JPG"
+      ]
+    },
+    {
+      "sku": "BZ-BNG-003",
+      "name": "Openwork Gold Bangle",
+      "price": 62,
+      "compare_at": null,
+      "categories": [
+        "ACC-BANGLES",
+        "COLL-BRASS",
+        "BESTSELLERS"
+      ],
+      "material": "Gold-tone brass",
+      "designs": [],
+      "description": "A broad hinged bangle in gold-tone openwork, with rows of granulated beads that catch the light.",
+      "images": [
+        "f0127b99-ea27-47d8-85f8-556e489f0ade.JPG",
+        "2a7ca264-4f4c-464f-9181-060ae6def94d.JPG"
+      ]
+    },
+    {
+      "sku": "BZ-BNG-004",
+      "name": "Twin Elephant Kada Bangles",
+      "price": 48,
+      "compare_at": 60,
+      "categories": [
+        "ACC-BANGLES",
+        "COLL-SILVER",
+        "SALE-FESTIVE"
+      ],
+      "material": "Oxidised silver-tone metal",
+      "designs": [],
+      "description": "A pair of oxidised kadas with carved elephant-head ends, green stone eyes and tiny ghungroo bells.",
+      "images": [
+        "378bb3a8-2b08-4883-b1ce-1a00d561c70d.JPG"
+      ]
+    },
+    {
+      "sku": "BZ-BNG-005",
+      "name": "Floral Medallion Cuff",
+      "price": 44,
+      "compare_at": null,
+      "categories": [
+        "ACC-BANGLES",
+        "COLL-SILVER",
+        "BESTSELLERS"
+      ],
+      "material": "Oxidised silver-tone metal",
+      "designs": [],
+      "description": "A chunky oxidised cuff with a raised floral medallion and beaded rosettes. Bold heritage for the wrist.",
+      "images": [
+        "599e07a6-a21a-4c61-bb3b-75d624200c65.JPG"
+      ]
+    },
+    {
+      "sku": "BZ-BNG-006",
+      "name": "Rose Garden Gold Kada",
+      "price": 52,
+      "compare_at": null,
+      "categories": [
+        "ACC-BANGLES",
+        "COLL-BRASS"
+      ],
+      "material": "Gold-tone brass",
+      "designs": [],
+      "description": "Sculpted roses wrap a gold-tone kada that ends in two carved dome finials.",
+      "images": [
+        "74286611-890e-49c1-83ba-1b5bfe755b3e.JPG"
+      ]
+    },
+    {
+      "sku": "BZ-BNG-007",
+      "name": "Caravan Charm Kada",
+      "price": 46,
+      "compare_at": 56,
+      "categories": [
+        "ACC-BANGLES",
+        "COLL-BRASS",
+        "SALE-FESTIVE"
+      ],
+      "material": "Two-tone (silver & gold-tone) metal",
+      "designs": [],
+      "description": "Two-tone camels, lions and lantern charms linked with coloured stones: a playful bracelet with a story.",
+      "images": [
+        "c3b528bd-b5f7-425e-b4c9-d52d50456ff1.JPG"
+      ]
+    },
+    {
+      "sku": "BZ-BNG-008",
+      "name": "Spiral Wire Gold Cuff",
+      "price": 38,
+      "compare_at": null,
+      "categories": [
+        "ACC-BANGLES",
+        "COLL-BRASS"
+      ],
+      "material": "Gold-tone brass",
+      "designs": [],
+      "description": "Hand-coiled spirals of gold-tone wire form an airy, adjustable cuff.",
+      "images": [
+        "d0c03851-11a6-408b-b914-af76cce6dc79.JPG"
+      ]
+    },
+    {
+      "sku": "BZ-BNG-009",
+      "name": "Two-Tone Floral Kada",
+      "price": 44,
+      "compare_at": null,
+      "categories": [
+        "ACC-BANGLES",
+        "COLL-SILVER"
+      ],
+      "material": "Two-tone (silver & gold-tone) metal",
+      "designs": [],
+      "description": "A band of oxidised flowers framed by rows of gold-tone beads, on a hinged kada.",
+      "images": [
+        "e8c8d8e5-224e-4191-a488-43bda0459f70.JPG"
+      ]
+    },
+    {
+      "sku": "BZ-RNG-001",
+      "name": "Statement Cocktail Ring",
+      "price": 24,
+      "compare_at": null,
+      "categories": [
+        "ACC-RINGS",
+        "COLL-SILVER"
+      ],
+      "material": "Oxidised silver-tone metal",
+      "designs": [
+        "Peacock",
+        "Stone Mandala",
+        "Winged Scroll"
+      ],
+      "description": "Adjustable oxidised rings in three designs: a sculpted peacock, a red-and-green stone mandala, or winged scrollwork with a red stone.",
+      "images": [
+        "29e8b484-af8d-462c-8463-a570c6996be6.JPG"
+      ]
+    },
+    {
+      "sku": "BZ-RNG-002",
+      "name": "Kundan Meenakari Cocktail Ring",
+      "price": 26,
+      "compare_at": null,
+      "categories": [
+        "ACC-RINGS",
+        "COLL-KUNDAN",
+        "COLL-MEENAKARI",
+        "BESTSELLERS"
+      ],
+      "material": "Oxidised silver-tone metal",
+      "designs": [],
+      "description": "A handcrafted ring with a kundan-style centre, pastel pink and turquoise stones and a filigree crown. Adjustable.",
+      "images": [
+        "791c56f7-9d63-4352-87b4-0f41d0a4dfd2.JPG"
+      ]
+    },
+    {
+      "sku": "BZ-RNG-003",
+      "name": "Minimal Two-Tone Teardrop Ring",
+      "price": 18,
+      "compare_at": 24,
+      "categories": [
+        "ACC-RINGS",
+        "COLL-BRASS",
+        "SALE-LAST"
+      ],
+      "material": "Brushed gold-tone brass",
+      "designs": [],
+      "description": "A brushed gold teardrop with a white enamel tip on an open band. Minimal and adjustable.",
+      "images": [
+        "ab196dc3-f7ed-49e1-a01f-f1367a9c845e.JPG"
+      ]
+    },
+    {
+      "sku": "BZ-RNG-004",
+      "name": "Peacock Rose Statement Ring",
+      "price": 26,
+      "compare_at": null,
+      "categories": [
+        "ACC-RINGS",
+        "COLL-SILVER",
+        "NEW-TRENDING"
+      ],
+      "material": "Oxidised silver-tone metal",
+      "designs": [],
+      "description": "A dramatic finger ring with a turquoise-stone peacock, ruby and emerald accents and two sculpted roses. Adjustable.",
+      "images": [
+        "ac2db1a0-3a5b-4b9f-a926-af6fc5e35d22.JPG"
+      ]
+    },
+    {
+      "sku": "BZ-RNG-005",
+      "name": "Peach Moon Kundan Ring",
+      "price": 26,
+      "compare_at": null,
+      "categories": [
+        "ACC-RINGS",
+        "COLL-KUNDAN"
+      ],
+      "material": "Oxidised silver-tone metal",
+      "designs": [],
+      "description": "A peach stone crowns a crescent moon set with teal, ruby and kundan-style stones. Adjustable.",
+      "images": [
+        "b14ed6e3-767c-4cdc-b1f4-94c9c69e7a76.JPG"
+      ]
+    },
+    {
+      "sku": "BZ-RNG-006",
+      "name": "Citrine Mandala Statement Ring",
+      "price": 28,
+      "compare_at": null,
+      "categories": [
+        "ACC-RINGS",
+        "COLL-SILVER"
+      ],
+      "material": "Oxidised silver-tone metal",
+      "designs": [],
+      "description": "A dotwork mandala fan and a yellow cat's-eye stone on a wide oxidised band. Adjustable.",
+      "images": [
+        "d6bd5b87-3c7b-4919-b893-bc7282006075.JPG"
+      ]
+    }
+  ]
+}
