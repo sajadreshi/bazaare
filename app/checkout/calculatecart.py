@@ -30,7 +30,8 @@ def perform_calculation(cart):
           item.total_shipping = item_total_shipping
           item.total_tax = item_total_taxes
           item.total_discount =item_total_discount
-       cart_total = Decimal(total_merchandise) + Decimal(total_shipping) + Decimal(total_taxes) + Decimal(total_discount)
+       # Discounts are stored as positive amounts, so they reduce the total.
+       cart_total = Decimal(total_merchandise) + Decimal(total_shipping) + Decimal(total_taxes) - Decimal(total_discount)
        cart.update({'total_merchandise':total_merchandise,
                     'total_shipping':total_shipping,
                     'total_taxes':total_taxes,

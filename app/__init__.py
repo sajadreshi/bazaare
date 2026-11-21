@@ -33,7 +33,7 @@ def create_app(config_overrides=None):
     @login_manager.user_loader
     
     def load_user(user_id):
-        return User.query.get(user_id)
+        return db.session.get(User, int(user_id))
     app.jinja_env.globals.update(cart_count=get_cart_count)
     app.register_blueprint(main)
     app.register_blueprint(error_bp,url_prefix="/error")

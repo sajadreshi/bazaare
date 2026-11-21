@@ -70,7 +70,7 @@
                        <label class="list-group-item d-flex gap-2 prod-group">
                        <input class="form-check-input flex-shrink-0" type="radio" name="size" id="sizeGroupRadios{{loop.index}}" value="{{ sizekey}}" {{default_size}}>
                        <span style="width: 70%;">
-                           {{ sizevalue.product_size }}  <span class="dollar-amount">${{product_price * size_qty}} </span>
+                           {{ sizevalue.product_size }}  <span class="dollar-amount">${{ "%.2f"|format(product_price * size_qty) }} </span>
                            {% if sizevalue.size_description and sizevalue.size_description is not none%}
                            <small class="d-block text-body-secondary">{{ sizevalue.size_description}}</small>
                            {% endif %}
