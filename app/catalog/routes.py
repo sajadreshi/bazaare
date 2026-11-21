@@ -1,15 +1,13 @@
 from flask import flash, redirect, render_template, request, url_for
 
 from app.catalog import catalog
-from app.catalog.collectionbuilder import build_collection
-from app.catalog.productbuilder import build_crossells, build_product
 from app.services import cart as cart_service
+from app.services import catalog as catalog_service
 
 
 @catalog.route("/collection", methods=["GET"])
 def collection():
-    collection = build_collection()
-    return render_template("catalog/collection.html", collection=collection)
+    return render_template("catalog/collection.html", shelves=catalog_service.collection_shelves())
 
 
 @catalog.route("/product/<int:productId>", methods=["GET", "POST"])
@@ -24,6 +22,12 @@ def product(productId):
             flash(str(error))
             return redirect(url_for("catalog.product", productId=productId))
         cart = cart_service.get_cart()
-    product = build_product(productId)
-    xsells = build_crossells(productId)
-    return render_template("catalog/product.html", product=product, xsells=xsells, cart=cart)
+    product = catalog_service.get_product(productId)
+    return render_template(
+        "catalog/product.html",
+        product=product,
+        images=catalog_service.product_images(product) if product else [],
+        options=catalog_service.variant_options(product) if product else [],
+        xsells=catalog_service.cross_sells(product) if product else [],
+        cart=cart,
+    )

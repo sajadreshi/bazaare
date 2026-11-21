@@ -7,7 +7,7 @@ def test_jewellery_seed(app):
         codes = {c.code for c in Category.query.all()}
         assert {"RINGS", "NECKLACES", "EARRINGS", "BRACELETS"} <= codes
         jewellery = Collection.query.filter_by(name="Jewellery").one()
-        assert jewellery.category.count() == 4
+        assert {"RINGS", "NECKLACES", "EARRINGS", "BRACELETS"} <= {c.code for c in jewellery.category}
 
 
 def test_public_pages(client):

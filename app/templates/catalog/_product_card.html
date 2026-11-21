@@ -1,0 +1,22 @@
+{# One product tile. Expects `product` (Product) and `css_class`. #}
+<div class="col-sm-6 col-lg-4 all {{ css_class }}">
+  <div class="box">
+    <div>
+      <div class="img-box">
+        <a href="{{ url_for('catalog.product', productId=product.id) }}">
+          <img src="{{ url_for('static', filename='images/' + (product.main_image or 'default.jpg')) }}" alt="{{ product.name }}">
+        </a>
+      </div>
+      <div class="detail-box">
+        <h5>{{ product.name }}</h5>
+        <p>{{ product.description or '' }}</p>
+        <div class="options">
+          <h6>${{ product.sale_price }}</h6>
+          <a href="{{ url_for('catalog.product', productId=product.id) }}" aria-label="View {{ product.name }}">
+            <i class="fa fa-shopping-cart cart-icon"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
