@@ -102,6 +102,13 @@ class Product(db.Model):
     categories = db.relationship(
         "Category", secondary="category_product_rel", backref=db.backref("product", lazy="dynamic")
     )
+    associations = db.relationship(
+        "ProductAssociation",
+        foreign_keys="ProductAssociation.source_product_id",
+        back_populates="source_product",
+        cascade="all, delete-orphan",
+        order_by="(ProductAssociation.association_type, ProductAssociation.position, ProductAssociation.id)",
+    )
 
     def __repr__(self):
         return self.name
@@ -138,15 +145,42 @@ class VariantProduct(db.Model):
     association_type = db.Column(db.String(30), nullable=True)
 
 
+# Kinds of related product. The key is stored; the label is what admins see.
+ASSOCIATION_TYPES = {
+    "XSELL": "Cross-sell: Complete the look",
+    "UPSELL": "Upsell: Upgrade to",
+}
+
+
 class ProductAssociation(db.Model):
+    """A related product shown on another product's page (and in the bag, for cross-sells)."""
+
     __tablename__ = "product_association"
+    __table_args__ = (
+        db.UniqueConstraint(
+            "source_product_id", "target_product_id", "association_type", name="uq_product_association"
+        ),
+    )
     id = db.Column(db.Integer, primary_key=True)
     source_product_id = db.Column(db.Integer, db.ForeignKey("product.id"), nullable=False)
     target_product_id = db.Column(db.Integer, db.ForeignKey("product.id"), nullable=False)
-    is_active = db.Column(db.Boolean, default=False)
-    association_type = db.Column(db.String(30), nullable=False)
-    source_product = db.relationship("Product", foreign_keys=[source_product_id])
-    target_product = db.relationship("Product", foreign_keys=[target_product_id])
+    is_active = db.Column(db.Boolean, default=True)
+    association_type = db.Column(db.String(30), nullable=False, default="XSELL")
+    position = db.Column(db.Integer, nullable=False, default=0, server_default="0")
+    source_product = db.relationship(
+        "Product", foreign_keys=[source_product_id], back_populates="associations"
+    )
+    # Deleting a product also removes links that point at it.
+    target_product = db.relationship(
+        "Product",
+        foreign_keys=[target_product_id],
+        backref=db.backref("linked_from", cascade="all, delete-orphan"),
+    )
+
+    def __repr__(self):
+        return (
+            f"{ASSOCIATION_TYPES.get(self.association_type, self.association_type)} → {self.target_product}"
+        )
 
 
 class Attribute(db.Model):

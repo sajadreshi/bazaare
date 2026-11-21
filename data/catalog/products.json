@@ -1035,5 +1035,169 @@
         "d6bd5b87-3c7b-4919-b893-bc7282006075.JPG"
       ]
     }
+  ],
+  "associations": [
+    {
+      "source": "BZ-NEC-006",
+      "target": "BZ-EAR-011",
+      "type": "XSELL",
+      "position": 1
+    },
+    {
+      "source": "BZ-NEC-006",
+      "target": "BZ-RNG-004",
+      "type": "XSELL",
+      "position": 2
+    },
+    {
+      "source": "BZ-NEC-016",
+      "target": "BZ-BNG-005",
+      "type": "XSELL",
+      "position": 1
+    },
+    {
+      "source": "BZ-NEC-016",
+      "target": "BZ-RNG-006",
+      "type": "XSELL",
+      "position": 2
+    },
+    {
+      "source": "BZ-EAR-006",
+      "target": "BZ-BNG-001",
+      "type": "XSELL",
+      "position": 1
+    },
+    {
+      "source": "BZ-EAR-006",
+      "target": "BZ-NEC-015",
+      "type": "XSELL",
+      "position": 2
+    },
+    {
+      "source": "BZ-EAR-004",
+      "target": "BZ-RNG-003",
+      "type": "XSELL",
+      "position": 1
+    },
+    {
+      "source": "BZ-EAR-004",
+      "target": "BZ-BNG-008",
+      "type": "XSELL",
+      "position": 2
+    },
+    {
+      "source": "BZ-NEC-004",
+      "target": "BZ-EAR-004",
+      "type": "XSELL",
+      "position": 1
+    },
+    {
+      "source": "BZ-NEC-004",
+      "target": "BZ-RNG-003",
+      "type": "XSELL",
+      "position": 2
+    },
+    {
+      "source": "BZ-EAR-015",
+      "target": "BZ-NEC-002",
+      "type": "XSELL",
+      "position": 1
+    },
+    {
+      "source": "BZ-EAR-015",
+      "target": "BZ-RNG-002",
+      "type": "XSELL",
+      "position": 2
+    },
+    {
+      "source": "BZ-EAR-001",
+      "target": "BZ-RNG-004",
+      "type": "XSELL",
+      "position": 1
+    },
+    {
+      "source": "BZ-EAR-001",
+      "target": "BZ-BNG-004",
+      "type": "XSELL",
+      "position": 2
+    },
+    {
+      "source": "BZ-NEC-002",
+      "target": "BZ-EAR-015",
+      "type": "XSELL",
+      "position": 1
+    },
+    {
+      "source": "BZ-NEC-002",
+      "target": "BZ-EAR-020",
+      "type": "XSELL",
+      "position": 2
+    },
+    {
+      "source": "BZ-BNG-005",
+      "target": "BZ-RNG-006",
+      "type": "XSELL",
+      "position": 1
+    },
+    {
+      "source": "BZ-BNG-005",
+      "target": "BZ-NEC-016",
+      "type": "XSELL",
+      "position": 2
+    },
+    {
+      "source": "BZ-RNG-004",
+      "target": "BZ-EAR-001",
+      "type": "XSELL",
+      "position": 1
+    },
+    {
+      "source": "BZ-RNG-004",
+      "target": "BZ-NEC-006",
+      "type": "XSELL",
+      "position": 2
+    },
+    {
+      "source": "BZ-NEC-002",
+      "target": "BZ-NEC-011",
+      "type": "UPSELL",
+      "position": 1
+    },
+    {
+      "source": "BZ-NEC-018",
+      "target": "BZ-NEC-016",
+      "type": "UPSELL",
+      "position": 1
+    },
+    {
+      "source": "BZ-NEC-008",
+      "target": "BZ-NEC-009",
+      "type": "UPSELL",
+      "position": 1
+    },
+    {
+      "source": "BZ-BNG-002",
+      "target": "BZ-BNG-004",
+      "type": "UPSELL",
+      "position": 1
+    },
+    {
+      "source": "BZ-EAR-004",
+      "target": "BZ-EAR-025",
+      "type": "UPSELL",
+      "position": 1
+    },
+    {
+      "source": "BZ-NEC-010",
+      "target": "BZ-NEC-015",
+      "type": "UPSELL",
+      "position": 1
+    },
+    {
+      "source": "BZ-RNG-003",
+      "target": "BZ-RNG-002",
+      "type": "UPSELL",
+      "position": 1
+    }
   ]
 }

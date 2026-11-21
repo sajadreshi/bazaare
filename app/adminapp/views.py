@@ -1,9 +1,12 @@
+from flask_admin.model.form import InlineFormAdmin
 from flask_ckeditor import CKEditorField
 from markupsafe import Markup
+from wtforms import SelectField
+from wtforms.validators import DataRequired
 
 from app.adminapp.fields import StorageImageField
 from app.adminapp.security import SecureModelView
-from app.models import ORDER_STATUSES
+from app.models import ASSOCIATION_TYPES, ORDER_STATUSES, ProductAssociation
 from app.storage import image_url
 
 
@@ -151,15 +154,33 @@ PRODUCT_IMAGES = {
 }
 
 
+ASSOCIATION_CHOICES = [(key, label) for key, label in ASSOCIATION_TYPES.items()]
+
+
+class RelatedProductInline(InlineFormAdmin):
+    """One row per related product on the product form: which product, what kind, order, on/off."""
+
+    form_columns = ("id", "target_product", "association_type", "position", "is_active")
+    form_label = "Related products"
+    form_overrides = {"association_type": SelectField}
+    form_args = {
+        "target_product": {"label": "Product", "validators": [DataRequired()]},
+        "association_type": {"label": "Show as", "choices": ASSOCIATION_CHOICES},
+        "position": {"label": "Order", "default": 0},
+        "is_active": {"label": "Active", "default": True},
+    }
+
+
 class ProductView(SecureModelView):
     column_formatters = {attr: thumbnail(attr) for attr in PRODUCT_IMAGES}
     form_extra_fields = {
         attr: StorageImageField(label, folder="products") for attr, label in PRODUCT_IMAGES.items()
     }
-    form_excluded_columns = ["created_at", "updated_at", "attribute_links"]
+    form_excluded_columns = ["created_at", "updated_at", "attribute_links", "linked_from", "associations"]
     column_searchable_list = ["name", "sku"]
-    column_filters = ["sale_price"]
-    edit_modal = True
+    column_filters = ["sale_price", "is_active"]
+    # "Related products" table at the bottom of the product form.
+    inline_models = (RelatedProductInline(ProductAssociation),)
 
 
 class VariantView(SecureModelView):
@@ -170,8 +191,27 @@ class VariantView(SecureModelView):
 
 
 class ProductAssociationView(SecureModelView):
-    column_display_pk = False  # optional, but I like to see the IDs in the list
-    column_list = ("source_product", "target_product", "is_active", "association_type")
+    """All related-product links in one list. They can also be edited on each product's form."""
+
+    column_list = ("source_product", "association_type", "target_product", "position", "is_active")
+    column_labels = {
+        "source_product": "On the page of",
+        "association_type": "Show as",
+        "target_product": "Related product",
+        "position": "Order",
+        "is_active": "Active",
+    }
+    column_formatters = {
+        "association_type": lambda v, c, m, n: ASSOCIATION_TYPES.get(m.association_type, m.association_type)
+    }
+    column_filters = ("association_type", "is_active")
+    column_default_sort = [("source_product_id", False), ("association_type", False), ("position", False)]
+    form_columns = ("source_product", "target_product", "association_type", "position", "is_active")
+    form_choices = {"association_type": ASSOCIATION_CHOICES}
+    form_args = {
+        "source_product": {"label": "On the page of"},
+        "target_product": {"label": "Related product"},
+    }
 
 
 class UserView(SecureModelView):

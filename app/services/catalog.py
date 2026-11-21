@@ -6,7 +6,7 @@ Only active collections, categories and products are ever shown to shoppers.
 from dataclasses import dataclass, field
 
 from app.extension import db
-from app.models import Carousel, Category, HomePageContent, Product, ProductAssociation
+from app.models import Carousel, Category, HomePageContent, Product
 from app.services.cart import line_price, product_variants
 
 
@@ -43,13 +43,46 @@ def product_images(product):
     ]
 
 
-def cross_sells(product):
-    links = (
-        db.session.query(ProductAssociation)
-        .filter_by(source_product_id=product.id, association_type="XSELL", is_active=True)
-        .order_by(ProductAssociation.id)
-    )
-    return [link.target_product for link in links if link.target_product and link.target_product.is_active]
+def related(product, association_type, limit=8):
+    """Active products linked from this one with the given type, in their admin order."""
+    targets = [
+        link.target_product
+        for link in product.associations
+        if link.association_type == association_type and link.is_active
+    ]
+    return [p for p in targets if p is not None and p.is_active and p.id != product.id][:limit]
+
+
+def cross_sells(product, limit=8):
+    return related(product, "XSELL", limit)
+
+
+def upsells(product, limit=3):
+    return related(product, "UPSELL", limit)
+
+
+def similar(product, exclude=(), limit=4):
+    """Fallback suggestions: other active products from the product's main category."""
+    category = primary_category(product)
+    if category is None:
+        return []
+    skip = {product.id, *(p.id for p in exclude)}
+    return [p for p in category_products(category, "newest") if p.id not in skip][:limit]
+
+
+def bag_suggestions(cart, limit=4):
+    """Cross-sells of the items in the bag that aren't already in it."""
+    if cart is None:
+        return []
+    in_bag = {item.product_id for item in cart.pending_items}
+    suggestions = {}
+    for item in cart.pending_items:
+        if item.product is None:
+            continue
+        for product in cross_sells(item.product):
+            if product.id not in in_bag:
+                suggestions.setdefault(product.id, product)
+    return list(suggestions.values())[:limit]
 
 
 def home_page():

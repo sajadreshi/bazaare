@@ -25,6 +25,12 @@
   {% endif %}
 </section>
 
+{% if suggestions %}
+<section class="bz-section">
+  <h2 class="bz-title">Complete the look</h2>
+  {% with products = suggestions %}{% include 'catalog/_grid.html' %}{% endwith %}
+</section>
+{% endif %}
 {% endblock %}
 
 {% block footer %}{% include 'common/footer.html' %}{% endblock %}

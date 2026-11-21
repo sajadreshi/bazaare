@@ -110,7 +110,7 @@ def test_product_page_shows_variants_attributes_and_cross_sells(client, catalog)
     assert re.search(rf'value="{catalog["chain_18"]}"[^>]*checked', html)  # default variant preselected
     assert "Most popular" in html
     assert "moon-side.png" in html  # alternate image thumbnail
-    assert "You may also like" in html and "Pearl Studs" in html
+    assert "Complete the look" in html and "Pearl Studs" in html
     assert "Retired Hoop" not in html  # inactive cross-sell hidden
 
 

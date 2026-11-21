@@ -25,12 +25,15 @@ def product(productId):
             return redirect(url_for("catalog.product", productId=productId))
         cart = cart_service.get_cart()
     product = catalog_service.get_product(productId)
+    xsells = catalog_service.cross_sells(product) if product else []
     return render_template(
         "catalog/product.html",
         product=product,
         images=catalog_service.product_images(product) if product else [],
         options=catalog_service.variant_options(product) if product else [],
-        xsells=catalog_service.cross_sells(product) if product else [],
+        upsells=catalog_service.upsells(product) if product else [],
+        xsells=xsells,
+        similar=[] if xsells or not product else catalog_service.similar(product),
         cart=cart,
     )
 
