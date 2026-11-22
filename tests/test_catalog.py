@@ -54,9 +54,9 @@ def catalog(app):
         retired.categories.append(earrings)
         secret.categories.append(hidden_cat)
 
-        chain_16 = Variant(name="16 inch", is_default=False, position=0)
-        chain_18 = Variant(name="18 inch", price=Decimal("77.40"), is_default=True, position=1)
-        one = Variant(name="One size", is_default=True)
+        chain_16 = Variant(stock=1000, name="16 inch", is_default=False, position=0)
+        chain_18 = Variant(stock=1000, name="18 inch", price=Decimal("77.40"), is_default=True, position=1)
+        one = Variant(stock=1000, name="One size", is_default=True)
         pendant.options = [chain_16, chain_18]
         pendant.option_label = "Length"
         studs.options = [one]

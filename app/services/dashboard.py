@@ -65,15 +65,15 @@ def _catalog_todos():
         todos.append(("Active products in no category (not in the menu)", no_category, "/admin/product/"))
     no_stock = Variant.query.join(Product).filter(Variant.stock.is_(None)).count()
     if no_stock:
-        todos.append(("Options without a stock count", no_stock, "/admin/stock/?show=missing"))
+        todos.append(
+            ("Options without a stock count (can't be sold)", no_stock, "/admin/stock/?show=missing")
+        )
     hidden = Product.query.filter(Product.sold_out_at.isnot(None)).count()
     if hidden:
         todos.append(("Sold out and hidden: restock to bring back", hidden, "/admin/stock/?show=out"))
     alert = inventory.low_stock_alert()
     low = [
-        v
-        for v in Variant.query.join(Product).filter(Product.is_active.is_(True), Variant.stock.isnot(None))
-        if 0 < v.available <= alert
+        v for v in Variant.query.join(Product).filter(Product.is_active.is_(True)) if 0 < v.available <= alert
     ]
     if low:
         todos.append((f"Running low ({alert} or fewer left to sell)", len(low), "/admin/stock/?show=low"))

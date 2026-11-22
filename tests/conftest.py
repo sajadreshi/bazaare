@@ -54,8 +54,8 @@ def client(app):
 def product_ids(app):
     with app.app_context():
         rings = Category.query.filter_by(code="ACC-RINGS").one()
-        small = Variant(name="Ring size 6", is_default=True, position=0)
-        large = Variant(name="Ring size 9", price=Decimal("109.99"), position=1)
+        small = Variant(stock=1000, name="Ring size 6", is_default=True, position=0)
+        large = Variant(stock=1000, name="Ring size 9", price=Decimal("109.99"), position=1)
         product = Product(
             sku="FLOW-RING",
             name="Gold Signet",

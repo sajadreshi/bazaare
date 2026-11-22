@@ -1,8 +1,8 @@
 """Stock: counts go down when an order is placed and back up if it's cancelled.
 
 Only stock above the shop's threshold can be sold (see services.inventory), and a
-product that sells out is hidden from the shop until it's restocked. An option whose
-``stock`` is empty (from before stock was required) isn't counted.
+product that sells out is hidden from the shop until it's restocked. An option with
+no count yet can't be sold.
 """
 
 from collections import Counter
@@ -23,7 +23,7 @@ def take_for_cart(cart):
         return
     variants = (
         db.session.query(Variant)
-        .filter(Variant.id.in_(wanted), Variant.stock.isnot(None))
+        .filter(Variant.id.in_(wanted))
         .order_by(Variant.id)
         .with_for_update()
         .populate_existing()
@@ -35,7 +35,7 @@ def take_for_cart(cart):
             left = f"only {variant.available} left" if variant.available > 0 else "it just sold out"
             name = f"{variant.product.name} ({variant.name})"
             raise OutOfStock(f"Sorry, {name}: {left}. Please update your bag.")
-        variant.stock -= count
+        variant.stock = (variant.stock or 0) - count
     inventory.refresh({variant.product for variant in variants})
 
 

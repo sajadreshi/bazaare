@@ -386,8 +386,8 @@ def _stock_cell(view, context, model, name):
     options = model.options
     if not options:
         return Markup('<span class="bz-pill bz-pill--warn">no options</span>')
-    if any(o.stock is None for o in options):
-        return Markup('<span class="bz-pill bz-pill--warn">stock not set</span>')
+    if all(o.stock is None for o in options):
+        return Markup('<span class="bz-pill bz-pill--bad">stock not set · can\'t be sold</span>')
     if model.sold_out_at is not None:
         return Markup(
             '<span class="bz-pill bz-pill--bad">sold out · hidden</span>'
@@ -401,7 +401,9 @@ def _stock_cell(view, context, model, name):
     if available <= inventory.low_stock_alert():
         label = Markup('<span class="bz-pill bz-pill--warn">%d left</span>') % available
     if sold_out:
-        label += Markup('<br><small class="bz-muted">%d option(s) sold out</small>') % len(sold_out)
+        label += Markup('<br><small class="bz-muted">%d option(s) sold out or not counted</small>') % len(
+            sold_out
+        )
     return label
 
 

@@ -186,7 +186,7 @@ class Variant(db.Model):
     name = db.Column(db.String(64), nullable=False)
     # Empty = same as the product's price.
     price = db.Column(db.Numeric(10, 2))
-    # Empty = stock isn't tracked (always available); 0 = sold out.
+    # How many the shop has. Empty = not counted yet, which (like 0) means it can't be sold.
     stock = db.Column(db.Integer)
     is_default = db.Column(db.Boolean, nullable=False, default=False, server_default=db.false())
     position = db.Column(db.Integer, nullable=False, default=0, server_default="0")
@@ -202,16 +202,16 @@ class Variant(db.Model):
 
     @property
     def available(self):
-        """How many can still be sold: stock above the shop's reserve threshold (None = not counted)."""
+        """How many can still be sold: stock above the shop's reserve threshold (0 if not counted)."""
         if self.stock is None:
-            return None
+            return 0
         from app.services.inventory import threshold
 
         return max(0, self.stock - threshold())
 
     @property
     def in_stock(self):
-        return self.stock is None or self.available > 0
+        return self.available > 0
 
     def __repr__(self):
         return self.name
