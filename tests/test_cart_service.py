@@ -89,8 +89,10 @@ def test_standard_shipping_is_free_over_the_threshold(app):
     from app.services.shipping import METHODS
 
     standard = METHODS["STANDARD"]
-    assert standard.charge(Decimal("49.99")) == Decimal("5.99")
-    assert standard.charge(Decimal("50.00")) == Decimal("0.00")
+    with app.app_context():  # the threshold is a shop setting ($50 by default)
+        assert standard.charge(Decimal("49.99")) == Decimal("5.99")
+        assert standard.charge(Decimal("50.00")) == Decimal("0.00")
+        assert METHODS["EXPRESS"].charge(Decimal("500")) == Decimal("14.99")
 
 
 def test_estimates_skip_weekends_and_holidays(app):

@@ -70,7 +70,8 @@
       <h2 class="bz-card-panel__title">Summary</h2>
       <p class="bz-muted bz-card-panel__sub">Placed {{ order.placed_at.strftime('%a %d %b %Y') }}</p>
       {{ totals(order.total_merchandise, order.total_shipping, order.total_taxes, order.total_discount, order.total,
-                shipping_label='Shipping (' ~ order.method.name ~ ')', tax_label=tax_label(order.tax_rate)) }}
+                shipping_label='Shipping (' ~ order.method.name ~ ')', tax_label=tax_label(order.tax_rate),
+                discount_label='Discount (' ~ order.coupon_code ~ ')' if order.coupon_code else 'Discount') }}
       {% for payment in order.payments %}
       <p class="bz-order-view__pay">{{ icon('cash', 16) }} {{ 'Cash on delivery' if payment.payment_method == 'COD' else payment.payment_method }}</p>
       {% endfor %}

@@ -8,6 +8,8 @@ from app.extension import db
 from app.services import cart as cart_service
 from app.services import catalog as catalog_service
 from app.services import checkout as checkout_service
+from app.services import inventory as inventory_service
+from app.services import promotions
 from app.services.customers import get_current_customer
 from app.services.orders import get_customer_order
 from app.services.shipping import DEFAULT_METHOD, METHODS
@@ -80,6 +82,14 @@ def order():
                 checkout_service.save_address(billing_form, "billing")
                 return redirect(url_for("checkout.order"))
             failed = "billing"
+        if form_id in ("coupon_apply", "coupon_remove") and FlaskForm().validate_on_submit():
+            if form_id == "coupon_apply" and inventory_service.settings().coupons_enabled:
+                ok, message = checkout_service.apply_coupon(request.form.get("code", ""))
+                flash(message)
+            elif form_id == "coupon_remove":
+                checkout_service.remove_coupon()
+                flash("Coupon removed.")
+            return redirect(url_for("checkout.order") + "#summary")
         if form_id == "billing_same" and FlaskForm().validate_on_submit():  # checks the CSRF token
             if not checkout_service.use_shipping_for_billing():
                 flash("Please add your shipping address first.")
@@ -118,9 +128,14 @@ def order():
     editing = request.args.get("edit")
     open_step = failed or (editing if editing in STEPS else None)
     open_step = open_step or next((step for step in STEPS if not done[step]), None)
+    coupon_problem = None
+    if cart is not None and cart.coupon is not None:
+        coupon_problem = promotions.problem(cart.coupon, cart.total_merchandise or 0)
     return render_template(
         "checkout/checkout.html",
         cart=cart,
+        coupons_enabled=inventory_service.settings().coupons_enabled,
+        coupon_problem=coupon_problem,
         status=status,
         open_step=open_step,
         customer=customer,

@@ -9,7 +9,7 @@ from decimal import ROUND_HALF_UP, Decimal
 
 from app.extension import db
 from app.models import Cart, Item, Product
-from app.services import tax
+from app.services import promotions, tax
 from app.services.customers import get_current_customer, get_or_create_current_customer
 from app.services.shipping import method_for
 
@@ -100,8 +100,18 @@ def recalculate(cart):
     """Recompute every pending item's totals and the cart totals (no commit)."""
     merchandise = shipping = taxes = discount = ZERO
     customer = cart.customer
+    items = cart.pending_items
+    # Coupon first: it lowers each line's price, so tax and free shipping see the discounted bag.
+    subtotal = sum((_money(i.product_price) for i in items), ZERO)
+    coupon = cart.coupon
+    if coupon is not None and promotions.problem(coupon, subtotal) is None:
+        off = promotions.discount(coupon, subtotal)
+    else:
+        off = ZERO
+    for item, share in zip(items, _split(off, [_money(i.product_price) for i in items]), strict=True):
+        item.merchandise_discount = share
     sales_tax = tax.quote(customer.shipping_address if customer else None)
-    _allocate_tax(cart.pending_items, sales_tax)
+    _allocate_tax(items, sales_tax)
     for item in cart.pending_items:
         item.total_shipping = _money(item.shipping_base_charge) + _money(item.shipping_up_charge)
         item.total_tax = _money(item.merchandise_tax) + _money(item.shipping_tax)
@@ -115,7 +125,7 @@ def recalculate(cart):
         discount += item.total_discount
     # Shipping is charged per order, by the chosen method (free over its threshold).
     if cart.pending_items:
-        shipping += method_for(cart.shipping_method).charge(merchandise)
+        shipping += method_for(cart.shipping_method).charge(merchandise - discount)
     if sales_tax.tax_shipping:
         taxes += sales_tax.on(shipping)
     cart.tax_rate = sales_tax.rate if sales_tax.applies else None
@@ -128,21 +138,25 @@ def recalculate(cart):
     cart.total_cart = merchandise + shipping + taxes - discount
 
 
+def _split(total, weights):
+    """Split ``total`` across lines in proportion to ``weights``; rounding cents go to the last line."""
+    base = sum(weights, ZERO)
+    shares, left = [], total
+    for index, weight in enumerate(weights):
+        share = left if index == len(weights) - 1 or not base else _money(total * weight / base)
+        shares.append(share)
+        left -= share
+    return shares
+
+
 def _allocate_tax(items, sales_tax):
-    """Tax the bag's merchandise once (so it matches rate x subtotal), then split it across the
-    lines in proportion to their price; any rounding cent goes to the last line."""
+    """Tax the bag's (discounted) merchandise once, so it matches rate x subtotal, then split it
+    across the lines in proportion to their price."""
     taxable = [_money(i.product_price) - _money(i.merchandise_discount) for i in items]
     total = sales_tax.on(sum(taxable, ZERO))
-    base = sum(taxable, ZERO)
-    left = total
-    for index, (item, amount) in enumerate(zip(items, taxable, strict=True)):
-        if index == len(items) - 1 or not base:
-            share = left
-        else:
-            share = _money(total * amount / base)
+    for item, share in zip(items, _split(total, taxable), strict=True):
         item.merchandise_tax = share
         item.shipping_tax = ZERO  # shipping tax is added once for the whole order
-        left -= share
 
 
 def add_item(product_id, variant_id=None):

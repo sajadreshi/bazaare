@@ -7,11 +7,12 @@ from flask_wtf.csrf import CSRFError
 from markupsafe import Markup
 
 from app.adminapp.auth import bp as admin_auth_bp
-from app.adminapp.settings import SettingsView, StockView, TaxesView
+from app.adminapp.settings import PromotionSettingsView, SettingsView, StockView, TaxesView
 from app.adminapp.views import (
     AttributesView,
     CarouselView,
     CategoryView,
+    CouponView,
     HolidayView,
     OrderView,
     ProductAssociationView,
@@ -39,6 +40,7 @@ from .models import (
     Attribute,
     Carousel,
     Category,
+    Coupon,
     Holiday,
     Order,
     Product,
@@ -130,6 +132,10 @@ def create_app(config_overrides=None):
     admin.add_view(RoleView(Role, db, category="User"))
     admin.add_view(ProductAssociationView(ProductAssociation, db, category="Attributes"))
     admin.add_view(HolidayView(Holiday, db, category="Settings", name="Shop holidays", endpoint="holiday"))
+    admin.add_view(CouponView(Coupon, db, category="Promotions", name="Coupon codes", endpoint="coupon"))
+    admin.add_view(
+        PromotionSettingsView(name="Free shipping & coupons", endpoint="promotions", category="Promotions")
+    )
     admin.add_view(OrderView(Order, db, name="Orders", endpoint="order"))
     admin.add_view(SettingsView(name="Inventory", endpoint="settings", category="Settings"))
     admin.add_view(TaxesView(name="Taxes", endpoint="taxes", category="Settings"))

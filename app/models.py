@@ -159,7 +159,40 @@ class ShopSettings(db.Model):
     stock_threshold = db.Column(db.Integer, nullable=False, default=0, server_default="0")
     # Warn on the dashboard (and show "Only N left" in the shop) when this many or fewer can be sold.
     low_stock_alert = db.Column(db.Integer, nullable=False, default=3, server_default="3")
+    # Standard shipping is free when the bag (after discounts) reaches this; empty = never free.
+    free_shipping_over = db.Column(db.Numeric(10, 2), default=50, server_default="50")
+    # Show the "Have a coupon code?" box at checkout.
+    coupons_enabled = db.Column(db.Boolean, nullable=False, default=True, server_default=db.true())
     updated_at = db.Column(db.DateTime, default=utcnow, onupdate=utcnow)
+
+
+COUPON_KINDS = {"PERCENT": "% off the order", "AMOUNT": "$ off the order"}
+
+
+class Coupon(db.Model):
+    """A code shoppers can enter at checkout for a percentage or a fixed amount off."""
+
+    __tablename__ = "coupon"
+    id = db.Column(db.Integer, primary_key=True)
+    code = db.Column(db.String(40), unique=True, nullable=False, index=True)  # stored in capitals
+    description = db.Column(db.String(200))  # for the admin, e.g. "Diwali newsletter"
+    kind = db.Column(db.String(10), nullable=False, default="PERCENT")  # a key of COUPON_KINDS
+    value = db.Column(db.Numeric(10, 2), nullable=False)  # 10 = 10% or $10
+    min_order = db.Column(db.Numeric(10, 2))  # the bag must reach this (before discount)
+    starts_at = db.Column(db.DateTime)
+    ends_at = db.Column(db.DateTime)
+    max_uses = db.Column(db.Integer)  # empty = unlimited
+    times_used = db.Column(db.Integer, nullable=False, default=0, server_default="0")
+    is_active = db.Column(db.Boolean, nullable=False, default=True, server_default=db.true())
+    created_at = db.Column(db.DateTime, default=utcnow)
+
+    @property
+    def offer(self):
+        value = f"{self.value:.2f}".rstrip("0").rstrip(".")
+        return f"{value}% off" if self.kind == "PERCENT" else f"${self.value:.2f} off"
+
+    def __repr__(self):
+        return self.code
 
 
 class TaxState(db.Model):
@@ -390,11 +423,13 @@ class Cart(db.Model):
     # Sales tax applied to this cart (from the shipping address's ZIP); see services.tax.
     tax_rate = db.Column(db.Numeric(7, 6))
     tax_region = db.Column(db.String(120))
+    coupon_id = db.Column(db.Integer, db.ForeignKey("coupon.id", ondelete="SET NULL"))
     customer_id = db.Column(db.BigInteger, db.ForeignKey("customer.id"), index=True)
     updated_at = db.Column(db.DateTime, index=True, default=utcnow)
     created_at = db.Column(db.DateTime, index=True, default=utcnow)
 
     customer = db.relationship("Customer")
+    coupon = db.relationship("Coupon")
     items = db.relationship("Item", back_populates="cart", order_by="Item.id", cascade="all, delete-orphan")
 
     @property
@@ -506,6 +541,7 @@ class Order(db.Model):
     tax_rate = db.Column(db.Numeric(7, 6))
     tax_region = db.Column(db.String(120))
     shipping_tax = db.Column(db.Numeric(10, 2), nullable=False, default=0, server_default="0")
+    coupon_code = db.Column(db.String(40))  # the code used, if any (total_discount holds the amount)
     carrier = db.Column(db.String(20))
     tracking_number = db.Column(db.String(64))
     shipped_at = db.Column(db.DateTime)

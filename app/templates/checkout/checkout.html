@@ -136,9 +136,35 @@
       <ul class="bz-lines bz-lines--compact">
         {% for item in items %}{{ bag_line(item) }}{% endfor %}
       </ul>
+      {% if coupons_enabled or cart.coupon %}
+      <div class="bz-coupon" id="summary">
+        {% if cart.coupon %}
+        <form method="post" action="{{ url_for('checkout.order') }}" class="bz-coupon__applied">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="form_id" value="coupon_remove">
+          <span class="bz-coupon__tag">{{ icon('check', 14) }} {{ cart.coupon.code }}</span>
+          <span class="bz-coupon__what">{{ cart.coupon.offer }}</span>
+          <button type="submit" class="bz-textbtn">Remove</button>
+        </form>
+        {% if coupon_problem %}<p class="bz-coupon__problem">{{ coupon_problem }}</p>{% endif %}
+        {% else %}
+        <details class="bz-coupon__ask" {{ 'open' if get_flashed_messages() }}>
+          <summary>Have a coupon code?</summary>
+          <form method="post" action="{{ url_for('checkout.order') }}" class="bz-coupon__form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="form_id" value="coupon_apply">
+            <label class="bz-sr" for="coupon-code">Coupon code</label>
+            <input id="coupon-code" name="code" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="Enter code">
+            <button type="submit" class="bz-btn bz-btn--ghost">Apply</button>
+          </form>
+        </details>
+        {% endif %}
+      </div>
+      {% endif %}
       {{ totals(cart.total_merchandise, cart.total_shipping, cart.total_taxes, cart.total_discount, cart.total_cart,
                 shipping_label='Shipping (' ~ shipping_method_for(cart.shipping_method).name ~ ')', count=items | length,
-                tax_label=tax_label(cart.tax_rate), tax_note=None if status.shipping else 'Added once we know where it ships') }}
+                tax_label=tax_label(cart.tax_rate), tax_note=None if status.shipping else 'Added once we know where it ships',
+                discount_label='Discount (' ~ cart.coupon.code ~ ')' if cart.coupon else 'Discount') }}
       {{ assurances() }}
     </aside>
   </div>

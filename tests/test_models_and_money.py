@@ -3,7 +3,7 @@ from decimal import Decimal
 from flask_login import AnonymousUserMixin
 
 from app.extension import db
-from app.models import Cart, Customer, Item, User
+from app.models import Cart, Coupon, Customer, Item, User
 from app.services.cart import recalculate
 from tests.conftest import ADMIN_EMAIL
 
@@ -24,7 +24,9 @@ def test_cart_total_subtracts_discount_exactly(app):
         customer = Customer(id=9000000001, customer_type="GUEST")
         db.session.add(customer)
         db.session.flush()
-        cart = Cart(customer_id=customer.id, status="PENDING")
+        # Discounts come from a coupon: $0.30 off, spread over the three lines.
+        coupon = Coupon(code="MONEY030", kind="AMOUNT", value=Decimal("0.30"))
+        cart = Cart(customer_id=customer.id, status="PENDING", coupon=coupon)
         db.session.add(cart)
         db.session.flush()
         # 0.1 + 0.2 style amounts that drift with floats.
@@ -35,7 +37,6 @@ def test_cart_total_subtracts_discount_exactly(app):
                     product_sku="X",
                     product_price=Decimal(price),
                     shipping_base_charge=Decimal("1.10"),
-                    merchandise_discount=Decimal("0.10"),
                     status="PENDING",
                 )
             )
@@ -47,4 +48,9 @@ def test_cart_total_subtracts_discount_exactly(app):
         # Item shipping (3 x 1.10) plus Standard shipping ($5.99: under the $50 free-shipping threshold).
         assert cart.total_shipping == Decimal("9.29")
         assert cart.total_discount == Decimal("0.30")
+        assert [i.merchandise_discount for i in cart.items] == [
+            Decimal("0.10"),
+            Decimal("0.20"),
+            Decimal("0.00"),
+        ]
         assert cart.total_cart == Decimal("39.59")  # 30.60 + 9.29 - 0.30
