@@ -21,6 +21,11 @@ def create_order_from_cart(cart):
         total_discount=cart.total_discount or 0,
         total=cart.total_cart or 0,
         shipping_method=method_for(cart.shipping_method).code,
+        tax_state=(customer.shipping_address.state if customer and customer.shipping_address else None)
+        if cart.tax_rate
+        else None,
+        tax_rate=cart.tax_rate,
+        tax_region=cart.tax_region,
         shipping_address_id=customer.shipping_address_id if customer else None,
         billing_address_id=customer.billing_address_id if customer else None,
     )
@@ -40,6 +45,7 @@ def create_order_from_cart(cart):
                 discount=item.total_discount or 0,
             )
         )
+    order.shipping_tax = (order.total_taxes or 0) - sum((line.tax or 0) for line in order.items)
     db.session.add(order)
     db.session.flush()  # assigns order.id
     return order

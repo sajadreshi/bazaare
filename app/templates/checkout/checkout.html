@@ -1,5 +1,5 @@
 {% extends 'common/layout.html' %}
-{% from 'checkout/_macros.html' import bag_line, totals, assurances, money, address_lines, address_form with context %}
+{% from 'checkout/_macros.html' import bag_line, totals, assurances, money, address_lines, address_form, tax_label with context %}
 {% from 'common/_icons.html' import icon %}
 {% block title %}Checkout{% endblock %}
 {% block header %}{% include 'common/header.html' %}{% endblock %}
@@ -137,7 +137,8 @@
         {% for item in items %}{{ bag_line(item) }}{% endfor %}
       </ul>
       {{ totals(cart.total_merchandise, cart.total_shipping, cart.total_taxes, cart.total_discount, cart.total_cart,
-                shipping_label='Shipping (' ~ shipping_method_for(cart.shipping_method).name ~ ')', count=items | length) }}
+                shipping_label='Shipping (' ~ shipping_method_for(cart.shipping_method).name ~ ')', count=items | length,
+                tax_label=tax_label(cart.tax_rate), tax_note=None if status.shipping else 'Added once we know where it ships') }}
       {{ assurances() }}
     </aside>
   </div>

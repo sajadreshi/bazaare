@@ -162,6 +162,34 @@ class ShopSettings(db.Model):
     updated_at = db.Column(db.DateTime, default=utcnow, onupdate=utcnow)
 
 
+class TaxState(db.Model):
+    """A state the shop collects sales tax in (Admin > Settings > Taxes)."""
+
+    __tablename__ = "tax_state"
+    state = db.Column(db.String(2), primary_key=True)  # e.g. "NY"
+    collect = db.Column(db.Boolean, nullable=False, default=True, server_default=db.true())
+    # Whether shipping charges are taxed too (they are in New York).
+    tax_shipping = db.Column(db.Boolean, nullable=False, default=True, server_default=db.true())
+    # Used when a ZIP isn't in the rate table, e.g. 0.08625 for 8.625%.
+    fallback_rate = db.Column(db.Numeric(7, 6), nullable=False, default=0, server_default="0")
+    rates_updated_at = db.Column(db.DateTime)  # when a rate file for this state was last loaded
+    rates_source = db.Column(db.String(200))
+
+
+class TaxRate(db.Model):
+    """Combined sales tax rate for one ZIP code (state + county + city + special districts)."""
+
+    __tablename__ = "tax_rate"
+    zip = db.Column(db.String(5), primary_key=True)
+    state = db.Column(db.String(2), nullable=False, index=True)
+    region = db.Column(db.String(120))  # e.g. "NASSAU COUNTY"
+    rate = db.Column(db.Numeric(7, 6), nullable=False)
+    state_rate = db.Column(db.Numeric(7, 6))
+    county_rate = db.Column(db.Numeric(7, 6))
+    city_rate = db.Column(db.Numeric(7, 6))
+    special_rate = db.Column(db.Numeric(7, 6))
+
+
 class ProductImage(db.Model):
     """One photo of a product. The lowest position is the main photo."""
 
@@ -359,6 +387,9 @@ class Cart(db.Model):
     total_cart = db.Column(db.Numeric(10, 2), default=0.00)
     status = db.Column(db.String(64), index=True, default="PENDING", nullable=False)
     shipping_method = db.Column(db.String(20))  # a key of services.shipping.METHODS; None = default
+    # Sales tax applied to this cart (from the shipping address's ZIP); see services.tax.
+    tax_rate = db.Column(db.Numeric(7, 6))
+    tax_region = db.Column(db.String(120))
     customer_id = db.Column(db.BigInteger, db.ForeignKey("customer.id"), index=True)
     updated_at = db.Column(db.DateTime, index=True, default=utcnow)
     created_at = db.Column(db.DateTime, index=True, default=utcnow)
@@ -470,6 +501,11 @@ class Order(db.Model):
     total_discount = db.Column(db.Numeric(10, 2), nullable=False, default=0)
     total = db.Column(db.Numeric(10, 2), nullable=False, default=0)
     shipping_method = db.Column(db.String(20), nullable=False, default="STANDARD", server_default="STANDARD")
+    # Sales tax as charged: the state and rate used, and how much of total_taxes was on shipping.
+    tax_state = db.Column(db.String(2), index=True)
+    tax_rate = db.Column(db.Numeric(7, 6))
+    tax_region = db.Column(db.String(120))
+    shipping_tax = db.Column(db.Numeric(10, 2), nullable=False, default=0, server_default="0")
     carrier = db.Column(db.String(20))
     tracking_number = db.Column(db.String(64))
     shipped_at = db.Column(db.DateTime)

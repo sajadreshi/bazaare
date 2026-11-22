@@ -3,6 +3,7 @@
 from flask import flash, redirect, url_for
 from flask_admin import BaseView, expose
 from flask_wtf import FlaskForm
+from sqlalchemy import func
 from wtforms import IntegerField
 from wtforms.validators import InputRequired, NumberRange
 
@@ -112,4 +113,107 @@ class StockView(AdminOnlyMixin, BaseView):
             rows = [r for r in rows if r[2] == show]
         return self.render(
             "admin/stock.html", rows=rows, show=show, counts=counts, settings=inventory.settings()
+        )
+
+
+class TaxesView(AdminOnlyMixin, BaseView):
+    """Settings > Taxes: where the shop collects sales tax, the ZIP rate table and what was collected."""
+
+    @expose("/", methods=["GET", "POST"])
+    def index(self):
+        from decimal import Decimal, InvalidOperation
+
+        from flask import request
+
+        from app.models import Address, Order, TaxRate, TaxState
+        from app.services import tax
+        from app.us_states import US_STATES
+
+        if request.method == "POST":
+            action = request.form.get("action")
+            if action == "upload":
+                upload = request.files.get("rates")
+                if not upload or not upload.filename:
+                    flash("Choose the rate file (.csv) to upload.", "error")
+                else:
+                    try:
+                        counts = tax.load_rates(upload.read(), source=upload.filename)
+                    except tax.RateFileError as error:
+                        db.session.rollback()
+                        flash(f"That file couldn't be loaded: {error}", "error")
+                    else:
+                        db.session.commit()
+                        summary = ", ".join(f"{state}: {n} ZIP codes" for state, n in counts.items())
+                        flash(f"Rates loaded ({summary}).", "success")
+            elif action == "save":
+                errors = []
+                for state in db.session.query(TaxState):
+                    key = state.state
+                    state.collect = request.form.get(f"collect-{key}") == "y"
+                    state.tax_shipping = request.form.get(f"shipping-{key}") == "y"
+                    raw = (request.form.get(f"fallback-{key}") or "").strip().rstrip("%")
+                    try:
+                        rate = Decimal(raw or "0") / 100
+                        if not Decimal(0) <= rate < Decimal("0.5"):
+                            raise InvalidOperation
+                        state.fallback_rate = rate
+                    except InvalidOperation:
+                        errors.append(f"{key}: “{raw}” isn't a percentage.")
+                new = (request.form.get("add_state") or "").strip().upper()
+                if new and db.session.get(TaxState, new) is None:
+                    db.session.add(TaxState(state=new, collect=True, tax_shipping=True, fallback_rate=0))
+                if errors:
+                    db.session.rollback()
+                    for error in errors:
+                        flash(error, "error")
+                else:
+                    db.session.commit()
+                    flash("Tax settings saved.", "success")
+            return redirect(url_for(".index"))
+
+        states = db.session.query(TaxState).order_by(TaxState.collect.desc(), TaxState.state).all()
+        zip_counts = dict(
+            db.session.query(TaxRate.state, func.count(TaxRate.zip)).group_by(TaxRate.state).all()
+        )
+        lookup_zip = (request.args.get("zip") or "").strip()
+        lookup = None
+        if lookup_zip:
+            state = (request.args.get("state") or "").strip().upper()
+            if not state:
+                row = db.session.get(TaxRate, tax.zip5(lookup_zip) or "")
+                state = row.state if row else "NY"
+            lookup = (state, tax.quote(Address(state=state, zip=lookup_zip)))
+
+        report = (
+            db.session.query(
+                func.extract("year", Order.placed_at),
+                func.extract("month", Order.placed_at),
+                Order.tax_state,
+                func.count(Order.id),
+                func.sum(Order.total_merchandise),
+                func.sum(Order.total_shipping),
+                func.sum(Order.total_taxes),
+                func.sum(Order.shipping_tax),
+            )
+            .filter(Order.status != "CANCELLED", Order.tax_state.isnot(None))
+            .group_by(
+                func.extract("year", Order.placed_at), func.extract("month", Order.placed_at), Order.tax_state
+            )
+            .order_by(
+                func.extract("year", Order.placed_at).desc(), func.extract("month", Order.placed_at).desc()
+            )
+            .limit(36)
+            .all()
+        )
+        names = dict(US_STATES)
+        return self.render(
+            "admin/taxes.html",
+            states=states,
+            zip_counts=zip_counts,
+            stale={s.state for s in tax.stale_states()},
+            lookup_zip=lookup_zip,
+            lookup=lookup,
+            report=report,
+            state_names=names,
+            addable=[(code, name) for code, name in US_STATES if code not in {s.state for s in states}],
         )

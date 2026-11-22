@@ -67,6 +67,10 @@ def save_address(form, kind):
             customer.billing_address = address
     else:
         customer.billing_address = address
+    if kind == "shipping":
+        cart = get_cart()
+        if cart is not None:
+            recalculate(cart)  # sales tax depends on where it ships
     db.session.commit()
     return address
 

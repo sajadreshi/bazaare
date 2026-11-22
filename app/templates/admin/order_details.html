@@ -51,7 +51,7 @@
         <tfoot>
           <tr><td colspan="4" class="text-right bz-muted">Subtotal</td><td class="text-right">${{ money | format(order.total_merchandise) }}</td></tr>
           <tr><td colspan="4" class="text-right bz-muted">Shipping</td><td class="text-right">${{ money | format(order.total_shipping) }}</td></tr>
-          <tr><td colspan="4" class="text-right bz-muted">Taxes</td><td class="text-right">${{ money | format(order.total_taxes) }}</td></tr>
+          <tr><td colspan="4" class="text-right bz-muted">Sales tax{% if order.tax_rate %} ({{ ('%.3f' | format(order.tax_rate * 100)).rstrip('0').rstrip('.') }}% · {{ order.tax_region }}){% endif %}{% if order.shipping_tax %}<br><small>incl. ${{ '%.2f' | format(order.shipping_tax) }} on shipping</small>{% endif %}</td><td class="text-right">${{ money | format(order.total_taxes) }}</td></tr>
           {% if order.total_discount %}<tr><td colspan="4" class="text-right bz-muted">Discounts</td><td class="text-right">−${{ money | format(order.total_discount) }}</td></tr>{% endif %}
           <tr class="bz-order__total"><td colspan="4" class="text-right">Total</td><td class="text-right">${{ money | format(order.total) }}</td></tr>
         </tfoot>

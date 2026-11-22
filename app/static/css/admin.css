@@ -282,3 +282,10 @@ a:hover { color: #f1d595; }
 .bz-fill { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 0 0 14px; padding: 12px 16px; border-radius: 12px; background: #2a1f14; border: 1px solid #5a4423; }
 .bz-fill span { flex: 1 1 320px; color: var(--bz-text); }
 .bz-fill input { width: 110px; }
+.bz-pct { display: flex; align-items: center; gap: 6px; max-width: 130px; }
+.bz-steps-list { padding-left: 1.2em; margin: 0 0 12px; }
+.bz-steps-list li { margin: 4px 0; }
+.bz-upload { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 8px; }
+.bz-upload input[type="file"]::file-selector-button { background: #2a241a; color: var(--bz-gold-2); border: 1px solid #3b3326; border-radius: 6px; padding: 5px 12px; margin-right: 8px; cursor: pointer; }
+.bz-lookup { display: flex; flex-direction: column; gap: 2px; margin-top: 14px; padding: 12px 14px; border-radius: 12px; background: #1b1915; border: 1px solid var(--bz-line); }
+.bz-lookup strong { font-size: 1.6rem; color: var(--bz-gold-2); }
