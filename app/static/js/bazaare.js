@@ -36,6 +36,27 @@
       }
     });
   });
+  // "Added to your bag" panel: slides in after adding; closes on ×, the backdrop, Continue or Escape.
+  var drawer = document.querySelector('[data-bz-drawer]');
+  if (drawer) {
+    var panel = drawer.querySelector('.bz-drawer__panel');
+    var opener = document.activeElement;
+    var close = function () {
+      drawer.classList.remove('is-open');
+      document.body.classList.remove('bz-drawer-open');
+      setTimeout(function () { drawer.hidden = true; }, 250);
+      if (opener && opener.focus) opener.focus();
+    };
+    setTimeout(function () {
+      drawer.classList.add('is-open');
+      document.body.classList.add('bz-drawer-open');
+      panel.focus({ preventScroll: true });
+    }, 30);
+    drawer.querySelectorAll('[data-bz-drawer-close]').forEach(function (el) { el.addEventListener('click', close); });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !drawer.hidden) close(); });
+    // The add-to-bag form posted to this page; don't re-post it on refresh.
+    if (window.history && history.replaceState) history.replaceState(null, '', location.href);
+  }
   // Photos come from the image host (Cloudflare R2). If one fails to load, try once more
   // after a moment, then show a neutral placeholder instead of a broken image.
   function photoFallback(img) {

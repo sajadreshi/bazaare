@@ -58,6 +58,9 @@ def test_add_to_cart(app, client):
         pid, vid = product.id, product.options[0].id
     resp = client.post(f"/catalog/product/{pid}", data={"pid": pid, "size": vid})
     assert resp.status_code == 200
+    html = resp.get_data(as_text=True)
+    assert "Added to your bag" in html and "data-bz-drawer" in html and "Silver Band" in html
+    assert "data-bz-drawer" not in client.get(f"/catalog/product/{pid}").get_data(as_text=True)
     resp = client.get("/checkout/shopcart")
     assert resp.status_code == 200
     assert b"Silver Band" in resp.data

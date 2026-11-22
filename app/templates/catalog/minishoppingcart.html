@@ -1,29 +1,51 @@
-{# Mini cart shown after adding to cart. `cart` is a Cart model. #}
-<div class="shopping-cart">
-    <div class="shopping-cart-header">
-        <i class="fa fa-shopping-cart cart-icon"></i><span class="dollar-amount">Total : ${{ cart.total_cart }}</span>
+{# "Added to your bag" panel shown after adding to the bag. `cart` is a Cart model; the newest line is the one just added. #}
+{% from 'checkout/_macros.html' import bag_line, money with context %}
+{% from 'common/_icons.html' import icon %}
+{% set items = cart.pending_items %}
+{% set added = items | last %}
+{% set others = items[:-1] | reverse | list %}
+{% set free_over = shipping_methods['STANDARD'].free_over %}
+{% set subtotal = cart.total_merchandise or 0 %}
+<div class="bz-drawer" data-bz-drawer role="dialog" aria-modal="true" aria-labelledby="bz-drawer-title">
+  <div class="bz-drawer__backdrop" data-bz-drawer-close></div>
+  <aside class="bz-drawer__panel" tabindex="-1">
+    <header class="bz-drawer__head">
+      <h2 id="bz-drawer-title"><span class="bz-drawer__tick">{{ icon('check', 16) }}</span> Added to your bag</h2>
+      <button type="button" class="bz-iconbtn" data-bz-drawer-close aria-label="Close">{{ icon('close', 20) }}</button>
+    </header>
+
+    <div class="bz-drawer__body">
+      <ul class="bz-lines bz-lines--compact bz-drawer__added">{{ bag_line(added) }}</ul>
+
+      {% if free_over %}
+        {% if subtotal >= free_over %}
+        <p class="bz-drawer__ship is-done">{{ icon('check', 16) }} Your order ships free with standard shipping.</p>
+        {% else %}
+        {% set pct = (subtotal / free_over * 100) | round | int %}
+        <div class="bz-drawer__ship">
+          <p>{{ icon('truck', 16) }} Add <strong>{{ money(free_over - subtotal) }}</strong> more for free standard shipping.</p>
+          <div class="bz-freeship__bar"><span style="width: {{ pct }}%"></span></div>
+        </div>
+        {% endif %}
+      {% endif %}
+
+      {% if others %}
+      <p class="bz-drawer__label">Also in your bag</p>
+      <ul class="bz-lines bz-lines--compact">
+        {% for item in others[:3] %}{{ bag_line(item) }}{% endfor %}
+      </ul>
+      {% if others | length > 3 %}<p class="bz-drawer__more">and {{ others | length - 3 }} more</p>{% endif %}
+      {% endif %}
     </div>
-    <div class="min-shopcart-products">
-        <ul class="shopping-cart-items">
-            {% for item in cart.pending_items %}
-            <li class="clearfix">
-                <img class="rounded-2 alt-img" src="{{ image_url((item.product.main_image if item.product else None)) }}"
-                    alt="{{ item.product_name }}" />
-                <span class="item-name">{{ item.product_name }}</span>
-                <span class="item-price">${{ item.product_price }}</span>
-                <span class="item-quantity">{{ item.variant.name if item.variant else '' }}</span>
-                <div class="remove-item">
-                <form method="post" action="{{ url_for('checkout.remove', itemId=item.id) }}" class="d-inline">
-                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                  <button type="submit" class="btn btn-link p-0"><i class="fa fa-trash" aria-hidden="true"></i><span> Remove </span></button>
-                </form>
-                </div>
-            </li>
-            {% endfor %}
-        </ul>
-    </div>
-     <div style="position: relative;">
-        <a href="{{ url_for('checkout.shopcart') }}" class="button">Checkout</a>
-        <a href="javascript:void(0)" class="button cont_shopping">Continue Shopping</a>
-    </div>
+
+    <footer class="bz-drawer__foot">
+      <div class="bz-drawer__subtotal">
+        <span>Subtotal · {{ items | length }} item{{ 's' if items | length != 1 }}</span>
+        <strong>{{ money(subtotal) }}</strong>
+      </div>
+      <a class="bz-btn bz-btn--wide" href="{{ url_for('checkout.order') }}">{{ icon('lock', 18) }} Checkout</a>
+      <a class="bz-btn bz-btn--ghost bz-btn--wide" href="{{ url_for('checkout.shopcart') }}">View bag</a>
+      <button type="button" class="bz-textbtn bz-drawer__continue" data-bz-drawer-close>Continue shopping</button>
+    </footer>
+  </aside>
 </div>
