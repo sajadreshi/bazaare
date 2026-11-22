@@ -9,7 +9,7 @@ from app.services import cart as cart_service
 from app.services import catalog as catalog_service
 from app.services import checkout as checkout_service
 from app.services import inventory as inventory_service
-from app.services import promotions
+from app.services import notifications, promotions
 from app.services.customers import get_current_customer
 from app.services.orders import get_customer_order
 from app.services.shipping import DEFAULT_METHOD, METHODS
@@ -105,6 +105,7 @@ def order():
             if not result.ok:
                 flash(result.error)
                 return redirect(url_for("checkout.order"))
+            notifications.order_placed(result.order)
             return redirect(url_for("checkout.confirm", orderId=result.order.id))
 
     cart = cart_service.get_cart()

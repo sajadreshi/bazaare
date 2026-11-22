@@ -1,0 +1,23 @@
+{% extends 'email/_layout.html' %}
+{% from 'email/_order.html' import money, items, totals, address, heading, button with context %}
+{% block title %}Order {{ order.number }} confirmed{% endblock %}
+{% block preheader %}Thank you! Your order {{ order.number }} is confirmed and we're getting it ready.{% endblock %}
+{% block body %}
+{% set earliest, latest = order.estimated_delivery %}
+{{ heading('Order ' ~ order.number, 'Thank you, ' ~ (name or 'for your order') ~ '!') }}
+<p style="font-size:15px;line-height:1.6;margin:0 0 14px;">Your order is confirmed. We'll check each piece, wrap it with care and email you as soon as it's on its way.</p>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f8f4ec;border-radius:12px;font-size:14px;">
+  <tr>
+    <td style="padding:12px 14px;"><span style="color:#786f60;font-size:11px;letter-spacing:2px;text-transform:uppercase;">Estimated delivery</span><br><strong>{{ earliest.strftime('%a %d %b') }} &ndash; {{ latest.strftime('%a %d %b') }}</strong></td>
+    <td style="padding:12px 14px;"><span style="color:#786f60;font-size:11px;letter-spacing:2px;text-transform:uppercase;">Payment</span><br><strong>{{ payment_label }}</strong></td>
+  </tr>
+</table>
+{{ items(order) }}
+{{ totals(order) }}
+{% if cash %}<p style="font-size:14px;background:#f1e6cf;border-radius:10px;padding:10px 14px;margin:16px 0 0;">Please have {{ money(order.total) }} ready in cash when your order arrives.</p>{% endif %}
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:18px;font-size:14px;line-height:1.5;">
+  <tr><td valign="top" width="50%" style="padding-right:10px;"><div style="color:#786f60;font-size:11px;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;">Shipping to</div>{{ address(order.shipping_address) }}</td>
+      <td valign="top"><div style="color:#786f60;font-size:11px;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;">Shipping</div>{{ order.method.name }} &middot; {{ order.method.days_label }}</td></tr>
+</table>
+{% if order_url %}{{ button(order_url, 'View your order') }}{% else %}<p style="font-size:13px;color:#786f60;margin-top:18px;">Keep this email for your records. Your order number is <strong>{{ order.number }}</strong>.</p>{% endif %}
+{% endblock %}

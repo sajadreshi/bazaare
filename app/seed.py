@@ -147,6 +147,14 @@ def seed_menu():
     db.session.commit()
 
 
+def seed_pages():
+    from app.content.pages import seed_pages as _seed
+    from app.models import Page
+
+    _seed(db, Page)
+
+
 def seed_all():
     seed_admin()
     seed_menu()
+    seed_pages()

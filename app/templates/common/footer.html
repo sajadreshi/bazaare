@@ -17,7 +17,13 @@
         <li><a href="{{ url_for('main.about') }}">About us</a></li>
         <li><a href="{{ url_for('customer.orders') }}">Your orders</a></li>
         <li><a href="{{ url_for('catalog.wishlist') }}">Wishlist</a></li>
-        <li><a href="mailto:support@bazaare.com">support@bazaare.com</a></li>
+        <li><a href="mailto:{{ shop_settings().support_email }}">{{ shop_settings().support_email }}</a></li>
+      </ul>
+    </div>
+    <div class="bz-footer__col">
+      <h4>Policies</h4>
+      <ul>
+        {% for p in policy_pages() %}<li><a href="{{ url_for('main.policy', slug=p.slug) }}">{{ p.title }}</a></li>{% endfor %}
       </ul>
     </div>
   </div>

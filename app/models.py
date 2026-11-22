@@ -163,6 +163,12 @@ class ShopSettings(db.Model):
     free_shipping_over = db.Column(db.Numeric(10, 2), default=50, server_default="50")
     # Show the "Have a coupon code?" box at checkout.
     coupons_enabled = db.Column(db.Boolean, nullable=False, default=True, server_default=db.true())
+    # Who gets the "new order" email (empty = the admin account's email), and the address
+    # shoppers are told to write to (emails, footer, policy pages).
+    order_alert_email = db.Column(db.String(120))
+    support_email = db.Column(
+        db.String(120), default="support@bazaare.com", server_default="support@bazaare.com"
+    )
     updated_at = db.Column(db.DateTime, default=utcnow, onupdate=utcnow)
 
 
@@ -384,6 +390,23 @@ class ProductCategory(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     product_id = db.Column(db.Integer, db.ForeignKey("product.id", ondelete="CASCADE"), nullable=False)
     category_id = db.Column(db.Integer, db.ForeignKey("category.id", ondelete="CASCADE"), nullable=False)
+
+
+class Page(db.Model):
+    """A content page such as a policy (Admin > Content > Pages), shown at /policies/<slug>."""
+
+    __tablename__ = "page"
+    id = db.Column(db.Integer, primary_key=True)
+    slug = db.Column(db.String(60), unique=True, nullable=False, index=True)  # e.g. "returns"
+    title = db.Column(db.String(120), nullable=False)
+    summary = db.Column(db.String(300))  # one line under the title (and for search engines)
+    body = db.Column(db.Text, nullable=False, default="")  # HTML from the admin editor
+    position = db.Column(db.Integer, nullable=False, default=0, server_default="0")
+    is_published = db.Column(db.Boolean, nullable=False, default=True, server_default=db.true())
+    updated_at = db.Column(db.DateTime, default=utcnow, onupdate=utcnow)
+
+    def __repr__(self):
+        return self.title
 
 
 class Carousel(db.Model):

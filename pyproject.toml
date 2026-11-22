@@ -14,6 +14,7 @@ select = ["E", "W", "F", "I", "B"]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/*" = ["E501"]  # long literals in test data are fine
+"app/content/*" = ["E501"]  # page text reads better unwrapped
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

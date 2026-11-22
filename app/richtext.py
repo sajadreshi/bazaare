@@ -1,4 +1,4 @@
-"""Keep only simple formatting in product descriptions (paragraphs, bold, italic, lists).
+"""Keep only simple formatting in rich text (paragraphs, bold, italic, lists, headings, links).
 
 Descriptions come from the admin's small editor; anything else (scripts, styles, links,
 attributes) is dropped so the shop can show the HTML as is.
@@ -10,7 +10,8 @@ from html.parser import HTMLParser
 
 TAG = re.compile(r"</?[a-zA-Z]")
 
-ALLOWED = {"p", "br", "strong", "b", "em", "i", "ul", "ol", "li"}
+ALLOWED = {"p", "br", "strong", "b", "em", "i", "ul", "ol", "li", "h2", "h3", "a"}
+SAFE_LINK = re.compile(r"^(https?://|mailto:|/|#)", re.IGNORECASE)
 RENAME = {"b": "strong", "i": "em", "div": "p"}
 VOID = {"br"}
 DROP_CONTENT = {"script", "style", "template", "iframe", "object"}
@@ -32,6 +33,15 @@ class _Cleaner(HTMLParser):
             return
         if tag in ("li", "p") and self.open and self.open[-1] == tag:
             self.out.append(f"</{self.open.pop()}>")  # an <li> or <p> ends where the next one starts
+        if tag == "a":
+            href = (dict(attrs).get("href") or "").strip()
+            if not SAFE_LINK.match(href):
+                return  # links only to web pages, email addresses or this site
+            external = href.lower().startswith("http")
+            extra = ' target="_blank" rel="noopener"' if external else ""
+            self.out.append(f'<a href="{escape(href, quote=True)}"{extra}>')
+            self.open.append("a")
+            return
         self.out.append(f"<{tag}>")
         if tag not in VOID:
             self.open.append(tag)

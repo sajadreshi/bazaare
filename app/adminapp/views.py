@@ -19,6 +19,7 @@ from app.models import (
     Category,
     Coupon,
     Order,
+    Page,
     Product,
     ProductAssociation,
     ProductAttribute,
@@ -27,7 +28,7 @@ from app.models import (
     utcnow,
 )
 from app.richtext import clean_html
-from app.services import inventory, stock
+from app.services import inventory, notifications, stock
 from app.services.catalog import category_products
 from app.services.shipping import CARRIERS, HAND_DELIVERY
 from app.storage import image_url
@@ -781,6 +782,7 @@ class OrderView(SecureModelView):
                 order.shipped_at = order.shipped_at or now
                 order.delivered_at = now
             db.session.commit()
+            notifications.status_changed(order, previous)
             flash(f"{order.number} moved from {previous.title()} to {status.title()}.", "success")
         return redirect(self.get_url(".details_view", id=order.id))
 
@@ -890,3 +892,50 @@ class CouponView(SecureModelView):
             raise ValidationError("A percentage can't be more than 100.")
         if model.starts_at and model.ends_at and model.ends_at <= model.starts_at:
             raise ValidationError("The end date must be after the start date.")
+
+
+class PageView(SecureModelView):
+    """Content pages: About and the policies (shipping, returns, privacy, terms) at /policies/<slug>."""
+
+    column_list = ("title", "slug", "is_published", "updated_at", "view")
+    column_labels = {"slug": "Address", "is_published": "Published", "updated_at": "Last updated", "view": ""}
+    column_default_sort = [("position", False), ("title", False)]
+    column_formatters = {
+        "slug": lambda v, c, m, n: "/about" if m.slug == "about" else f"/policies/{m.slug}",
+        "updated_at": lambda v, c, m, n: f"{m.updated_at:%d %b %Y}" if m.updated_at else "",
+        "view": lambda v, c, m, n: (
+            Markup('<a href="%s" target="_blank" rel="noopener">View ↗</a>')
+            % (url_for("main.about") if m.slug == "about" else url_for("main.policy", slug=m.slug))
+        ),
+    }
+    form_columns = ("title", "summary", "body", "slug", "position", "is_published")
+    form_overrides = {"body": TextAreaField}
+    form_args = {
+        "title": {"label": "Title"},
+        "summary": {
+            "label": "Summary",
+            "description": "One line under the title; also used by search engines.",
+        },
+        "body": {
+            "label": "Page text",
+            "render_kw": {"data-bz-rich": "1", "data-bz-headings": "1", "rows": 20},
+            "description": "Use Heading for sections. Select words and press Link to link them.",
+        },
+        "slug": {
+            "label": "Address",
+            "description": "End of the page link, e.g. returns → /policies/returns.",
+        },
+        "position": {"label": "Order in menus", "default": 0},
+        "is_published": {"label": "Published", "default": True},
+    }
+    create_template = "admin/page_create.html"
+    edit_template = "admin/page_edit.html"
+
+    def on_model_change(self, form, model, is_created):
+        model.slug = re.sub(r"[^a-z0-9-]+", "-", (model.slug or model.title or "").lower()).strip("-")[:60]
+        if not model.slug:
+            raise ValidationError("The address needs letters or numbers.")
+        clash = _taken(Page, "slug", model.slug, exclude_id=model.id)
+        if clash is not None:
+            raise ValidationError(f"The address “{model.slug}” is already used by {clash.title}.")
+        model.body = clean_html(model.body) or ""

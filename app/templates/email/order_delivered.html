@@ -1,0 +1,12 @@
+{% extends 'email/_layout.html' %}
+{% from 'email/_order.html' import items, heading, button with context %}
+{% block title %}Your order {{ order.number }} was delivered{% endblock %}
+{% block preheader %}Your BazaarE' order has arrived. We hope you love it.{% endblock %}
+{% block body %}
+{{ heading('Order ' ~ order.number, 'Delivered. Enjoy!') }}
+<p style="font-size:15px;line-height:1.6;margin:0 0 14px;">Your order was delivered{% if order.delivered_at %} on {{ order.delivered_at.strftime('%A %d %B') }}{% endif %}. We hope it brings you joy{{ ', ' ~ name if name }}.</p>
+{{ items(order) }}
+<p style="font-size:14px;line-height:1.6;margin-top:16px;"><strong>Caring for your jewellery:</strong> keep pieces dry and away from perfume and lotions, store them separately in the pouch, and wipe gently with a soft cloth after wearing.</p>
+<p style="font-size:14px;line-height:1.6;">Something not right? See our <a href="{{ url('main.policy', slug='returns') }}" style="color:#a8834a;">returns &amp; exchanges</a> or just reply to this email.</p>
+{{ button(url('main.home'), 'Shop new arrivals') }}
+{% endblock %}

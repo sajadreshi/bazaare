@@ -1,6 +1,8 @@
-from flask import render_template
+from flask import abort, render_template
 
+from app.extension import db
 from app.main import main
+from app.models import Page
 from app.services import catalog
 
 
@@ -32,6 +34,21 @@ def home():
     )
 
 
+def _page(slug):
+    page = db.session.query(Page).filter_by(slug=slug, is_published=True).first()
+    if page is None:
+        abort(404)
+    others = (
+        db.session.query(Page).filter(Page.is_published.is_(True)).order_by(Page.position, Page.title).all()
+    )
+    return render_template("main/page.html", page=page, pages=others)
+
+
 @main.route("/about")
 def about():
-    return render_template("main/about.html")
+    return _page("about")
+
+
+@main.route("/policies/<slug>")
+def policy(slug):
+    return _page(slug)

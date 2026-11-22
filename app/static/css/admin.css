@@ -341,3 +341,10 @@ a:hover { color: #f1d595; }
 .daterangepicker .calendar-date .prev i::before { content: "‹" !important; font-size: 1.3rem; }
 .daterangepicker .calendar-date .next i::before { content: "›" !important; font-size: 1.3rem; }
 .daterangepicker .calendar-date select { background: #0f0e0d !important; color: var(--bz-text) !important; border: 1px solid var(--bz-line) !important; border-radius: 6px; color-scheme: dark; }
+.bz-rich__area h2 { font-family: Georgia, "Times New Roman", serif; font-size: 1.35rem; color: #fbf3e2; margin: 14px 0 6px; }
+.bz-rich__area h3 { font-size: 1rem; font-weight: 600; color: #fbf3e2; margin: 12px 0 4px; }
+.bz-rich__area a { color: var(--bz-gold-2); text-decoration: underline; }
+.bz-rich--tall .bz-rich__area { min-height: 420px; max-height: 70vh; }
+.bz-email-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.bz-email-list a { display: block; padding: 10px 14px; border: 1px solid var(--bz-line); border-radius: 10px; color: var(--bz-text); }
+.bz-email-list a:hover { border-color: var(--bz-gold); color: var(--bz-gold-2); text-decoration: none; }

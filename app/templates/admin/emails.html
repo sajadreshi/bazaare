@@ -1,0 +1,57 @@
+{% extends 'admin/master.html' %}
+{% from 'admin/_editor.html' import field with context %}
+{% block page_title %}{% endblock %}
+{% block body %}
+<div class="bz-editor">
+  <div class="bz-editor__head">
+    <div>
+      <h1>Emails</h1>
+      <p class="bz-muted">Shoppers get an email when their order is confirmed, shipped (with tracking) and delivered. You get one for every new order.</p>
+    </div>
+  </div>
+  <div class="bz-editor__grid">
+    <div class="bz-editor__main">
+      <form method="post" class="bz-panel" novalidate>
+        {{ form.hidden_tag() }}
+        <h2>Addresses</h2>
+        <div class="bz-two">
+          {{ field(form.order_alert_email, 'Leave empty to use the admin account (' ~ (config.ADMIN_EMAIL or 'not set') ~ ').') }}
+          {{ field(form.support_email, 'Shown in emails, the footer and policy pages. Customer replies go here.') }}
+        </div>
+        <button type="submit" class="btn bz-btn-gold">Save</button>
+      </form>
+
+      <section class="bz-panel">
+        <h2>What the emails look like</h2>
+        {% if latest %}
+        <p class="bz-muted bz-panel__intro">Previews use your latest order, {{ latest.number }}.</p>
+        <ul class="bz-email-list">
+          {% for kind, label in kinds.items() %}
+          <li><a href="{{ url_for('.preview', kind=kind, order_id=latest.id) }}" target="_blank" rel="noopener">{{ label }} ↗</a></li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p class="bz-muted">Previews appear once there's an order.</p>
+        {% endif %}
+      </section>
+    </div>
+    <aside class="bz-editor__side">
+      <section class="bz-panel">
+        <h2>Sending</h2>
+        {% if mail_server %}
+        <p><span class="bz-dot is-on">Connected</span><br><small class="bz-muted">via {{ mail_server }}</small></p>
+        {% else %}
+        <p><span class="bz-pill bz-pill--warn">No mail server yet</span></p>
+        <p class="bz-muted" style="font-size:.85rem">Emails aren't sent; each one is saved as a file in<br><code>{{ outbox }}</code><br>so you can check them. Add the MAIL_… settings from your email provider to start sending.</p>
+        {% endif %}
+        <p class="bz-muted" style="font-size:.85rem">New-order alerts go to <strong>{{ alert_to or 'nobody (set an address)' }}</strong>.</p>
+        <form method="post">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="action" value="test">
+          <button type="submit" class="btn bz-btn-outline btn-block" {{ 'disabled' if not latest }}>Send me a test email</button>
+        </form>
+      </section>
+    </aside>
+  </div>
+</div>
+{% endblock %}
