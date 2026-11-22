@@ -54,12 +54,16 @@
                  {% if option.variant.variant_image %}data-image="{{ image_url(option.variant.variant_image) }}"{% endif %}
                  {{ 'checked' if option.variant.id == chosen.variant.id }} {{ 'disabled' if not option.available }}>
           <span>{{ option.variant.name }}{% if option.price != product.price %} · ${{ '%.2f' | format(option.price) }}{% endif %}
-            {%- if not option.available %}<small> · sold out</small>{% endif %}</span>
+            {%- if not option.available %}<small> · sold out</small>{% elif option.variant.available is not none and option.variant.available <= shop_settings().low_stock_alert %}<small class="bz-few"> · only {{ option.variant.available }} left</small>{% endif %}</span>
         </label>
         {% endfor %}
       </fieldset>
       {% else %}
       <input type="hidden" name="size" value="{{ chosen.variant.id }}">
+      {% endif %}
+      {% set left = chosen.variant.available %}
+      {% if left is not none and left <= shop_settings().low_stock_alert and (options | length == 1) %}
+      <p class="bz-few-note">Only {{ left }} left</p>
       {% endif %}
       <div class="bz-buy__actions">
         <button type="submit" class="bz-btn bz-btn--wide">{{ icon('bag', 18) }} Add to bag</button>

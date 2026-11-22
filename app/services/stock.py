@@ -1,12 +1,15 @@
-"""Stock: options with a tracked count go down when an order is placed and back up if it's cancelled.
+"""Stock: counts go down when an order is placed and back up if it's cancelled.
 
-An option whose ``stock`` is empty isn't tracked and is always available.
+Only stock above the shop's threshold can be sold (see services.inventory), and a
+product that sells out is hidden from the shop until it's restocked. An option whose
+``stock`` is empty (from before stock was required) isn't counted.
 """
 
 from collections import Counter
 
 from app.extension import db
 from app.models import Variant
+from app.services import inventory
 
 
 class OutOfStock(Exception):
@@ -28,11 +31,12 @@ def take_for_cart(cart):
     )
     for variant in variants:
         count = wanted[variant.id]
-        if variant.stock < count:
-            left = f"only {variant.stock} left" if variant.stock > 0 else "it just sold out"
+        if variant.available < count:
+            left = f"only {variant.available} left" if variant.available > 0 else "it just sold out"
             name = f"{variant.product.name} ({variant.name})"
             raise OutOfStock(f"Sorry, {name}: {left}. Please update your bag.")
         variant.stock -= count
+    inventory.refresh({variant.product for variant in variants})
 
 
 def _order_counts(order):
@@ -42,12 +46,16 @@ def _order_counts(order):
 def put_back(order):
     """A cancelled order's items go back on the shelf."""
     counts = _order_counts(order)
-    for variant in db.session.query(Variant).filter(Variant.id.in_(counts), Variant.stock.isnot(None)):
+    variants = db.session.query(Variant).filter(Variant.id.in_(counts), Variant.stock.isnot(None)).all()
+    for variant in variants:
         variant.stock += counts[variant.id]
+    inventory.refresh({variant.product for variant in variants})
 
 
 def take_again(order):
     """A reopened order takes its items off the shelf again (never below zero)."""
     counts = _order_counts(order)
-    for variant in db.session.query(Variant).filter(Variant.id.in_(counts), Variant.stock.isnot(None)):
+    variants = db.session.query(Variant).filter(Variant.id.in_(counts), Variant.stock.isnot(None)).all()
+    for variant in variants:
         variant.stock = max(0, variant.stock - counts[variant.id])
+    inventory.refresh({variant.product for variant in variants})

@@ -11,7 +11,7 @@
     <div>
       <a class="bz-back" href="{{ return_url }}">← All products</a>
       <h1>{{ product.name if product else 'New product' }}</h1>
-      {% if product %}<p class="bz-muted">SKU {{ product.sku }} · {{ 'Active, shown in the shop' if product.is_active else 'Hidden from the shop' }}</p>{% endif %}
+      {% if product %}<p class="bz-muted">SKU {{ product.sku }} · {% if product.sold_out_at %}Sold out, hidden automatically since {{ product.sold_out_at.strftime('%d %b') }}{% else %}{{ 'Active, shown in the shop' if product.is_active else 'Hidden from the shop' }}{% endif %}</p>{% endif %}
     </div>
     {% if product %}
     <div class="bz-editor__tools">
@@ -51,8 +51,9 @@
 
       <section class="bz-panel">
         <h2>Options &amp; stock</h2>
-        <p class="bz-muted bz-panel__intro">One row per size or design. Leave <em>Price</em> empty to use the product price,
-          and <em>Stock</em> empty if you don't count it. Drag ⋮⋮ to change the order. No rows = sold as “One Size”.</p>
+        <p class="bz-muted bz-panel__intro">One row per size or design, with <strong>how many you have</strong> in Stock. Leave <em>Price</em> empty to use the product price.
+          Drag ⋮⋮ to change the order. Only one kind? Add a single “One Size” row.
+          {% set t = shop_settings().stock_threshold %}When stock reaches {{ t }}{{ ' (your reserve)' if t }}, that option sells out; when every option has, the product hides itself until you restock.</p>
         {{ field(form.option_label, 'What the choice is called on the product page, e.g. Size, Design, Length.') }}
         {{ form.options() | safe }}
       </section>
@@ -73,6 +74,9 @@
     <aside class="bz-editor__side">
       <section class="bz-panel">
         <h2>Visibility</h2>
+        {% if product and product.sold_out_at %}
+        <p class="bz-soldout-note">Sold out on {{ product.sold_out_at.strftime('%d %b %Y') }}, so the shop hid it. Add stock under <em>Options &amp; stock</em> and it comes back by itself.</p>
+        {% endif %}
         {{ field(form.is_active, 'Unticked products are hidden from the shop.') }}
       </section>
       <section class="bz-panel">

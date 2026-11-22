@@ -57,13 +57,14 @@ def _in_cart(cart, variant):
 
 def check_stock(cart, variant, adding=1):
     """Raise CartError if the bag can't hold ``adding`` more of this option."""
-    if variant.stock is None:
+    available = variant.available
+    if available is None:
         return
-    wanted = _in_cart(cart, variant) + adding
-    if variant.stock <= 0:
-        raise CartError(f"Sorry, {variant.product.name} ({variant.name}) is sold out.")
-    if wanted > variant.stock:
-        raise CartError(f"Sorry, only {variant.stock} of {variant.product.name} ({variant.name}) left.")
+    name = f"{variant.product.name} ({variant.name})"
+    if available <= 0:
+        raise CartError(f"Sorry, {name} is sold out.")
+    if _in_cart(cart, variant) + adding > available:
+        raise CartError(f"Sorry, only {available} of {name} left.")
 
 
 def get_cart(create=False):
