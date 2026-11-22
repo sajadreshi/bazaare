@@ -1,4 +1,6 @@
-from flask import abort, render_template
+import os
+
+from flask import abort, current_app, render_template, send_from_directory
 
 from app.extension import db
 from app.main import main
@@ -42,6 +44,14 @@ def _page(slug):
         db.session.query(Page).filter(Page.is_published.is_(True)).order_by(Page.position, Page.title).all()
     )
     return render_template("main/page.html", page=page, pages=others)
+
+
+@main.route("/favicon.ico")
+def favicon():
+    # Browsers ask for /favicon.ico directly (e.g. for bookmarks and PDFs of a page).
+    return send_from_directory(
+        os.path.join(current_app.static_folder, "images"), "favicon.ico", mimetype="image/vnd.microsoft.icon"
+    )
 
 
 @main.route("/about")

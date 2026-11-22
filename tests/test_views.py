@@ -64,3 +64,11 @@ def test_add_to_cart(app, client):
     resp = client.get("/checkout/shopcart")
     assert resp.status_code == 200
     assert b"Silver Band" in resp.data
+
+
+def test_site_icons(client):
+    resp = client.get("/favicon.ico")
+    assert resp.status_code == 200 and resp.mimetype == "image/vnd.microsoft.icon"
+    html = client.get("/").get_data(as_text=True)
+    assert "images/favicon.ico" in html and "apple-touch-icon.png" in html and "site.webmanifest" in html
+    assert client.get("/static/site.webmanifest").status_code == 200
