@@ -82,3 +82,72 @@ def test_saved_addresses(app, client, member):
     assert client.post("/customer/billing", data=billing).status_code == 302
     assert "9 Billing Rd" in client.get("/customer/billing").get_data(as_text=True)
     assert "1 Main St" in client.get("/customer/shipping").get_data(as_text=True)
+
+
+def test_register_signs_you_in_and_keeps_the_bag(app, client, product_ids):
+    from tests.test_cart_service import add_to_cart
+
+    pid, small, _ = product_ids
+    with app.app_context():
+        add_to_cart(client, pid, small)
+    data = {
+        "first_name": "Nila",
+        "last_name": "Rao",
+        "email": "nila@example.com",
+        "password": "a-long-password",
+    }
+    resp = client.post("/auth/register?next=/checkout/order", data=data)
+    assert resp.status_code == 302 and resp.headers["Location"].endswith("/checkout/order")
+    html = client.get("/customer/profile").get_data(as_text=True)
+    assert "Hello, Nila" in html and "nila@example.com" in html
+    assert "Gold Signet" in client.get("/checkout/shopcart").get_data(as_text=True)
+    resp = client.post("/auth/register", data={**data, "first_name": "Again"})
+    assert resp.status_code == 302  # already signed in: sent home
+    client.get("/auth/logout")
+    html = client.post("/auth/register", data=data).get_data(as_text=True)
+    assert "already an account with this email" in html
+
+
+def test_wrong_password_keeps_where_you_were_going(client, member):
+    client.get("/auth/logout")
+    resp = client.post("/auth/login?next=/customer/orders", data={"email": member, "password": "nope-nope"})
+    html = resp.get_data(as_text=True)
+    assert resp.status_code == 401 and "don&#39;t match an account" in html
+    assert f'value="{member}"' in html and "nope-nope" not in html  # email kept, password not
+    # The form still posts to the same address, so ?next survives the retry.
+    resp = client.post(
+        "/auth/login?next=/customer/orders", data={"email": member, "password": "member-password-1"}
+    )
+    assert resp.headers["Location"].endswith("/customer/orders")
+
+
+def test_account_pages_share_the_new_layout(client, member):
+    for url, heading in [
+        ("/customer/profile", "Your details"),
+        ("/customer/orders", "No orders yet"),
+        ("/customer/shipping", "Shipping address"),
+        ("/customer/security", "Change your password"),
+    ]:
+        html = client.get(url).get_data(as_text=True)
+        assert 'class="bz-account__nav"' in html and heading in html, url
+    client.post("/customer/shipping", data=address("shipping_form"))
+    html = client.get("/customer/shipping").get_data(as_text=True)
+    assert "1 Main St" in html and 'name="address1"' not in html  # saved: shown, not a form
+    assert 'name="address1"' in client.get("/customer/shipping?edit=1").get_data(as_text=True)
+    assert "Billing address" in client.get("/customer/billing").get_data(as_text=True)
+
+
+def test_first_checkout_starts_from_the_account_details(app, client, product_ids):
+    from tests.test_cart_service import add_to_cart
+
+    with app.app_context():
+        user = User(first_name="Ira", last_name="Sen", email="ira@example.com", cell_number="5550001111")
+        user.set_password("ira-password-1")
+        db.session.add(user)
+        db.session.commit()
+    login(client, "ira@example.com", "ira-password-1")
+    pid, small, _ = product_ids
+    with app.app_context():
+        add_to_cart(client, pid, small)
+    html = client.get("/checkout/order").get_data(as_text=True)
+    assert 'value="Ira"' in html and 'value="ira@example.com"' in html and 'value="5550001111"' in html

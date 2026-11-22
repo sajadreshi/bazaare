@@ -1,4 +1,5 @@
 from flask import abort, flash, jsonify, redirect, render_template, request, url_for
+from flask_login import current_user
 from flask_wtf import FlaskForm
 
 from app.checkout import checkout
@@ -90,6 +91,16 @@ def order():
     cart = cart_service.get_cart()
     customer = cart.customer if cart else None
     shipping_form.fill_from(customer.shipping_address if customer else None)
+    if (
+        current_user.is_authenticated
+        and not shipping_form.is_submitted()
+        and not shipping_form.first_name.data
+    ):
+        # First checkout for a signed-in shopper: start from their account details.
+        shipping_form.first_name.data = current_user.first_name
+        shipping_form.last_name.data = current_user.last_name
+        shipping_form.email.data = current_user.email
+        shipping_form.phone.data = current_user.cell_number
     billing_form.fill_from(customer.billing_address if customer else None)
     delivery_form.fill_from(cart)
     status = checkout_service.checkout_status(cart)

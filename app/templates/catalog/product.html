@@ -4,7 +4,7 @@
 {% block header %}{% include 'common/header.html' %}{% endblock %}
 {% block content %}
 {% if cart and cart.pending_items %}
-<section class="mini_cart_section">{% include 'catalog/minishoppingcart.html' %}</section>
+{% include "catalog/minishoppingcart.html" %}
 {% endif %}
 <section class="bz-section">
   {% if product %}

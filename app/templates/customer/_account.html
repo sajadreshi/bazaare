@@ -1,0 +1,35 @@
+{% extends 'common/layout.html' %}
+{# Frame for the signed-in account pages: greeting, section navigation and the page itself. #}
+{% from 'checkout/_macros.html' import input, checkbox, address_form, address_lines, money with context %}
+{% from 'common/_icons.html' import icon %}
+{% block header %}{% include 'common/header.html' %}{% endblock %}
+{% block content %}
+{% set nav = [
+  ('orders', url_for('customer.orders'), 'Orders', 'bag'),
+  ('profile', url_for('customer.profile'), 'Your details', 'user'),
+  ('addresses', url_for('customer.shipping'), 'Addresses', 'home'),
+  ('security', url_for('customer.security'), 'Password', 'lock'),
+] %}
+<section class="bz-section bz-account">
+  <header class="bz-account__head">
+    <div>
+      <p class="bz-eyebrow">Your account</p>
+      <h1 class="bz-title">Hello, {{ current_user.first_name }}</h1>
+      <p class="bz-muted">{{ current_user.email }}</p>
+    </div>
+    <a class="bz-btn bz-btn--ghost" href="{{ url_for('auth.logout') }}">Sign out</a>
+  </header>
+  <div class="bz-account__grid">
+    <nav class="bz-account__nav" aria-label="Account">
+      {% for key, url, label, glyph in nav %}
+      <a href="{{ url }}" class="{{ 'is-active' if page == key }}" {{ 'aria-current=page' if page == key }}>{{ icon(glyph, 18) }} {{ label }}</a>
+      {% endfor %}
+      <a href="{{ url_for('catalog.wishlist') }}">{{ icon('heart', 18) }} Wishlist</a>
+    </nav>
+    <div class="bz-account__main">
+      {% block account %}{% endblock %}
+    </div>
+  </div>
+</section>
+{% endblock %}
+{% block footer %}{% include 'common/footer.html' %}{% endblock %}
