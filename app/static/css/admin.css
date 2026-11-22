@@ -289,3 +289,55 @@ a:hover { color: #f1d595; }
 .bz-upload input[type="file"]::file-selector-button { background: #2a241a; color: var(--bz-gold-2); border: 1px solid #3b3326; border-radius: 6px; padding: 5px 12px; margin-right: 8px; cursor: pointer; }
 .bz-lookup { display: flex; flex-direction: column; gap: 2px; margin-top: 14px; padding: 12px 14px; border-radius: 12px; background: #1b1915; border: 1px solid var(--bz-line); }
 .bz-lookup strong { font-size: 1.6rem; color: var(--bz-gold-2); }
+
+/* Date/time picker (bootstrap-daterangepicker, used by date fields and filters) in the dark theme */
+.daterangepicker { background: var(--bz-panel) !important; border: 1px solid var(--bz-line) !important; color: var(--bz-text) !important; box-shadow: 0 18px 40px rgba(0, 0, 0, .5) !important; border-radius: 12px !important; }
+.daterangepicker::before { border-bottom-color: var(--bz-line) !important; }
+.daterangepicker::after { border-bottom-color: var(--bz-panel) !important; }
+.daterangepicker.drop-up::before { border-top-color: var(--bz-line) !important; }
+.daterangepicker.drop-up::after { border-top-color: var(--bz-panel) !important; }
+.daterangepicker .calendar-table, .daterangepicker .drp-calendar { background: var(--bz-panel) !important; border-color: var(--bz-panel) !important; }
+.daterangepicker .calendar-table table { color: var(--bz-text) !important; }
+.daterangepicker th.month { color: #fbf3e2 !important; font-weight: 600 !important; }
+.daterangepicker th { color: var(--bz-muted) !important; }
+.daterangepicker .calendar-table .next span, .daterangepicker .calendar-table .prev span { border-color: var(--bz-gold-2) !important; }
+.daterangepicker td.available:hover, .daterangepicker th.available:hover { background: #2a241a !important; color: var(--bz-gold-2) !important; }
+.daterangepicker td.off, .daterangepicker td.off.in-range, .daterangepicker td.off.start-date, .daterangepicker td.off.end-date { background: transparent !important; color: #5c564b !important; }
+.daterangepicker td.in-range { background: #2a241a !important; color: var(--bz-text) !important; }
+.daterangepicker td.active, .daterangepicker td.active:hover { background: var(--bz-gold) !important; border-color: transparent !important; color: #1a1408 !important; font-weight: 600 !important; }
+.daterangepicker td.disabled, .daterangepicker option.disabled { color: #4a453c !important; }
+.daterangepicker select.hourselect, .daterangepicker select.minuteselect, .daterangepicker select.secondselect, .daterangepicker select.ampmselect,
+.daterangepicker select.monthselect, .daterangepicker select.yearselect { background: #0f0e0d !important; color: var(--bz-text) !important; border: 1px solid var(--bz-line) !important; border-radius: 6px !important; padding: 2px 4px !important; color-scheme: dark !important; }
+.daterangepicker .drp-buttons { border-top-color: var(--bz-line) !important; }
+.daterangepicker .drp-selected { color: var(--bz-muted) !important; }
+.daterangepicker .drp-buttons .btn-primary, .daterangepicker .applyBtn { background: var(--bz-gold) !important; border-color: var(--bz-gold) !important; color: #1a1408 !important; }
+.daterangepicker .drp-buttons .btn-default, .daterangepicker .cancelBtn { background: transparent !important; border: 1px solid var(--bz-line) !important; color: var(--bz-text) !important; }
+.daterangepicker .ranges li { color: var(--bz-text) !important; }
+.daterangepicker .ranges li:hover { background: #2a241a !important; }
+.daterangepicker .ranges li.active { background: var(--bz-gold) !important; color: #1a1408 !important; }
+.daterangepicker .calendar-time { color: var(--bz-muted) !important; }
+/* Native date inputs and other controls follow the dark theme too. */
+.admin-form input, .admin-form select { color-scheme: dark; }
+.daterangepicker .calendar-table td, .daterangepicker .calendar-table th { background: transparent !important; color: inherit; }
+.daterangepicker .calendar-table td.available { color: var(--bz-text) !important; }
+.daterangepicker .calendar-table td.active, .daterangepicker .calendar-table td.active:hover { background: var(--bz-gold) !important; color: #1a1408 !important; }
+.daterangepicker .calendar-table td.off { color: #5c564b !important; }
+.daterangepicker .calendar-table td.available:hover { background: #2a241a !important; color: var(--bz-gold-2) !important; }
+.daterangepicker .calendar-table .prev, .daterangepicker .calendar-table .next { color: var(--bz-gold-2) !important; }
+.daterangepicker .calendar-table .prev .fa, .daterangepicker .calendar-table .next .fa,
+.daterangepicker .calendar-table .prev .glyphicon, .daterangepicker .calendar-table .next .glyphicon { font-family: inherit !important; font-style: normal; }
+.daterangepicker .calendar-table .prev .fa::before, .daterangepicker .calendar-table .prev .glyphicon::before { content: "‹" !important; font-size: 1.2rem; }
+.daterangepicker .calendar-table .next .fa::before, .daterangepicker .calendar-table .next .glyphicon::before { content: "›" !important; font-size: 1.2rem; }
+/* Older daterangepicker markup (.calendar-date) bundled with Flask-Admin */
+.daterangepicker .calendar-date { background: var(--bz-panel) !important; border-color: var(--bz-line) !important; }
+.daterangepicker .calendar-date td, .daterangepicker .calendar-date th { background: transparent !important; color: var(--bz-text) !important; }
+.daterangepicker .calendar-date th { color: var(--bz-muted) !important; }
+.daterangepicker .calendar-date td.off { color: #5c564b !important; }
+.daterangepicker .calendar-date td.available:hover, .daterangepicker .calendar-date th.available:hover { background: #2a241a !important; color: var(--bz-gold-2) !important; }
+.daterangepicker .calendar-date td.active, .daterangepicker .calendar-date td.active:hover { background: var(--bz-gold) !important; color: #1a1408 !important; }
+.daterangepicker .calendar-date td.in-range { background: #2a241a !important; }
+.daterangepicker .calendar-date .prev, .daterangepicker .calendar-date .next { color: var(--bz-gold-2) !important; }
+.daterangepicker .calendar-date .prev i, .daterangepicker .calendar-date .next i { font-family: inherit !important; font-style: normal; }
+.daterangepicker .calendar-date .prev i::before { content: "‹" !important; font-size: 1.3rem; }
+.daterangepicker .calendar-date .next i::before { content: "›" !important; font-size: 1.3rem; }
+.daterangepicker .calendar-date select { background: #0f0e0d !important; color: var(--bz-text) !important; border: 1px solid var(--bz-line) !important; border-radius: 6px; color-scheme: dark; }
