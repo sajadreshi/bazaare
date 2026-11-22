@@ -639,7 +639,22 @@ class RoleView(SecureModelView):
 
 
 class HolidayView(SecureModelView):
+    """Days the shop doesn't ship. Delivery estimates (checkout, order pages) skip them, like weekends."""
+
     column_display_pk = False
+    column_list = ("holiday_date",)
+    column_labels = {"holiday_date": "Date"}
+    column_default_sort = ("holiday_date", False)
+    column_formatters = {
+        "holiday_date": lambda v, c, m, n: f"{m.holiday_date:%A %d %B %Y}" if m.holiday_date else ""
+    }
+    form_args = {
+        "holiday_date": {
+            "label": "Date",
+            "description": "A day you don't ship. Delivery estimates skip it, like weekends.",
+        }
+    }
+    list_template = "admin/holiday_list.html"
 
 
 def order_customer(order):
