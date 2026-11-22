@@ -105,4 +105,3 @@ class StockView(AdminOnlyMixin, BaseView):
         return self.render(
             "admin/stock.html", rows=rows, show=show, counts=counts, settings=inventory.settings()
         )
-
