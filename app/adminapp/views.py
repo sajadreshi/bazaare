@@ -1,4 +1,5 @@
 import re
+from decimal import Decimal
 
 from flask import abort, flash, redirect, request, url_for
 from flask_admin import expose
@@ -16,6 +17,7 @@ from app.models import (
     ASSOCIATION_TYPES,
     ORDER_STATUSES,
     Category,
+    Coupon,
     Order,
     Product,
     ProductAssociation,
@@ -781,3 +783,110 @@ class OrderView(SecureModelView):
             db.session.commit()
             flash(f"{order.number} moved from {previous.title()} to {status.title()}.", "success")
         return redirect(self.get_url(".details_view", id=order.id))
+
+
+def _coupon_offer(view, context, model, name):
+    return Markup("<strong>%s</strong>") % model.offer
+
+
+def _coupon_conditions(view, context, model, name):
+    parts = []
+    if model.min_order:
+        parts.append(f"bag ${model.min_order:.2f}+")
+    if model.starts_at or model.ends_at:
+        start = f"{model.starts_at:%d %b}" if model.starts_at else "now"
+        end = f"{model.ends_at:%d %b %Y}" if model.ends_at else "no end"
+        parts.append(f"{start} → {end}")
+    return ", ".join(parts) or Markup('<span class="bz-muted">any order</span>')
+
+
+def _coupon_uses(view, context, model, name):
+    limit = f" / {model.max_uses}" if model.max_uses is not None else ""
+    return f"{model.times_used}{limit}"
+
+
+def _coupon_state(view, context, model, name):
+    from app.services import promotions
+
+    reason = promotions.problem(model, merchandise=Decimal("1e9"))
+    if reason is None:
+        return Markup('<span class="bz-dot is-on">Live</span>')
+    label = "Off" if not model.is_active else reason.replace(f"{model.code} ", "").rstrip(".").capitalize()
+    return Markup('<span class="bz-dot">%s</span>') % label
+
+
+class CouponView(SecureModelView):
+    """Coupon codes shoppers type at checkout: % or $ off, with optional minimum, dates and use limit."""
+
+    column_list = ("code", "offer", "conditions", "uses", "state", "description")
+    column_labels = {
+        "offer": "Gives",
+        "conditions": "When",
+        "uses": "Used",
+        "state": "Status",
+        "description": "Note",
+    }
+    column_formatters = {
+        "offer": _coupon_offer,
+        "conditions": _coupon_conditions,
+        "uses": _coupon_uses,
+        "state": _coupon_state,
+    }
+    column_searchable_list = ("code", "description")
+    column_default_sort = ("created_at", True)
+    form_columns = (
+        "code",
+        "kind",
+        "value",
+        "min_order",
+        "starts_at",
+        "ends_at",
+        "max_uses",
+        "is_active",
+        "description",
+    )
+    form_overrides = {"kind": SelectField}
+    form_args = {
+        "code": {
+            "label": "Code",
+            "description": "What shoppers type, e.g. DIWALI15. Letters and numbers; case doesn't matter.",
+            "validators": [DataRequired(), Length(max=40)],
+        },
+        "kind": {
+            "label": "Type",
+            "choices": [("PERCENT", "Percentage off the order"), ("AMOUNT", "Dollar amount off the order")],
+        },
+        "value": {
+            "label": "Amount",
+            "description": "15 = 15% off (percentage) or $15 off (dollar amount).",
+            "validators": [DataRequired(), NumberRange(min=0.01)],
+        },
+        "min_order": {
+            **_optional_decimal("Minimum bag ($)"),
+            "description": "Optional. Only works when the bag is at least this.",
+        },
+        "starts_at": {"label": "Starts", "description": "Optional. Leave empty to start now."},
+        "ends_at": {"label": "Ends", "description": "Optional. Leave empty for no end date."},
+        "max_uses": {
+            "label": "Total uses allowed",
+            "description": "Optional. e.g. 100 for the first 100 orders. Empty = unlimited.",
+            "validators": [Optional(), NumberRange(min=1)],
+        },
+        "is_active": {"label": "Active", "default": True},
+        "description": {
+            "label": "Note (only for you)",
+            "description": "e.g. Diwali newsletter, Instagram giveaway.",
+        },
+    }
+
+    def on_model_change(self, form, model, is_created):
+        model.code = re.sub(r"[^A-Z0-9_-]", "", (model.code or "").upper())
+        if not model.code:
+            raise ValidationError("The code needs letters or numbers.")
+        clash = _taken(Coupon, "code", model.code, exclude_id=model.id)
+        if clash is not None:
+            raise ValidationError(f"There's already a coupon called {model.code}.")
+        if model.kind == "PERCENT" and model.value > 100:
+            raise ValidationError("A percentage can't be more than 100.")
+        if model.starts_at and model.ends_at and model.ends_at <= model.starts_at:
+            raise ValidationError("The end date must be after the start date.")

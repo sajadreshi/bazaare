@@ -4,8 +4,8 @@ from flask import flash, redirect, url_for
 from flask_admin import BaseView, expose
 from flask_wtf import FlaskForm
 from sqlalchemy import func
-from wtforms import IntegerField
-from wtforms.validators import InputRequired, NumberRange
+from wtforms import BooleanField, DecimalField, IntegerField
+from wtforms.validators import InputRequired, NumberRange, Optional
 
 from app.adminapp.security import AdminOnlyMixin
 from app.extension import db
@@ -217,3 +217,31 @@ class TaxesView(AdminOnlyMixin, BaseView):
             state_names=names,
             addable=[(code, name) for code, name in US_STATES if code not in {s.state for s in states}],
         )
+
+
+class PromotionSettingsForm(FlaskForm):
+    free_shipping_over = DecimalField(
+        "Free standard shipping when the bag reaches ($)",
+        places=2,
+        validators=[Optional(), NumberRange(min=0, max=100000)],
+    )
+    coupons_enabled = BooleanField("Show the “Have a coupon code?” box at checkout")
+
+
+class PromotionSettingsView(AdminOnlyMixin, BaseView):
+    """Promotions > Free shipping & coupons: the free-shipping amount and the coupon box switch."""
+
+    @expose("/", methods=["GET", "POST"])
+    def index(self):
+        settings = inventory.settings()
+        form = PromotionSettingsForm(obj=settings)
+        if form.validate_on_submit():
+            form.populate_obj(settings)
+            inventory.forget_settings()
+            db.session.commit()
+            flash(
+                "Promotion settings saved. Open bags are re-priced the next time they're viewed.", "success"
+            )
+            return redirect(url_for(".index"))
+        db.session.commit()
+        return self.render("admin/promotion_settings.html", form=form, settings=settings)

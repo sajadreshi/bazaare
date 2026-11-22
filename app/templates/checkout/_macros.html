@@ -51,13 +51,13 @@
 {% endmacro %}
 
 {# Totals for a cart or an order (both have the same total_* fields; the grand total differs). #}
-{% macro totals(subtotal, shipping, taxes, discount, total, shipping_label='Shipping', count=None, tax_label='Sales tax', tax_note=None) %}
+{% macro totals(subtotal, shipping, taxes, discount, total, shipping_label='Shipping', count=None, tax_label='Sales tax', tax_note=None, discount_label='Discount') %}
 <dl class="bz-totals">
   <div><dt>Subtotal{% if count %} ({{ count }} item{{ 's' if count != 1 }}){% endif %}</dt><dd>{{ money(subtotal) }}</dd></div>
+  {% if discount %}<div class="is-discount"><dt>{{ discount_label }}</dt><dd>−{{ money(discount) }}</dd></div>{% endif %}
   <div><dt>{{ shipping_label }}</dt><dd>{{ 'Free' if not shipping else money(shipping) }}</dd></div>
   {% if taxes %}<div><dt>{{ tax_label }}</dt><dd>{{ money(taxes) }}</dd></div>
   {% elif tax_note %}<div class="is-note"><dt>Sales tax</dt><dd>{{ tax_note }}</dd></div>{% endif %}
-  {% if discount %}<div class="is-discount"><dt>Discount</dt><dd>−{{ money(discount) }}</dd></div>{% endif %}
   <div class="bz-totals__grand"><dt>Total</dt><dd>{{ money(total) }}</dd></div>
 </dl>
 {% endmacro %}

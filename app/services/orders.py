@@ -26,6 +26,7 @@ def create_order_from_cart(cart):
         else None,
         tax_rate=cart.tax_rate,
         tax_region=cart.tax_region,
+        coupon_code=cart.coupon.code if cart.coupon is not None and cart.total_discount else None,
         shipping_address_id=customer.shipping_address_id if customer else None,
         billing_address_id=customer.billing_address_id if customer else None,
     )

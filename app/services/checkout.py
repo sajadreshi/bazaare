@@ -5,6 +5,7 @@ from dataclasses import dataclass
 
 from app.extension import db
 from app.models import Address, Cart, Payment, utcnow
+from app.services import promotions
 from app.services.cart import get_cart, recalculate
 from app.services.customers import get_or_create_current_customer
 from app.services.orders import create_order_from_cart
@@ -85,6 +86,26 @@ def use_shipping_for_billing():
     return True
 
 
+def apply_coupon(code):
+    """Put a coupon code on the current cart. Returns (ok, message)."""
+    cart = get_cart()
+    if cart is None or not cart.pending_items:
+        return False, "Your bag is empty."
+    ok, message = promotions.apply_code(cart, code)
+    if ok:
+        recalculate(cart)
+        db.session.commit()
+    return ok, message
+
+
+def remove_coupon():
+    cart = get_cart()
+    if cart is not None and cart.coupon_id is not None:
+        cart.coupon = None
+        recalculate(cart)
+        db.session.commit()
+
+
 def save_shipping_method(code):
     """Choose Standard/Express for the current cart. Returns False for an unknown method."""
     cart = get_cart()
@@ -129,6 +150,10 @@ def place_order(payment_method):
             db.session.rollback()
             return PlaceOrderResult(error="This order has already been placed.")
         recalculate(cart)
+        coupon_error = promotions.redeem(cart)
+        if coupon_error:
+            db.session.rollback()
+            return PlaceOrderResult(error=coupon_error)
         take_for_cart(cart)
         payment = take_payment(payment_method, cart.total_cart)
         if not payment.approved:

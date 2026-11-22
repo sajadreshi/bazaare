@@ -1,0 +1,32 @@
+{% extends 'admin/master.html' %}
+{% from 'admin/_editor.html' import field with context %}
+{% block page_title %}{% endblock %}
+{% block body %}
+<form method="post" class="bz-editor" novalidate>
+  {{ form.hidden_tag() }}
+  <div class="bz-editor__head">
+    <div>
+      <h1>Free shipping &amp; coupons</h1>
+      <p class="bz-muted">Shop-wide promotion settings. Create codes under Promotions › <a href="{{ url_for('coupon.index_view') }}">Coupon codes</a>.</p>
+    </div>
+  </div>
+  <div class="bz-editor__grid">
+    <div class="bz-editor__main">
+      <section class="bz-panel">
+        <h2>Free shipping</h2>
+        {{ field(form.free_shipping_over, 'Leave empty to always charge for shipping. It applies to Standard shipping; Express is always charged. It’s judged on the bag after any coupon.') }}
+        <p class="bz-muted">Shoppers see “You're $X away from free shipping” in the bag and the add-to-bag panel.</p>
+      </section>
+      <section class="bz-panel">
+        <h2>Coupon codes at checkout</h2>
+        {{ field(form.coupons_enabled, 'Untick to hide the coupon box. Codes already applied to a bag keep working until the order is placed.') }}
+      </section>
+    </div>
+    <aside class="bz-editor__side">
+      <section class="bz-panel bz-editor__save">
+        <button type="submit" class="btn bz-btn-gold btn-block">Save</button>
+      </section>
+    </aside>
+  </div>
+</form>
+{% endblock %}

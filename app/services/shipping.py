@@ -15,10 +15,21 @@ class ShippingMethod:
     price: Decimal
     min_days: int  # business days after the order is placed
     max_days: int
-    free_over: Decimal | None = None  # merchandise subtotal at or above which shipping is free
+    free_eligible: bool = False  # free when the bag reaches the shop's free-shipping amount
+
+    @property
+    def free_over(self):
+        """The bag total at or above which this method is free (Admin > Promotions), or None."""
+        if not self.free_eligible:
+            return None
+        from app.services.inventory import settings
+
+        value = settings().free_shipping_over
+        return Decimal(value) if value is not None else None
 
     def charge(self, merchandise):
-        if self.free_over is not None and merchandise >= self.free_over:
+        free_over = self.free_over
+        if free_over is not None and merchandise >= free_over:
             return Decimal("0.00")
         return self.price
 
@@ -33,7 +44,7 @@ class ShippingMethod:
 
 # Placeholder prices: confirm with the client.
 METHODS = {
-    "STANDARD": ShippingMethod("STANDARD", "Standard", Decimal("5.99"), 3, 5, free_over=Decimal("50.00")),
+    "STANDARD": ShippingMethod("STANDARD", "Standard", Decimal("5.99"), 3, 5, free_eligible=True),
     "EXPRESS": ShippingMethod("EXPRESS", "Express", Decimal("14.99"), 1, 2),
 }
 DEFAULT_METHOD = "STANDARD"
