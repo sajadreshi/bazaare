@@ -558,7 +558,7 @@ img.is-missing { object-fit: contain !important; background: var(--bz-paper); op
 .bz-drawer.is-open .bz-drawer__backdrop { opacity: 1; }
 .bz-drawer.is-open .bz-drawer__panel { transform: none; }
 @media (prefers-reduced-motion: reduce) { .bz-drawer__backdrop, .bz-drawer__panel { transition: none; } }
-body.bz-drawer-open { overflow: hidden; }
+html.bz-drawer-open { overflow: hidden; }
 .bz-drawer__head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 18px 20px; background: var(--bz-ink); color: #f3ede2; }
 .bz-drawer__head h2 { display: flex; align-items: center; gap: 10px; margin: 0; font-family: var(--bz-serif); font-size: 1.45rem; font-weight: 600; color: #fbf6ec; }
 .bz-drawer__tick { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 50%; background: var(--bz-gold-2); color: var(--bz-ink); }

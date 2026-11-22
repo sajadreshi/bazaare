@@ -41,15 +41,30 @@
   if (drawer) {
     var panel = drawer.querySelector('.bz-drawer__panel');
     var opener = document.activeElement;
+    // Locking the page scroll hides the scrollbar, which would shift the page sideways;
+    // pad the page by the scrollbar's width while the panel is open so nothing moves.
+    var lockScroll = function () {
+      var gap = window.innerWidth - document.documentElement.clientWidth;
+      if (gap > 0) {
+        document.body.style.paddingRight = gap + 'px';
+        document.querySelectorAll('.bz-header').forEach(function (h) { h.style.paddingRight = gap + 'px'; });
+      }
+      document.documentElement.classList.add('bz-drawer-open');
+    };
+    var unlockScroll = function () {
+      document.documentElement.classList.remove('bz-drawer-open');
+      document.body.style.paddingRight = '';
+      document.querySelectorAll('.bz-header').forEach(function (h) { h.style.paddingRight = ''; });
+    };
     var close = function () {
       drawer.classList.remove('is-open');
-      document.body.classList.remove('bz-drawer-open');
+      unlockScroll();
       setTimeout(function () { drawer.hidden = true; }, 250);
       if (opener && opener.focus) opener.focus();
     };
     setTimeout(function () {
       drawer.classList.add('is-open');
-      document.body.classList.add('bz-drawer-open');
+      lockScroll();
       panel.focus({ preventScroll: true });
     }, 30);
     drawer.querySelectorAll('[data-bz-drawer-close]').forEach(function (el) { el.addEventListener('click', close); });
