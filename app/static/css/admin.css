@@ -348,3 +348,28 @@ a:hover { color: #f1d595; }
 .bz-email-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
 .bz-email-list a { display: block; padding: 10px 14px; border: 1px solid var(--bz-line); border-radius: 10px; color: var(--bz-text); }
 .bz-email-list a:hover { border-color: var(--bz-gold); color: var(--bz-gold-2); text-decoration: none; }
+
+/* Top menu: calmer, evenly spaced, current section underlined in gold */
+.navbar.bg-dark { padding: 8px 18px; }
+.navbar-dark .navbar-nav .nav-link { font-size: .92rem; letter-spacing: .01em; padding: 8px 11px !important; border-radius: 8px; position: relative; color: #cfc6b4; }
+.navbar-dark .navbar-nav .nav-link:hover { background: #1f1c17; color: var(--bz-gold-2); }
+.navbar-dark .navbar-nav .active > .nav-link { color: var(--bz-gold-2); }
+.navbar-dark .navbar-nav .active > .nav-link { background-image: linear-gradient(var(--bz-gold), var(--bz-gold)); background-repeat: no-repeat; background-size: calc(100% - 22px) 2px; background-position: 11px calc(100% - 3px); }
+.navbar .dropdown-toggle::after { border-top-width: .28em; border-left-width: .28em; border-right-width: .28em; margin-left: .35em; vertical-align: .18em; opacity: .55; }
+.navbar .dropdown-menu { padding: 6px; border-radius: 12px; margin-top: 6px; box-shadow: 0 18px 40px rgba(0, 0, 0, .45); min-width: 200px; }
+.navbar .dropdown-item { border-radius: 8px; padding: 8px 12px; font-size: .9rem; }
+.navbar .dropdown-item.active, .navbar .dropdown-item:active { background: #2a241a; color: var(--bz-gold-2); }
+.navbar-nav.navbar-right .nav-link, .navbar-nav.ml-auto .nav-link { color: var(--bz-muted); font-size: .85rem; }
+.bz-admin-brand span { font-size: 1.15rem; }
+.bz-admin-brand { margin-right: 18px; }
+
+/* Keep the whole menu on one line on laptop screens */
+@media (min-width: 1200px) { body > .container, .navbar ~ .container, .container { max-width: 1380px; } }
+@media (min-width: 992px) {
+  .navbar-expand-lg .navbar-collapse { flex-wrap: nowrap; }
+  .navbar-expand-lg .navbar-nav { flex-wrap: nowrap; white-space: nowrap; }
+  .navbar-expand-lg .navbar-nav.navbar-right, .navbar-expand-lg .navbar-nav.ml-auto { flex-direction: row; gap: 2px; }
+}
+.navbar-nav.navbar-right { display: flex; flex-direction: row; align-items: center; gap: 4px; margin-left: auto; }
+.navbar-nav.navbar-right > li > .nav-link { color: var(--bz-muted) !important; font-size: .85rem; }
+.navbar-nav.navbar-right > li > .nav-link:hover { color: var(--bz-gold-2) !important; }
