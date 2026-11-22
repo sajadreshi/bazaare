@@ -8,7 +8,7 @@ from sqlalchemy import func
 
 from app.extension import db
 from app.models import Category, Order, OrderItem, Product, User, Variant, utcnow
-from app.services import inventory
+from app.services import inventory, tax
 from app.services.catalog import category_products
 
 ZERO = Decimal("0.00")
@@ -77,6 +77,8 @@ def _catalog_todos():
     ]
     if low:
         todos.append((f"Running low ({alert} or fewer left to sell)", len(low), "/admin/stock/?show=low"))
+    for state in tax.stale_states():
+        todos.append((f"Update the {state.state} sales tax rates (monthly)", 1, "/admin/taxes/"))
     menu = Category.query.filter(Category.is_active.is_(True), Category.show_in_menu.is_(True))
     empty = [c.name for c in menu if c.max_price is None and not category_products(c)]
     if empty:

@@ -1,0 +1,117 @@
+{% extends 'admin/master.html' %}
+{% block page_title %}{% endblock %}
+{% block body %}
+{% macro pct(rate) %}{{ ('%.4f' | format((rate or 0) * 100)).rstrip('0').rstrip('.') }}{% endmacro %}
+<div class="bz-editor">
+  <div class="bz-editor__head">
+    <div>
+      <h1>Sales tax</h1>
+      <p class="bz-muted">Tax is added at checkout from the shipping address's ZIP code, on the merchandise and, where the state taxes it, on shipping.</p>
+    </div>
+  </div>
+
+  <div class="bz-editor__grid">
+    <div class="bz-editor__main">
+      <form method="post" class="bz-panel">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="action" value="save">
+        <h2>Where you collect tax</h2>
+        <p class="bz-muted bz-panel__intro">Only states ticked “Collect” get tax. Usually that's your home state, plus any state where your sales pass its threshold. Check with your accountant.</p>
+        <table class="table bz-table">
+          <thead><tr><th>State</th><th>Collect</th><th>Tax shipping</th><th>Standard rate</th><th>ZIP rates</th></tr></thead>
+          <tbody>
+          {% for s in states %}
+          <tr>
+            <td><strong>{{ s.state }}</strong> <small class="bz-muted">{{ state_names.get(s.state, '') }}</small></td>
+            <td><input type="checkbox" name="collect-{{ s.state }}" value="y" {{ 'checked' if s.collect }}></td>
+            <td><input type="checkbox" name="shipping-{{ s.state }}" value="y" {{ 'checked' if s.tax_shipping }}></td>
+            <td><div class="bz-pct"><input class="form-control" name="fallback-{{ s.state }}" value="{{ pct(s.fallback_rate) }}" inputmode="decimal"><span>%</span></div>
+              <small class="bz-muted">for ZIPs not in the table</small></td>
+            <td>
+              {% if zip_counts.get(s.state) %}{{ zip_counts[s.state] }} ZIPs<br><small class="bz-muted">updated {{ s.rates_updated_at.strftime('%d %b %Y') if s.rates_updated_at else '?' }}</small>
+              {% else %}<span class="bz-pill bz-pill--warn">none yet</span>{% endif %}
+              {% if s.collect and s.state in stale and zip_counts.get(s.state) %}<br><span class="bz-pill bz-pill--warn">over a month old</span>{% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+        <div class="bz-two">
+          <div class="bz-field">
+            <label for="add_state">Add a state</label>
+            <select class="form-control" id="add_state" name="add_state">
+              <option value="">Choose…</option>
+              {% for code, name in addable %}<option value="{{ code }}">{{ name }}</option>{% endfor %}
+            </select>
+          </div>
+          <div class="bz-field" style="align-self:end"><button type="submit" class="btn bz-btn-gold">Save</button></div>
+        </div>
+      </form>
+
+      <form method="post" enctype="multipart/form-data" class="bz-panel">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="action" value="upload">
+        <h2>Monthly rate update</h2>
+        <ol class="bz-steps-list">
+          <li>Download the latest free rate table for each state you collect in from
+            <a href="https://www.avalara.com/taxrates/en/download-tax-tables.html" target="_blank" rel="noopener">Avalara's tax rate tables ↗</a> (a CSV, updated monthly).</li>
+          <li>Upload it here. It replaces that state's ZIP rates.</li>
+        </ol>
+        <div class="bz-upload">
+          <input type="file" name="rates" accept=".csv,text/csv">
+          <button type="submit" class="btn bz-btn-outline">Upload rates</button>
+        </div>
+        <small class="bz-muted">Other CSVs work too if they have <code>zip</code>, <code>state</code> and <code>rate</code> columns (rate as 0.08625 or 8.625).</small>
+      </form>
+
+      <section class="bz-panel">
+        <h2>Tax collected</h2>
+        {% if report %}
+        <table class="table bz-table">
+          <thead><tr><th>Month</th><th>State</th><th class="text-right">Orders</th><th class="text-right">Merchandise</th><th class="text-right">Shipping</th><th class="text-right">Tax collected</th></tr></thead>
+          <tbody>
+          {% for year, month, state, orders, merch, ship, taxes, ship_tax in report %}
+          <tr>
+            <td>{{ '%04d-%02d' | format(year | int, month | int) }}</td>
+            <td>{{ state }}</td>
+            <td class="text-right">{{ orders }}</td>
+            <td class="text-right">${{ '%.2f' | format(merch or 0) }}</td>
+            <td class="text-right">${{ '%.2f' | format(ship or 0) }}</td>
+            <td class="text-right"><strong>${{ '%.2f' | format(taxes or 0) }}</strong>{% if ship_tax %}<br><small class="bz-muted">${{ '%.2f' | format(ship_tax) }} on shipping</small>{% endif %}</td>
+          </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+        <p class="bz-muted">Cancelled orders aren't counted. Use this when filing your sales tax returns.</p>
+        {% else %}
+        <p class="bz-muted">No taxed orders yet.</p>
+        {% endif %}
+      </section>
+    </div>
+
+    <aside class="bz-editor__side">
+      <form method="get" class="bz-panel">
+        <h2>Check a ZIP</h2>
+        <div class="bz-field">
+          <label for="zip">ZIP code</label>
+          <input class="form-control" id="zip" name="zip" value="{{ lookup_zip }}" placeholder="e.g. 11530" inputmode="numeric">
+        </div>
+        <button type="submit" class="btn bz-btn-outline btn-block">Look up</button>
+        {% if lookup %}
+        {% set state, q = lookup %}
+        <div class="bz-lookup">
+          {% if q.applies %}
+          <strong>{{ q.percent }}</strong>
+          <span>{{ q.region }}</span>
+          <small class="bz-muted">{{ 'Shipping is taxed too.' if q.tax_shipping else 'Shipping is not taxed.' }}</small>
+          {% else %}
+          <strong>No tax</strong>
+          <span>The shop doesn't collect in {{ state }}.</span>
+          {% endif %}
+        </div>
+        {% endif %}
+      </form>
+    </aside>
+  </div>
+</div>
+{% endblock %}

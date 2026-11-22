@@ -4,6 +4,7 @@ from flask_wtf import FlaskForm
 
 from app.checkout import checkout
 from app.checkout.forms import BillingForm, PlaceOrderForm, ShippingForm, ShippingMethodForm
+from app.extension import db
 from app.services import cart as cart_service
 from app.services import catalog as catalog_service
 from app.services import checkout as checkout_service
@@ -31,6 +32,13 @@ def free_shipping_gap(cart):
 STEPS = ("shipping", "billing")
 
 
+def _refresh_totals(cart):
+    """Re-price the bag on view, so tax follows the current address and rates."""
+    if cart is not None and cart.pending_items:
+        cart_service.recalculate(cart)
+        db.session.commit()
+
+
 @checkout.route("/remove/<int:itemId>", methods=["POST"])
 def remove(itemId):
     cart_service.remove_item(itemId)
@@ -42,6 +50,7 @@ def shopcart():
     if request.method == "POST":
         cart_service.change_variant(request.form.get("itemId", type=int), request.form.get("size", type=int))
     cart = cart_service.get_cart()
+    _refresh_totals(cart)
     return render_template(
         "checkout/shopcart.html",
         cart=cart,
@@ -89,6 +98,7 @@ def order():
             return redirect(url_for("checkout.confirm", orderId=result.order.id))
 
     cart = cart_service.get_cart()
+    _refresh_totals(cart)
     customer = cart.customer if cart else None
     shipping_form.fill_from(customer.shipping_address if customer else None)
     if (

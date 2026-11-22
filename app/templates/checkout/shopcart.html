@@ -1,5 +1,5 @@
 {% extends 'common/layout.html' %}
-{% from 'checkout/_macros.html' import bag_line, totals, assurances, money with context %}
+{% from 'checkout/_macros.html' import bag_line, totals, assurances, money, tax_label with context %}
 {% from 'common/_icons.html' import icon %}
 {% block title %}Your bag{% endblock %}
 {% block header %}{% include 'common/header.html' %}{% endblock %}
@@ -35,7 +35,8 @@
     <aside class="bz-summary">
       <h2 class="bz-summary__title">Order summary</h2>
       {{ totals(cart.total_merchandise, cart.total_shipping, cart.total_taxes, cart.total_discount, cart.total_cart,
-                shipping_label='Shipping (' ~ shipping_method_for(cart.shipping_method).name ~ ')', count=items | length) }}
+                shipping_label='Shipping (' ~ shipping_method_for(cart.shipping_method).name ~ ')', count=items | length,
+                tax_label=tax_label(cart.tax_rate), tax_note=None if (cart.customer and cart.customer.shipping_address) else 'Calculated at checkout') }}
       <a class="bz-btn bz-btn--wide" href="{{ url_for('checkout.order') }}">{{ icon('lock', 18) }} Checkout</a>
       <p class="bz-summary__note">Shipping options and payment are chosen on the next step.</p>
       {{ assurances(free_over) }}

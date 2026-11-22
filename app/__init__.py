@@ -7,7 +7,7 @@ from flask_wtf.csrf import CSRFError
 from markupsafe import Markup
 
 from app.adminapp.auth import bp as admin_auth_bp
-from app.adminapp.settings import SettingsView, StockView
+from app.adminapp.settings import SettingsView, StockView, TaxesView
 from app.adminapp.views import (
     AttributesView,
     CarouselView,
@@ -132,6 +132,7 @@ def create_app(config_overrides=None):
     admin.add_view(HolidayView(Holiday, db, category="Settings", name="Shop holidays", endpoint="holiday"))
     admin.add_view(OrderView(Order, db, name="Orders", endpoint="order"))
     admin.add_view(SettingsView(name="Inventory", endpoint="settings", category="Settings"))
+    admin.add_view(TaxesView(name="Taxes", endpoint="taxes", category="Settings"))
     if not any(link.name == "Sign out" for link in admin.menu_links()):
         admin.add_link(MenuLink(name="View shop", url="/"))
         admin.add_link(MenuLink(name="Sign out", url="/admin/logout"))

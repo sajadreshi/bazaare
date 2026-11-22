@@ -3,6 +3,9 @@
 
 {% macro money(value) %}${{ '%.2f' | format(value or 0) }}{% endmacro %}
 
+{# "Sales tax (8.625%)" for a cart or order that has a tax rate. #}
+{% macro tax_label(rate) %}Sales tax{% if rate %} ({{ ('%.3f' | format(rate * 100)).rstrip('0').rstrip('.') }}%){% endif %}{% endmacro %}
+
 {# One line of the bag. `editable` adds the option picker and Remove. #}
 {% macro bag_line(item, editable=False) %}
 {% set product = item.product %}
@@ -48,11 +51,12 @@
 {% endmacro %}
 
 {# Totals for a cart or an order (both have the same total_* fields; the grand total differs). #}
-{% macro totals(subtotal, shipping, taxes, discount, total, shipping_label='Shipping', count=None) %}
+{% macro totals(subtotal, shipping, taxes, discount, total, shipping_label='Shipping', count=None, tax_label='Sales tax', tax_note=None) %}
 <dl class="bz-totals">
   <div><dt>Subtotal{% if count %} ({{ count }} item{{ 's' if count != 1 }}){% endif %}</dt><dd>{{ money(subtotal) }}</dd></div>
   <div><dt>{{ shipping_label }}</dt><dd>{{ 'Free' if not shipping else money(shipping) }}</dd></div>
-  {% if taxes %}<div><dt>Taxes</dt><dd>{{ money(taxes) }}</dd></div>{% endif %}
+  {% if taxes %}<div><dt>{{ tax_label }}</dt><dd>{{ money(taxes) }}</dd></div>
+  {% elif tax_note %}<div class="is-note"><dt>Sales tax</dt><dd>{{ tax_note }}</dd></div>{% endif %}
   {% if discount %}<div class="is-discount"><dt>Discount</dt><dd>−{{ money(discount) }}</dd></div>{% endif %}
   <div class="bz-totals__grand"><dt>Total</dt><dd>{{ money(total) }}</dd></div>
 </dl>
