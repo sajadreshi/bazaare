@@ -1,0 +1,231 @@
+{% extends 'admin/master.html' %}
+{% block title %}Reports · BazaarE’ admin{% endblock %}
+{% block page_title %}{% endblock %}
+{% block body %}
+{% macro money(v) %}${{ '{:,.2f}'.format(v or 0) }}{% endmacro %}
+{% macro change(pct) %}{% if pct is not none %}<b class="bz-chg {{ 'up' if pct >= 0 else 'down' }}">{{ '+' if pct >= 0 }}{{ pct }}%</b>{% endif %}{% endmacro %}
+{% set csv_url = url_for('.download', tab=tab, **query) %}
+<div class="bz-reports">
+  <header class="bz-editor__head">
+    <div>
+      <h1>Reports</h1>
+      <p class="bz-muted">{{ rng.label }} · New York time · placed, shipped and delivered orders</p>
+    </div>
+    <a class="btn bz-btn-outline" href="{{ csv_url }}">Download CSV ↓</a>
+  </header>
+
+  <form method="get" class="bz-range">
+    <input type="hidden" name="tab" value="{{ tab }}">
+    <select name="range" class="form-control" data-bz-range>
+      {% for key, label in presets.items() %}<option value="{{ key }}" {{ 'selected' if rng.preset == key }}>{{ label }}</option>{% endfor %}
+    </select>
+    <span class="bz-range__custom" {{ 'hidden' if rng.preset != 'custom' }}>
+      <input type="date" name="start" class="form-control" value="{{ rng.start.isoformat() }}" aria-label="From">
+      <span>to</span>
+      <input type="date" name="end" class="form-control" value="{{ rng.end.isoformat() }}" aria-label="To">
+    </span>
+    {% if tab == 'sales' %}
+    <select name="group" class="form-control">
+      {% for key, label in groups.items() %}<option value="{{ key }}" {{ 'selected' if rng.group == key }}>{{ label }}</option>{% endfor %}
+    </select>
+    {% endif %}
+    <button type="submit" class="btn bz-btn-gold">Show</button>
+  </form>
+
+  <nav class="bz-filter bz-report-tabs">
+    {% for key, label in tabs.items() %}
+    <a href="{{ url_for('.index', tab=key, **query) }}" class="{{ 'is-active' if tab == key }}">{{ label }}</a>
+    {% endfor %}
+  </nav>
+
+  {% if tab == 'sales' %}
+  {% set t = report.totals %}
+  <section class="bz-kpis">
+    <div class="bz-kpi"><span class="bz-kpi__label">Net sales</span><span class="bz-kpi__value">{{ money(t.net) }}</span>
+      <span class="bz-kpi__meta">{{ change(report.change('net')) }} vs previous period ({{ money(report.previous.net) }})</span></div>
+    <div class="bz-kpi"><span class="bz-kpi__label">Orders</span><span class="bz-kpi__value">{{ t.orders }}</span>
+      <span class="bz-kpi__meta">{{ change(report.change('orders')) }} · {{ t.items }} item{{ 's' if t.items != 1 }}</span></div>
+    <div class="bz-kpi"><span class="bz-kpi__label">Average order</span><span class="bz-kpi__value">{{ money(t.average) }}</span>
+      <span class="bz-kpi__meta">{{ change(report.change('average')) }} incl. shipping &amp; tax</span></div>
+    <div class="bz-kpi"><span class="bz-kpi__label">Customers paid</span><span class="bz-kpi__value">{{ money(t.total) }}</span>
+      <span class="bz-kpi__meta">{{ report.cancelled }} cancelled ({{ money(report.cancelled_total) }}) not counted</span></div>
+  </section>
+
+  <section class="bz-panel">
+    <h2>Net sales {{ groups[rng.group] | lower }}</h2>
+    <div class="bz-chart bz-chart--tall" role="img" aria-label="Net sales over the period">
+      {% for label, p in report.periods %}
+      <div class="bz-chart__col" title="{{ label }}: {{ money(p.net) }} from {{ p.orders }} order{{ 's' if p.orders != 1 }}">
+        <span class="bz-chart__bar" style="height: {{ (p.net / report.peak * 100) | round(1) }}%"></span>
+        {% if report.periods | length <= 16 or loop.first or loop.last or loop.index % ((report.periods | length) // 8) == 0 %}
+        <span class="bz-chart__day">{{ label.replace('Week of ', '') }}</span>{% endif %}
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section class="bz-panel">
+    <h2>Breakdown</h2>
+    <div class="table-responsive">
+    <table class="table bz-table bz-report-table">
+      <thead><tr><th>Period</th><th>Orders</th><th>Items</th><th>Gross sales</th><th>Discounts</th><th>Net sales</th><th>Shipping</th><th>Sales tax</th><th>Customers paid</th></tr></thead>
+      <tbody>
+      {% for label, p in report.periods if p.orders %}
+      <tr><td>{{ label }}</td><td>{{ p.orders }}</td><td>{{ p.items }}</td><td>{{ money(p.gross) }}</td><td>{{ '−' ~ money(p.discounts) if p.discounts else '—' }}</td><td><strong>{{ money(p.net) }}</strong></td><td>{{ money(p.shipping) }}</td><td>{{ money(p.tax) }}</td><td>{{ money(p.total) }}</td></tr>
+      {% else %}
+      <tr><td colspan="9" class="bz-muted">No orders in this period.</td></tr>
+      {% endfor %}
+      </tbody>
+      <tfoot><tr class="bz-report-total"><td>Total</td><td>{{ t.orders }}</td><td>{{ t.items }}</td><td>{{ money(t.gross) }}</td><td>{{ '−' ~ money(t.discounts) if t.discounts else '—' }}</td><td>{{ money(t.net) }}</td><td>{{ money(t.shipping) }}</td><td>{{ money(t.tax) }}</td><td>{{ money(t.total) }}</td></tr></tfoot>
+    </table>
+    </div>
+    <p class="bz-muted bz-report-note">Gross sales = items at the prices charged. Net sales = gross minus discounts (excludes shipping and tax). Customers paid = net + shipping + tax.</p>
+  </section>
+
+  {% elif tab == 'products' %}
+  <section class="bz-panel">
+    <h2>Best sellers</h2>
+    {% if ranked %}
+    <table class="table bz-table bz-report-table">
+      <thead><tr><th>#</th><th>Product</th><th>Units</th><th>Orders</th><th>Revenue</th><th>By option</th></tr></thead>
+      <tbody>
+      {% for r in ranked %}
+      <tr>
+        <td class="bz-muted">{{ loop.index }}</td>
+        <td>{% if r.product_id %}<a href="{{ url_for('product.edit_view', id=r.product_id) }}"><strong>{{ r.name }}</strong></a>{% else %}<strong>{{ r.name }}</strong>{% endif %}<br><small class="bz-muted">{{ r.sku }}</small></td>
+        <td>{{ r.units }}</td><td>{{ r.orders | length }}</td><td><strong>{{ money(r.revenue) }}</strong></td>
+        <td>{% for name, (units, revenue) in r.options.items() %}<small class="bz-chip-sm">{{ name }}: {{ units }}</small>{% endfor %}</td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    {% else %}<p class="bz-muted">No sales in this period.</p>{% endif %}
+  </section>
+  <section class="bz-panel">
+    <h2>Not sold in this period <small class="bz-muted">{{ unsold | length }} active product{{ 's' if unsold | length != 1 }}</small></h2>
+    <p class="bz-muted bz-panel__intro">Candidates for a promotion, a better photo or a place on the home page.</p>
+    <div class="bz-unsold">
+      {% for p in unsold %}<a href="{{ url_for('product.edit_view', id=p.id) }}">{{ p.name }}</a>{% else %}<span class="bz-muted">Everything sold at least once.</span>{% endfor %}
+    </div>
+  </section>
+
+  {% elif tab == 'categories' %}
+  <section class="bz-panel">
+    <h2>Sales by category</h2>
+    <p class="bz-muted bz-panel__intro">A piece in two categories (e.g. Jhumkas and Kundan) counts in both, and in its main menu item.</p>
+    {% if rows %}
+    {% set top = (rows | map(attribute=3) | max) or 1 %}
+    <table class="table bz-table bz-report-table">
+      <thead><tr><th>Category</th><th>Units</th><th>Orders</th><th>Revenue</th><th style="width:30%"></th></tr></thead>
+      <tbody>
+      {% for cat, depth, units, revenue, orders in rows %}
+      <tr><td><span style="padding-left: {{ depth * 22 }}px">{% if depth %}└ {% endif %}{{ cat.name if depth else '' }}{% if not depth %}<strong>{{ cat.name }}</strong>{% endif %}</span></td>
+        <td>{{ units }}</td><td>{{ orders }}</td><td><strong>{{ money(revenue) }}</strong></td>
+        <td><span class="bz-hbar"><span style="width: {{ (revenue / top * 100) | round(1) }}%"></span></span></td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    {% else %}<p class="bz-muted">No sales in this period.</p>{% endif %}
+  </section>
+
+  {% elif tab == 'coupons' %}
+  <section class="bz-panel">
+    <h2>Coupon codes</h2>
+    <table class="table bz-table bz-report-table">
+      <thead><tr><th>Code</th><th>Orders</th><th>Discount given</th><th>Net sales with the code</th><th>Average order (net)</th></tr></thead>
+      <tbody>
+      {% for code, (n, discount, net) in rows %}
+      <tr><td><strong>{{ code }}</strong></td><td>{{ n }}</td><td>−{{ money(discount) }}</td><td><strong>{{ money(net) }}</strong></td><td>{{ money(net / n) }}</td></tr>
+      {% else %}
+      <tr><td colspan="5" class="bz-muted">No coupons were used in this period.</td></tr>
+      {% endfor %}
+      </tbody>
+      <tfoot><tr class="bz-report-total"><td>Without a coupon</td><td>{{ without.orders }}</td><td>—</td><td>{{ money(without.net) }}</td><td>{{ money(without.net / without.orders) if without.orders else '—' }}</td></tr></tfoot>
+    </table>
+    <p class="bz-muted bz-report-note">Compare the average order with and without a code to see whether a promotion made people buy more.</p>
+  </section>
+
+  {% elif tab == 'customers' %}
+  {% set total_orders = report.guest_orders + report.registered_orders %}
+  <section class="bz-kpis">
+    <div class="bz-kpi"><span class="bz-kpi__label">New customers</span><span class="bz-kpi__value">{{ report.new }}</span><span class="bz-kpi__meta">first order in this period</span></div>
+    <div class="bz-kpi"><span class="bz-kpi__label">Returning customers</span><span class="bz-kpi__value">{{ report.returning }}</span><span class="bz-kpi__meta">had ordered before</span></div>
+    <div class="bz-kpi"><span class="bz-kpi__label">Guest checkouts</span><span class="bz-kpi__value">{{ report.guest_orders }}</span><span class="bz-kpi__meta">{{ money(report.guest_sales) }}</span></div>
+    <div class="bz-kpi"><span class="bz-kpi__label">Account holders</span><span class="bz-kpi__value">{{ report.registered_orders }}</span><span class="bz-kpi__meta">{{ money(report.registered_sales) }}</span></div>
+  </section>
+  <div class="bz-dash__grid">
+    <section class="bz-panel">
+      <h2>Top customers</h2>
+      <table class="table bz-table bz-report-table">
+        <thead><tr><th>Customer</th><th>Orders</th><th>Spent</th></tr></thead>
+        <tbody>
+        {% for name, email, kind, n, spent in report.top %}
+        <tr><td><strong>{{ name }}</strong><br><small class="bz-muted">{{ email or 'no email' }} · {{ kind }}</small></td><td>{{ n }}</td><td><strong>{{ money(spent) }}</strong></td></tr>
+        {% else %}<tr><td colspan="3" class="bz-muted">No orders in this period.</td></tr>{% endfor %}
+        </tbody>
+      </table>
+    </section>
+    <section class="bz-panel">
+      <h2>Where orders go</h2>
+      <table class="table bz-table bz-report-table">
+        <thead><tr><th>Place</th><th>Orders</th><th>Sales</th></tr></thead>
+        <tbody>
+        {% for state, city, n, spent in report.places %}
+        <tr><td>{{ city }}, {{ state }}</td><td>{{ n }}</td><td>{{ money(spent) }}</td></tr>
+        {% else %}<tr><td colspan="3" class="bz-muted">No orders in this period.</td></tr>{% endfor %}
+        </tbody>
+      </table>
+    </section>
+  </div>
+
+  {% elif tab == 'inventory' %}
+  <section class="bz-kpis bz-kpis--3">
+    <div class="bz-kpi"><span class="bz-kpi__label">Pieces in stock</span><span class="bz-kpi__value">{{ units }}</span><span class="bz-kpi__meta">right now</span></div>
+    <div class="bz-kpi"><span class="bz-kpi__label">Stock value</span><span class="bz-kpi__value">{{ money(value) }}</span><span class="bz-kpi__meta">at selling price</span></div>
+    <div class="bz-kpi"><span class="bz-kpi__label">Sold in period</span><span class="bz-kpi__value">{{ rows | sum(attribute='sold') }}</span><span class="bz-kpi__meta">{{ rng.label }}</span></div>
+  </section>
+  <section class="bz-panel">
+    <h2>By product</h2>
+    <table class="table bz-table bz-report-table">
+      <thead><tr><th>Product</th><th>In stock</th><th>Available to sell</th><th>Stock value</th><th>Sold in period</th><th>Sell-through</th></tr></thead>
+      <tbody>
+      {% for r in rows | sort(attribute='value', reverse=true) %}
+      <tr class="{{ '' if r.product.is_active else 'bz-row-muted' }}">
+        <td><a href="{{ url_for('product.edit_view', id=r.product.id) }}"><strong>{{ r.product.name }}</strong></a><br><small class="bz-muted">{{ r.product.sku }}{{ ' · hidden' if not r.product.is_active }}</small></td>
+        <td>{{ r.in_stock }}</td><td>{{ r.available }}</td><td>{{ money(r.value) }}</td><td>{{ r.sold }}</td>
+        <td><span class="bz-hbar bz-hbar--sm"><span style="width: {{ r.sell_through }}%"></span></span> {{ r.sell_through }}%</td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    <p class="bz-muted bz-report-note">Sell-through = sold ÷ (sold + still in stock). High means it's moving fast (restock soon); low means it's slow.</p>
+  </section>
+
+  {% elif tab == 'tax' %}
+  <section class="bz-panel">
+    <h2>Sales tax collected</h2>
+    <table class="table bz-table bz-report-table">
+      <thead><tr><th>Month</th><th>State</th><th>Orders</th><th>Taxable merchandise</th><th>Shipping</th><th>Tax collected</th><th>…on shipping</th></tr></thead>
+      <tbody>
+      {% for month, state, n, merch, ship, tax_amount, ship_tax in rows %}
+      <tr><td>{{ month }}</td><td>{{ state }}</td><td>{{ n }}</td><td>{{ money(merch) }}</td><td>{{ money(ship) }}</td><td><strong>{{ money(tax_amount) }}</strong></td><td>{{ money(ship_tax) }}</td></tr>
+      {% else %}<tr><td colspan="7" class="bz-muted">No taxed orders in this period.</td></tr>{% endfor %}
+      </tbody>
+    </table>
+    <p class="bz-muted bz-report-note">For your sales tax return. Rates and states are set in Settings › Taxes.</p>
+  </section>
+  {% endif %}
+</div>
+{% endblock %}
+{% block tail %}
+  {{ super() }}
+  <script>
+  document.querySelectorAll('[data-bz-range]').forEach(function (select) {
+    select.addEventListener('change', function () {
+      var custom = select.form.querySelector('.bz-range__custom');
+      custom.hidden = select.value !== 'custom';
+      if (select.value !== 'custom') select.form.submit();
+    });
+  });
+  </script>
+{% endblock %}

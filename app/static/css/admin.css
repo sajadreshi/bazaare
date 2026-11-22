@@ -373,3 +373,30 @@ a:hover { color: #f1d595; }
 .navbar-nav.navbar-right { display: flex; flex-direction: row; align-items: center; gap: 4px; margin-left: auto; }
 .navbar-nav.navbar-right > li > .nav-link { color: var(--bz-muted) !important; font-size: .85rem; }
 .navbar-nav.navbar-right > li > .nav-link:hover { color: var(--bz-gold-2) !important; }
+
+/* Reports */
+.bz-reports { padding: 6px 0 40px; }
+.bz-range { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0 0 12px; }
+.bz-range .form-control { width: auto; }
+.bz-range__custom { display: inline-flex; align-items: center; gap: 8px; color: var(--bz-muted); }
+.bz-range__custom[hidden] { display: none; }
+.bz-report-tabs { margin-bottom: 16px; }
+.bz-reports .bz-panel { margin-bottom: 14px; }
+.bz-chart--tall { height: 220px; gap: 4px; }
+.bz-chart--tall .bz-chart__day { font-size: .65rem; white-space: nowrap; }
+.bz-report-table td, .bz-report-table th { white-space: nowrap; }
+.bz-report-table td:first-child { white-space: normal; }
+.bz-report-total td { font-weight: 600; color: #fbf3e2; border-top: 1px solid var(--bz-gold) !important; }
+.bz-report-note { font-size: .82rem; margin: 8px 0 0; }
+.bz-chg { font-weight: 600; }
+.bz-chg.up { color: #8fc79a; }
+.bz-chg.down { color: #e08a7a; }
+.bz-chip-sm { display: inline-block; margin: 2px 4px 2px 0; padding: 1px 8px; border-radius: 999px; background: #2a241a; color: var(--bz-gold-2); font-size: .75rem; }
+.bz-hbar { display: inline-block; width: 100%; height: 8px; border-radius: 999px; background: #24211c; overflow: hidden; vertical-align: middle; }
+.bz-hbar span { display: block; height: 100%; background: linear-gradient(90deg, var(--bz-gold), var(--bz-gold-2)); border-radius: 999px; }
+.bz-hbar--sm { width: 70px; margin-right: 6px; }
+.bz-unsold { display: flex; flex-wrap: wrap; gap: 6px; }
+.bz-unsold a { padding: 4px 12px; border-radius: 999px; border: 1px solid var(--bz-line); color: var(--bz-text); font-size: .85rem; }
+.bz-unsold a:hover { border-color: var(--bz-gold); color: var(--bz-gold-2); text-decoration: none; }
+.bz-kpis--3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.bz-row-muted td { opacity: .6; }

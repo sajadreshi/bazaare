@@ -310,3 +310,70 @@ class EmailsView(AdminOnlyMixin, BaseView):
         if order is None or kind not in notifications.KINDS:
             abort(404)
         return notifications.build(kind, order).html
+
+
+REPORT_TABS = {
+    "sales": "Sales",
+    "products": "Products",
+    "categories": "Categories",
+    "coupons": "Coupons",
+    "customers": "Customers",
+    "inventory": "Inventory value",
+    "tax": "Tax",
+}
+
+
+class ReportsView(AdminOnlyMixin, BaseView):
+    """Reports: sales over a date range, by product, category, coupon and customer; stock value; tax."""
+
+    @expose("/")
+    def index(self):
+        from flask import request
+
+        from app.services import reports
+
+        tab = request.args.get("tab", "sales")
+        if tab not in REPORT_TABS:
+            tab = "sales"
+        rng = reports.parse_range(request.args)
+        data = {}
+        if tab == "sales":
+            data["report"] = reports.sales(rng)
+        elif tab == "products":
+            data["ranked"], data["unsold"] = reports.products(rng)
+        elif tab == "categories":
+            data["rows"] = reports.categories(rng)
+        elif tab == "coupons":
+            data["rows"], data["without"] = reports.coupons(rng)
+        elif tab == "customers":
+            data["report"] = reports.customers(rng)
+        elif tab == "inventory":
+            data["rows"], data["units"], data["value"] = reports.inventory(rng)
+        elif tab == "tax":
+            data["rows"] = reports.tax(rng)
+        query = {k: v for k, v in request.args.items() if k != "tab"}
+        return self.render(
+            "admin/reports.html",
+            tab=tab,
+            tabs=REPORT_TABS,
+            rng=rng,
+            presets=reports.PRESETS,
+            groups=reports.GROUPS,
+            query=query,
+            **data,
+        )
+
+    @expose("/<tab>.csv")
+    def download(self, tab):
+        from flask import Response, abort, request
+
+        from app.services import reports
+
+        if tab not in REPORT_TABS:
+            abort(404)
+        filename, text = reports.csv_for(tab, reports.parse_range(request.args))
+        return Response(
+            text,
+            mimetype="text/csv",
+            headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+        )
