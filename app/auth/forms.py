@@ -8,33 +8,36 @@ from app.models import User
 class LoginForm(FlaskForm):
     email = StringField("Email", validators=[DataRequired(), Email()])
     password = PasswordField("Password", validators=[DataRequired()])
-    remember_me = BooleanField("Remeber Me")
-    submit = SubmitField("Sign In")
+    remember_me = BooleanField("Keep me signed in")
+    submit = SubmitField("Sign in")
 
 
 class RegistrationForm(FlaskForm):
-    first_name = StringField("First Name", validators=[DataRequired()])
-    last_name = StringField("Last Name", validators=[DataRequired()])
+    first_name = StringField("First name", validators=[DataRequired(), Length(max=100)])
+    last_name = StringField("Last name", validators=[DataRequired(), Length(max=100)])
     email = StringField("Email", validators=[DataRequired(), Email()])
     password = PasswordField(
         "Password", validators=[DataRequired(), Length(min=8, message="Use at least 8 characters.")]
     )
-    submit = SubmitField("Register")
+    submit = SubmitField("Create account")
 
     def validate_email(self, email):
         user = User.query.filter_by(email=email.data).first()
         if user is not None:
-            raise ValidationError("Email already taken. Please use different email")
+            raise ValidationError("There is already an account with this email. Try signing in instead.")
 
 
 class ResetPasswordRequestForm(FlaskForm):
     email = StringField("Email", validators=[DataRequired(), Email()])
-    submit = SubmitField("Reset Password")
+    submit = SubmitField("Send reset link")
 
 
 class ResetPasswordForm(FlaskForm):
     password = PasswordField(
-        "Password", validators=[DataRequired(), Length(min=8, message="Use at least 8 characters.")]
+        "New password", validators=[DataRequired(), Length(min=8, message="Use at least 8 characters.")]
     )
-    password2 = PasswordField("Repeat Password", validators=[DataRequired(), EqualTo("password")])
-    submit = SubmitField("Request Password Reset")
+    password2 = PasswordField(
+        "Repeat new password",
+        validators=[DataRequired(), EqualTo("password", message="Passwords must match.")],
+    )
+    submit = SubmitField("Set new password")

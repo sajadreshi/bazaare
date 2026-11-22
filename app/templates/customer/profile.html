@@ -1,49 +1,34 @@
-<div class="checkout-section mt-150 mb-150">
-    <div class="container">
-        <div class="row">
-            <div class="col-lg-8">
-                <div class="checkout-accordion-wrap">
-                    <div class="accordion" id="accordionExample">
-                        {% set profile_display = 'block' if display=='profile' else 'none'%}
-                        {% set form_display = 'block' if display=='form' else 'none'%}
-                        {% set form_expanded = 'show' if display=='form' else '' %}
-                        <div class="worked checkout-sec" id="ship-worked" style="display: {{profile_display}};">
-                            <div class="completed-sec">
-                                <h5 class="mb-0">
-                                    <span class="heading"> Profile</span>
-                                    <a href="javascript:void(0)" class="edit-ship">
-                                        <span style="float: right;"> Edit</span>
-                                    </a>
-                                </h5>
-                                <div class="card-body">
-                                    {% include 'customer/profileDisplay.html'%}
-                                </div>
-                            </div>
-                        </div>
-                        <div class="card single-accordion" id="ship-frm" style="display: {{form_display}};">
-                            <div class="card-header" id="headingOne">
-                                <h5 class="mb-0">
-                                    <button class="btn btn-link" type="button" data-toggle="expanded"
-                                        data-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
-                                        Update Profile
-                                        <a href="javascript:void(0)" style="display:none" id="ship-cancel"
-                                            class="cancel-ship">
-                                            <span style="float: right;"> Cancel</span>
-                                        </a>
-                                    </button>
-                                </h5>
-                            </div>
-
-                            <div id="collapseOne" class="collapse {{form_expanded}}" aria-labelledby="headingOne"
-                                data-parent="#accordionExample">
-                                <div class="card-body">
-                                    {% include 'customer/profileForm.html'%}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+{% extends 'customer/_account.html' %}
+{% block title %}Your details{% endblock %}
+{% block account %}
+<form method="post" action="{{ url_for('customer.profile') }}" class="bz-account__stack" novalidate>
+  {{ form.hidden_tag() }}
+  <section class="bz-card-panel">
+    <h2 class="bz-card-panel__title">Your details</h2>
+    <div class="bz-form">
+      <div class="bz-form__row">
+        {{ input(form.first_name, 'given-name') }}
+        {{ input(form.last_name, 'family-name') }}
+      </div>
+      <div class="bz-form__row">
+        <div class="bz-input">
+          <label for="account-email">Email</label>
+          <input id="account-email" type="email" value="{{ current_user.email }}" disabled>
+          <p class="bz-hint">This is how you sign in.</p>
         </div>
+        {{ input(form.cell_number, 'tel', 'tel') }}
+      </div>
     </div>
-</div>
+  </section>
+  <section class="bz-card-panel">
+    <h2 class="bz-card-panel__title">What we send you</h2>
+    <div class="bz-prefs">
+      {{ checkbox(form.transactional_email, 'Confirmation and shipping emails for your orders.') }}
+      {{ checkbox(form.transactional_sms, 'A text when your order ships or is out for delivery.') }}
+      {{ checkbox(form.marketing_email, 'Be first to see new collections and offers.') }}
+      {{ checkbox(form.marketing_sms, 'The occasional text about launches and sales.') }}
+    </div>
+  </section>
+  <div class="bz-form__actions"><button type="submit" class="bz-btn">Save changes</button></div>
+</form>
+{% endblock %}

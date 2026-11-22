@@ -1,0 +1,6 @@
+{% extends 'customer/_account.html' %}
+{% block title %}Order {{ order.number }}{% endblock %}
+{% block account %}
+<a class="bz-back-link bz-back-link--top" href="{{ url_for('customer.orders') }}">{{ icon('arrow-left', 16) }} All orders</a>
+{% include 'orders/_order.html' %}
+{% endblock %}

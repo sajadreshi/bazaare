@@ -1,56 +1,19 @@
-{% extends 'common/layout.html' %}
-{% block title %}Login{% endblock %}
-{% block header %}{% include 'common/header.html' %}{% endblock %}
-{% block content %}
-{% with messages = get_flashed_messages() %}
-  {% if messages %}
-    {% for message in messages %}
-        <div class="alert alert-warning alert-dismissible fade show" role="alert">
-              <div class="flash-msg">{{message}}</div>
-			  <span type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></span>
-        </div>
-    {% endfor %}
-  {% endif %}
-{% endwith %}
-
-<div class="login_section layout_padding">
-	<div class="container">
-		<div class="heading_container">
-	       <h1>Login</h1>
-         </div>
-  
-
-        <div class="form_container">	
-					 
-            <form action="" method="post" novalidate>
-                {{ form.hidden_tag() }}
-                <p>{{ form.email.label(class_="form-label") }}<br>
-                    {{ form.email(class_="form-input",size=32) }}
-                    {% for error in form.email.errors %}
-                    <span style="color: red;">[{{ error }}]</span>
-                    {% endfor %}
-                </p>
-                <p>
-                    {{ form.password.label(class_="form-label") }}<br>
-                    {{ form.password(class_="form-input",size=32) }}
-                    {% for error in form.password.errors %}
-                    <span style="color: red;">[{{ error }}]</span>
-                    {% endfor %}
-                </p>
-                <p>
-                    {{ form.remember_me() }}
-                    {{ form.remember_me.label(class_="form-label") }}
-                </p>
-                <p>{{ form.submit(class_="btn_box") }}</p>
-                <p>
-                    <a href="{{ url_for('auth.reset_password_request') }}">Forgot Your Password?</a>
-                </p>
-            </form>
-        </div>    
-    </div>        
-</div>
-
-
+{% extends 'auth/_auth.html' %}
+{% block title %}Sign in{% endblock %}
+{% block brand_title %}Welcome back{% endblock %}
+{% block form %}
+<p class="bz-eyebrow">Your account</p>
+<h1 class="bz-title">Sign in</h1>
+<form action="" method="post" class="bz-form" novalidate>
+  {{ form.hidden_tag() }}
+  {{ input(form.email, 'email', 'email') }}
+  <div>
+    {{ input(form.password, 'current-password') }}
+    <a class="bz-auth__forgot" href="{{ url_for('auth.reset_password_request') }}">Forgot your password?</a>
+  </div>
+  {{ checkbox(form.remember_me) }}
+  <button type="submit" class="bz-btn bz-btn--wide bz-btn--lg">Sign in</button>
+</form>
+<p class="bz-auth__switch">New to BazaarE'? <a href="{{ url_for('auth.register', next=request.args.get('next')) }}">Create an account</a></p>
+<p class="bz-auth__guest">No account needed to shop: you can check out as a guest.</p>
 {% endblock %}
-
-{% block footer %}{% include 'common/footer.html' %}{% endblock %}

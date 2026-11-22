@@ -1,0 +1,26 @@
+{% extends 'customer/_account.html' %}
+{% block title %}Addresses{% endblock %}
+{% block account %}
+<div class="bz-account__stack">
+  <nav class="bz-subtabs" aria-label="Address type">
+    <a href="{{ url_for('customer.shipping') }}" class="{{ 'is-active' if kind == 'shipping' }}">Shipping address</a>
+    <a href="{{ url_for('customer.billing') }}" class="{{ 'is-active' if kind == 'billing' }}">Billing address</a>
+  </nav>
+  <section class="bz-card-panel">
+    <header class="bz-card-panel__head">
+      <h2>{{ kind | title }} address</h2>
+      {% if address and not editing %}<a class="bz-textbtn" href="{{ url_for('customer.' ~ kind, edit=1) }}">Edit</a>{% endif %}
+    </header>
+    {% if editing %}
+      <p class="bz-muted bz-card-panel__sub">{{ 'Where we deliver your orders.' if kind == 'shipping' else 'The address your payment is registered to.' }} It's filled in for you at checkout.</p>
+      {{ address_form(form, kind ~ '_form', 'Save address', kind, action=url_for('customer.' ~ kind),
+                      cancel_url=url_for('customer.' ~ kind) if address else None) }}
+    {% else %}
+      {% if kind == 'billing' and billing and shipping and billing.id == shipping.id %}
+      <p class="bz-step__same">{{ icon('check', 16) }} Same as your shipping address</p>
+      {% endif %}
+      {{ address_lines(address) }}
+    {% endif %}
+  </section>
+</div>
+{% endblock %}
