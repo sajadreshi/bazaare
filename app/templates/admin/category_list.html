@@ -1,8 +1,9 @@
 {% extends 'admin/model/list.html' %}
 {% block model_menu_bar %}
-  <div class="alert alert-secondary py-2 mb-3" role="note" style="font-size: .9rem;">
-    This list is the shop menu. <strong>Bold</strong> rows are main menu items and the indented rows below them
-    are their dropdown items. To move a category, set its <em>Parent</em>; to reorder, change its <em>Position</em>.
+  <div class="bz-list-intro">
+    <p>This is the shop menu. <strong>Main menu items</strong> are at the left and their dropdown items are indented below them.
+      Use <span class="bz-arrow bz-arrow--inline">↑</span><span class="bz-arrow bz-arrow--inline">↓</span> to reorder, or open a category to move it under another.</p>
+    <a class="btn bz-btn-gold" href="{{ get_url('.create_view', url=return_url) }}">+ New category</a>
   </div>
   {{ super() }}
 {% endblock %}

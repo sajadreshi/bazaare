@@ -3,7 +3,7 @@
 {% block head_tail %}
   {{ super() }}
   <link rel="icon" href="{{ url_for('static', filename='images/favicon.png') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css', v=asset_version) }}">
 {% endblock %}
 {% block brand %}
   <a class="navbar-brand bz-admin-brand" href="{{ admin_view.admin.url }}">

@@ -1,0 +1,97 @@
+{# Sectioned category editor, shared by create and edit. Expects `form`, `return_url` and, when editing, `model`. #}
+{% from 'admin/_editor.html' import field, save_panel with context %}
+{% set category = model if model is defined else None %}
+<form action="" method="POST" role="form" class="admin-form bz-editor" enctype="multipart/form-data" data-bz-category-editor>
+  {{ form.hidden_tag() if form.hidden_tag is defined else '' }}
+  {% if csrf_token is defined and csrf_token and form.csrf_token is not defined %}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% endif %}
+
+  <div class="bz-editor__head">
+    <div>
+      <a class="bz-back" href="{{ return_url }}">← Menu &amp; categories</a>
+      <h1>{{ category.name if category else 'New category' }}</h1>
+      {% if category %}
+      <p class="bz-muted">
+        {% if category.parent %}In the {{ category.parent.name }} dropdown{% else %}Main menu item{% endif %}
+        · {{ 'shown in the menu' if category.show_in_menu else 'not in the menu' }}
+        · {{ 'active' if category.is_active else 'hidden' }}
+      </p>
+      {% endif %}
+    </div>
+    {% if category %}
+    <div class="bz-editor__tools">
+      <a class="btn bz-btn-outline" href="{{ url_for('catalog.category', slug=category.slug) }}" target="_blank" rel="noopener">View in shop ↗</a>
+      <a class="btn bz-btn-outline" href="{{ get_url('.create_view', parent=category.id, url=return_url) }}">+ Sub-category</a>
+    </div>
+    {% endif %}
+  </div>
+
+  <div class="bz-editor__grid">
+    <div class="bz-editor__main">
+      <section class="bz-panel">
+        <h2>Basics</h2>
+        {{ field(form.name) }}
+        <div class="bz-two">
+          {{ field(form.code) }}
+          <div class="bz-field">
+            <label>Page address</label>
+            <div class="bz-address" data-bz-address>/catalog/c/<strong>{{ (category.slug if category else '') }}</strong></div>
+            <small class="bz-hint">Changing the code changes this address.</small>
+          </div>
+        </div>
+        {{ field(form.description, 'Optional. One or two sentences shown under the title on the category page.') }}
+      </section>
+
+      <section class="bz-panel">
+        <h2>Place in the menu</h2>
+        <div class="bz-two">
+          {{ field(form.parent) }}
+          {{ field(form.position, 'Lower numbers come first. You can also use the ↑ ↓ arrows in the list.') }}
+        </div>
+        {{ field(form.show_in_menu, 'Untick for pages reached only by link, e.g. a campaign page.') }}
+        {% if category and category.children %}
+        <div class="bz-subcats">
+          <span class="bz-subcats__label">Sub-categories</span>
+          {% for child in category.children %}
+          <a class="bz-chip {{ '' if child.is_active else 'is-off' }}" href="{{ get_url('.edit_view', id=child.id, url=return_url) }}">{{ child.name }}</a>
+          {% endfor %}
+        </div>
+        {% endif %}
+      </section>
+
+      <section class="bz-panel">
+        <h2>Banner</h2>
+        <p class="bz-muted bz-panel__intro">The wide photo at the top of the category page. Without one, the parent's banner (or a product photo) is used.</p>
+        {% if category and category.banner_image %}
+        <img class="bz-banner-preview" src="{{ image_url(category.banner_image) }}" alt="">
+        {% endif %}
+        <div class="bz-field bz-banner-field">
+          {{ form.banner_image(class_='') }}
+          {% for e in form.banner_image.errors if e is string %}<div class="bz-error">{{ e }}</div>{% endfor %}
+        </div>
+      </section>
+
+      <section class="bz-panel">
+        <h2>Products</h2>
+        <p class="bz-muted bz-panel__intro">Products picked here show on this page{{ ' (and on its parent page)' if category and category.parent }}. Products can also be put in categories from the product form.</p>
+        {{ field(form.product) }}
+        {{ field(form.max_price, 'Optional automatic rule: also show every active product at or below this price, e.g. 25 for an “Under $25” page.') }}
+      </section>
+    </div>
+
+    <aside class="bz-editor__side">
+      <section class="bz-panel">
+        <h2>Visibility</h2>
+        {{ field(form.is_active, 'Hidden categories can’t be visited and don’t show in the menu.') }}
+      </section>
+      {% if category %}
+      <section class="bz-panel bz-facts">
+        <h2>At a glance</h2>
+        <p><span>Products picked</span><strong>{{ category.product.count() }}</strong></p>
+        <p><span>Sub-categories</span><strong>{{ category.children | length }}</strong></p>
+        {% if category.max_price is not none %}<p><span>Price rule</span><strong>≤ ${{ '%.0f' | format(category.max_price) }}</strong></p>{% endif %}
+      </section>
+      {% endif %}
+      {{ save_panel(return_url) }}
+    </aside>
+  </div>
+</form>

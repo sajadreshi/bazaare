@@ -26,6 +26,7 @@ from app.models import (
 )
 from app.richtext import clean_html
 from app.services import stock
+from app.services.catalog import category_products
 from app.services.shipping import CARRIERS, HAND_DELIVERY
 from app.storage import image_url
 
@@ -91,12 +92,13 @@ class CategoryView(SecureModelView):
     """Categories shown as the menu tree: main menu items with their dropdown items indented below."""
 
     list_template = "admin/category_list.html"
-    column_list = ("name", "code", "position", "show_in_menu", "is_active", "max_price", "products")
+    column_list = ("order", "name", "products", "show_in_menu", "is_active", "tools")
     column_labels = {
+        "order": "",
         "name": "Category",
         "show_in_menu": "In menu",
         "is_active": "Active",
-        "max_price": "Price rule",
+        "tools": "",
     }
     column_sortable_list = ()  # the tree order is the order
     column_searchable_list = ("name", "code")
@@ -113,19 +115,23 @@ class CategoryView(SecureModelView):
         "banner_image",
         "product",
     )
-    form_labels = {"product": "Products", "max_price": "Price rule (list all products at or below)"}
+    form_labels = {"name": "Name", "product": "Picked products", "max_price": "Price rule: up to ($)"}
+    form_overrides = {"description": TextAreaField}
     form_extra_fields = {"banner_image": StorageImageField("Banner image", folder="banners")}
     form_args = {
-        "name": {"description": "Shown in the menu and as the page title."},
+        "name": {"label": "Name", "description": "Shown in the menu and as the page title."},
+        "product": {"label": "Picked products"},
+        "max_price": {"label": "Price rule: up to ($)"},
         "parent": {
             "label": "Parent",
             "description": "Empty = a main menu item. Otherwise it appears in that item's dropdown.",
             "query_factory": lambda: _categories_as_tree(),
             "get_label": lambda c: ("— " * getattr(c, "_tree_depth", 0)) + c.name,
         },
-        "position": {"label": "Position in menu", "description": "Lower numbers come first (0, 10, 20...)."},
+        "position": {"label": "Position in menu", "default": 0},
+        "description": {"render_kw": {"rows": 3}},
         "show_in_menu": {"label": "Show in the menu"},
-        "is_active": {"label": "Active (page can be visited)"},
+        "is_active": {"label": "Active (page can be visited)", "default": True},
     }
     edit_template = "admin/category_edit.html"
     create_template = "admin/category_create.html"
@@ -156,19 +162,93 @@ class CategoryView(SecureModelView):
                 raise ValidationError("A category can't be inside itself or one of its own sub-categories.")
             parent = parent.parent
 
+    def create_form(self, obj=None):
+        form = super().create_form(obj)
+        # "+ Sub-category" links pass the parent along.
+        parent_id = request.args.get("parent", type=int)
+        if request.method == "GET" and parent_id:
+            form.parent.data = db.session.get(Category, parent_id)
+        return form
+
+    def _format_order(view, context, model, name):
+        def arrow(direction, symbol, label):
+            return Markup(
+                '<form method="post" action="%s" class="bz-inline-form">'
+                '<input type="hidden" name="csrf_token" value="%s">'
+                '<button type="submit" class="bz-arrow" title="%s">%s</button></form>'
+            ) % (view.get_url(".move", id=model.id, direction=direction), generate_csrf(), label, symbol)
+
+        return Markup('<div class="bz-arrows">%s%s</div>') % (
+            arrow("up", "↑", "Move up"),
+            arrow("down", "↓", "Move down"),
+        )
+
     def _format_name(view, context, model, name):
         depth = getattr(model, "_tree_depth", 0)
-        prefix = Markup("&nbsp;&nbsp;&nbsp;&nbsp;" * depth + ("└─ " if depth else ""))
-        label = Markup("<strong>%s</strong>") % model.name if depth == 0 else model.name
-        return prefix + label
+        edit = view.get_url(".edit_view", id=model.id, url=request.url)
+        label = Markup('<a href="%s" class="bz-tree__name bz-tree__name--%d">%s</a>') % (
+            edit,
+            min(depth, 2),
+            model.name,
+        )
+        rule = (
+            Markup(' <span class="bz-tag">≤ $%.0f</span>') % model.max_price
+            if model.max_price is not None
+            else ""
+        )
+        indent = Markup('<span class="bz-tree__indent" style="width:%dpx"></span>') % (depth * 26)
+        branch = Markup('<span class="bz-tree__branch">└</span>') if depth else ""
+        return Markup('<div class="bz-tree">%s%s%s%s</div>') % (indent, branch, label, rule)
 
     def _format_products(view, context, model, name):
-        return model.product.count()
+        picked = model.product.count()
+        shown = len(category_products(model)) if model.is_active else 0
+        if shown == picked:
+            return picked
+        return Markup('%d <small class="bz-muted">(%d in shop)</small>') % (picked, shown)
 
-    def _format_price_rule(view, context, model, name):
-        return f"≤ ${model.max_price:.0f}" if model.max_price is not None else ""
+    def _format_flag(view, context, model, name):
+        on = getattr(model, name)
+        return Markup('<span class="bz-dot %s">%s</span>') % ("is-on" if on else "", "Yes" if on else "No")
 
-    column_formatters = {"name": _format_name, "products": _format_products, "max_price": _format_price_rule}
+    def _format_tools(view, context, model, name):
+        return Markup(
+            '<a class="bz-link-btn" href="%s">+ Sub-category</a>'
+            '<a class="bz-link-btn" href="%s" target="_blank" rel="noopener">View ↗</a>'
+        ) % (
+            view.get_url(".create_view", parent=model.id, url=request.url),
+            url_for("catalog.category", slug=model.slug),
+        )
+
+    column_formatters = {
+        "order": _format_order,
+        "name": _format_name,
+        "products": _format_products,
+        "show_in_menu": _format_flag,
+        "is_active": _format_flag,
+        "tools": _format_tools,
+    }
+
+    @expose("/move/<int:id>/<direction>", methods=["POST"])
+    def move(self, id, direction):
+        """Swap a category with its neighbour among its siblings, then renumber them 0, 10, 20..."""
+        category = db.session.get(Category, id) or abort(404)
+        siblings = Category.query.filter(
+            Category.parent_id.is_(None)
+            if category.parent_id is None
+            else Category.parent_id == category.parent_id
+        ).all()
+        if category.parent_id is None:  # main menu items and hidden top-level pages sort separately
+            siblings = [c for c in siblings if c.show_in_menu == category.show_in_menu]
+        siblings.sort(key=lambda c: (c.position or 0, c.name.lower()))
+        index = siblings.index(category)
+        other = index - 1 if direction == "up" else index + 1
+        if 0 <= other < len(siblings):
+            siblings[index], siblings[other] = siblings[other], siblings[index]
+        for position, sibling in enumerate(siblings):
+            sibling.position = position * 10
+        db.session.commit()
+        return redirect(self.get_url(".index_view"))
 
     def get_list(self, page, sort_column, sort_desc, search, filters, execute=True, page_size=None):
         count, rows = super().get_list(None, None, False, search, filters, execute=True, page_size=None)
