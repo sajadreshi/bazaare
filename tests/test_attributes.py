@@ -4,7 +4,7 @@ import re
 
 from app.extension import db
 from app.models import Attribute, Product, ProductAttribute
-from tests.conftest import ADMIN_EMAIL, ADMIN_PASSWORD
+from tests.conftest import ADMIN_EMAIL, ADMIN_PASSWORD, ONE_SIZE
 from tests.test_security import login
 
 
@@ -60,6 +60,7 @@ def test_admin_edits_details_inside_the_product_form(app, client):
         "is_active": "y",
         "attribute_links-0-attribute": str(clasp_id),
         "attribute_links-0-value": "Screw clasp",
+        **ONE_SIZE,
     }
     assert client.post(f"/admin/product/edit/?id={pid}", data=data).status_code == 302
     with app.app_context():

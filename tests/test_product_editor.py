@@ -35,7 +35,7 @@ def test_options_are_saved_with_their_own_price_stock_order_and_one_default(app,
         "is_active": "y",
         "description": "<p>Hand <b>carved</b></p><script>alert(1)</script>",
         **option_rows(
-            {"name": "Size 8", "price": "", "stock": "", "position": "1"},
+            {"name": "Size 8", "price": "", "stock": "4", "position": "1"},
             {"name": "Size 6", "price": "44.50", "stock": "3", "position": "0", "is_default": "y"},
             {"name": "Size 7", "stock": "0", "position": "2", "is_default": "y"},
         ),
@@ -48,7 +48,7 @@ def test_options_are_saved_with_their_own_price_stock_order_and_one_default(app,
         assert product.description == "<p>Hand <strong>carved</strong></p>"
         assert [(o.name, o.price, o.stock) for o in product.options] == [
             ("Size 6", Decimal("44.50"), 3),
-            ("Size 8", None, None),
+            ("Size 8", None, 4),
             ("Size 7", None, 0),
         ]
         assert [o.name for o in product.options if o.is_default] == ["Size 6"]
@@ -61,7 +61,19 @@ def test_options_are_saved_with_their_own_price_stock_order_and_one_default(app,
 
     # The product list shows the stock picture and a show/hide switch.
     listing = admin_client.get("/admin/product/").get_data(as_text=True)
-    assert "Lotus Ring" in listing and "3 in stock" in listing and "1 option(s) sold out" in listing
+    assert "Lotus Ring" in listing and "7 available" in listing and "1 option(s) sold out" in listing
+
+
+def test_every_option_needs_a_stock_count_and_a_product_needs_an_option(app, admin_client):
+    data = {"name": "No Count Ring", "price": "40", **option_rows({"name": "Size 6", "stock": ""})}
+    html = admin_client.post("/admin/product/new/", data=data).get_data(as_text=True)
+    assert "How many do you have?" in html
+    html = admin_client.post("/admin/product/new/", data={"name": "Empty Ring", "price": "40"}).get_data(
+        as_text=True
+    )
+    assert "at least one row under Options" in html
+    with app.app_context():
+        assert Product.query.filter(Product.name.in_(["No Count Ring", "Empty Ring"])).count() == 0
 
 
 def test_a_taken_sku_is_refused(app, admin_client, product_ids):

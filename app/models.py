@@ -93,6 +93,8 @@ class Product(db.Model):
     is_active = db.Column(db.Boolean, default=False)
     # What the choice is called on the product page, e.g. "Size" or "Design".
     option_label = db.Column(db.String(30))
+    # Set when the shop hid the product because it sold out; it comes back by itself when restocked.
+    sold_out_at = db.Column(db.DateTime)
     created_at = db.Column(db.DateTime, index=True, default=utcnow)
     updated_at = db.Column(db.DateTime, index=True, default=utcnow, onupdate=utcnow)
     categories = db.relationship(
@@ -148,6 +150,18 @@ class Product(db.Model):
         return self.name
 
 
+class ShopSettings(db.Model):
+    """Shop-wide settings (a single row), edited under Admin > Settings."""
+
+    __tablename__ = "shop_settings"
+    id = db.Column(db.Integer, primary_key=True)
+    # An option is sold out once its stock is at or below this; 0 = sell every piece.
+    stock_threshold = db.Column(db.Integer, nullable=False, default=0, server_default="0")
+    # Warn on the dashboard (and show "Only N left" in the shop) when this many or fewer can be sold.
+    low_stock_alert = db.Column(db.Integer, nullable=False, default=3, server_default="3")
+    updated_at = db.Column(db.DateTime, default=utcnow, onupdate=utcnow)
+
+
 class ProductImage(db.Model):
     """One photo of a product. The lowest position is the main photo."""
 
@@ -187,8 +201,17 @@ class Variant(db.Model):
         return self.price if self.price is not None else self.product.price
 
     @property
+    def available(self):
+        """How many can still be sold: stock above the shop's reserve threshold (None = not counted)."""
+        if self.stock is None:
+            return None
+        from app.services.inventory import threshold
+
+        return max(0, self.stock - threshold())
+
+    @property
     def in_stock(self):
-        return self.stock is None or self.stock > 0
+        return self.stock is None or self.available > 0
 
     def __repr__(self):
         return self.name

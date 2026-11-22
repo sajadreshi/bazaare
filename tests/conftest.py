@@ -69,3 +69,7 @@ def product_ids(app):
         db.session.add(product)
         db.session.commit()
         return product.id, small.id, large.id
+
+
+# Admin product forms need at least one option row with its stock.
+ONE_SIZE = {"options-0-name": "One Size", "options-0-stock": "5", "options-0-is_default": "y"}

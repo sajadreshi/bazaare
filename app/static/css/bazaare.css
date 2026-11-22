@@ -472,6 +472,8 @@ form.is-busy { opacity: .55; pointer-events: none; }
   .bz-thanks { padding: 28px 16px; }
   .bz-thanks .bz-title { font-size: 2.1rem; }
 }
+.bz-few { color: var(--bz-sale); }
+.bz-few-note { margin: -6px 0 12px; color: var(--bz-sale); font-size: .92rem; font-weight: 500; }
 
 /* ---------------------------------------------------------------- sign in, register, password reset */
 .bz-auth { max-width: 1040px; margin: 0 auto; padding: 48px 20px 64px; }

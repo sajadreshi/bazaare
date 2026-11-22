@@ -12,7 +12,7 @@ from PIL import Image
 from app.extension import db
 from app.models import Product
 from app.storage import CACHE_FOREVER, LocalStorage, R2Storage, image_url, init_storage
-from tests.conftest import ADMIN_EMAIL, ADMIN_PASSWORD
+from tests.conftest import ADMIN_EMAIL, ADMIN_PASSWORD, ONE_SIZE
 from tests.test_security import login
 
 KEY_PATTERN = r"products/\d{4}/\d{2}/[0-9a-f]{32}\.(jpg|png)"
@@ -34,6 +34,7 @@ def upload_product(client, sku, file, filename="ring.jpg", **extra):
         "price": "9",
         "is_active": "y",
         "images_new": (file, filename),
+        **ONE_SIZE,
         **extra,
     }
     return client.post("/admin/product/new/", data=data, content_type="multipart/form-data")
@@ -120,7 +121,7 @@ def test_removing_an_image_keeps_the_file_for_past_orders(app, admin_client):
 
 def test_photos_upload_together_reorder_and_pick_the_main_one(app, admin_client):
     files = [(image_file(), "a.jpg"), (image_file(), "b.jpg"), (image_file(), "c.jpg")]
-    data = {"sku": "IMG-MANY", "name": "Many", "price": "9", "images_new": files}
+    data = {"sku": "IMG-MANY", "name": "Many", "price": "9", "images_new": files, **ONE_SIZE}
     assert (
         admin_client.post("/admin/product/new/", data=data, content_type="multipart/form-data").status_code
         == 302

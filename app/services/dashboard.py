@@ -8,6 +8,7 @@ from sqlalchemy import func
 
 from app.extension import db
 from app.models import Category, Order, OrderItem, Product, User, Variant, utcnow
+from app.services import inventory
 from app.services.catalog import category_products
 
 ZERO = Decimal("0.00")
@@ -62,12 +63,20 @@ def _catalog_todos():
     no_category = active.filter(~Product.categories.any()).count()
     if no_category:
         todos.append(("Active products in no category (not in the menu)", no_category, "/admin/product/"))
-    sold_out = active.filter(~Product.options.any((Variant.stock.is_(None)) | (Variant.stock > 0))).count()
-    if sold_out:
-        todos.append(("Active products sold out (no option in stock)", sold_out, "/admin/product/"))
-    low = Variant.query.join(Product).filter(Product.is_active.is_(True), Variant.stock.between(1, 2)).count()
+    no_stock = Variant.query.join(Product).filter(Variant.stock.is_(None)).count()
+    if no_stock:
+        todos.append(("Options without a stock count", no_stock, "/admin/stock/?show=missing"))
+    hidden = Product.query.filter(Product.sold_out_at.isnot(None)).count()
+    if hidden:
+        todos.append(("Sold out and hidden: restock to bring back", hidden, "/admin/stock/?show=out"))
+    alert = inventory.low_stock_alert()
+    low = [
+        v
+        for v in Variant.query.join(Product).filter(Product.is_active.is_(True), Variant.stock.isnot(None))
+        if 0 < v.available <= alert
+    ]
     if low:
-        todos.append(("Options running low (1–2 left)", low, "/admin/product/"))
+        todos.append((f"Running low ({alert} or fewer left to sell)", len(low), "/admin/stock/?show=low"))
     menu = Category.query.filter(Category.is_active.is_(True), Category.show_in_menu.is_(True))
     empty = [c.name for c in menu if c.max_price is None and not category_products(c)]
     if empty:

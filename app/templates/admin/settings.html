@@ -1,0 +1,39 @@
+{% extends 'admin/master.html' %}
+{% from 'admin/_editor.html' import field with context %}
+{% block page_title %}{% endblock %}
+{% block body %}
+<form method="post" class="bz-editor" novalidate>
+  {{ form.hidden_tag() }}
+  <div class="bz-editor__head">
+    <div>
+      <h1>Settings</h1>
+      <p class="bz-muted">Shop-wide rules. Changes apply straight away.</p>
+    </div>
+  </div>
+  <div class="bz-editor__grid">
+    <div class="bz-editor__main">
+      <section class="bz-panel">
+        <h2>Inventory</h2>
+        <p class="bz-muted bz-panel__intro">Every option (size or design) has a stock count, which goes down when an order is placed and back up if it's cancelled.</p>
+        <div class="bz-two">
+          {{ field(form.stock_threshold, '0 = sell every last piece. Set e.g. 1 to keep one in reserve (for display or a gift box).') }}
+          {{ field(form.low_stock_alert, 'Shown on the dashboard, and shoppers see “Only N left”.') }}
+        </div>
+        <div class="bz-rules">
+          <p><strong>What happens</strong></p>
+          <ul>
+            <li>When an option's stock reaches the number above, shoppers can no longer pick it.</li>
+            <li>When <em>every</em> option of a product has reached it, the product is <strong>hidden from the shop automatically</strong>.</li>
+            <li>Add stock again (on the product page) and it <strong>comes back by itself</strong>. Products you hid by hand stay hidden.</li>
+          </ul>
+        </div>
+      </section>
+    </div>
+    <aside class="bz-editor__side">
+      <section class="bz-panel bz-editor__save">
+        <button type="submit" class="btn bz-btn-gold btn-block">Save settings</button>
+      </section>
+    </aside>
+  </div>
+</form>
+{% endblock %}

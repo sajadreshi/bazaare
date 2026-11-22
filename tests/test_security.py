@@ -9,7 +9,7 @@ from app.extension import db
 from app.models import Payment, User
 from app.seed import seed_admin
 from app.urls import is_safe_next
-from tests.conftest import ADMIN_EMAIL, ADMIN_PASSWORD
+from tests.conftest import ADMIN_EMAIL, ADMIN_PASSWORD, ONE_SIZE
 
 CSRF_EXPIRED = "That form had expired"
 
@@ -149,7 +149,7 @@ def test_admin_can_save_with_csrf_on_and_is_protected_without_it(app, client):
         form = page[page.index("data-bz-editor") : page.index("</form>")]
         tokens = re.findall(r'name="csrf_token"[^>]*value="([^"]+)"', form)
         assert len(tokens) == 1  # exactly one token per form, or WTForms reads the wrong one
-        data = {"name": "CSRF Ring", "price": "12"}
+        data = {"name": "CSRF Ring", "price": "12", **ONE_SIZE}
         assert_csrf_rejected(client, client.post("/admin/product/new/", data=data))
         with app.app_context():
             assert Product.query.filter_by(name="CSRF Ring").count() == 0
@@ -158,7 +158,7 @@ def test_admin_can_save_with_csrf_on_and_is_protected_without_it(app, client):
         with app.app_context():
             product = Product.query.filter_by(name="CSRF Ring").one()
             assert product.sku == "BZ-CSRF-RING"  # made from the name
-            assert [o.name for o in product.options] == ["One Size"]
+            assert [(o.name, o.stock) for o in product.options] == [("One Size", 5)]
     finally:
         app.config["WTF_CSRF_ENABLED"] = False
 
@@ -179,6 +179,7 @@ def test_admin_can_put_a_product_in_categories(app, client):
         "price": "9",
         "is_active": "y",
         "categories": [str(rings), str(bracelets)],
+        **ONE_SIZE,
     }
     assert client.post("/admin/product/new/", data=data).status_code == 302
     with app.app_context():

@@ -7,7 +7,7 @@ from flask_ckeditor import CKEditorField
 from flask_wtf.csrf import generate_csrf
 from markupsafe import Markup
 from wtforms import HiddenField, SelectField, StringField, TextAreaField
-from wtforms.validators import DataRequired, Length, NumberRange, Optional, ValidationError
+from wtforms.validators import DataRequired, InputRequired, Length, NumberRange, Optional, ValidationError
 
 from app.adminapp.fields import PhotosField, StorageImageField
 from app.adminapp.security import SecureModelView
@@ -25,7 +25,7 @@ from app.models import (
     utcnow,
 )
 from app.richtext import clean_html
-from app.services import stock
+from app.services import inventory, stock
 from app.services.catalog import category_products
 from app.services.shipping import CARRIERS, HAND_DELIVERY
 from app.storage import image_url
@@ -302,8 +302,8 @@ class OptionInline(InlineFormAdmin):
         "price": {**_optional_decimal("Price"), "description": "Same as product"},
         "stock": {
             "label": "Stock",
-            "validators": [Optional(), NumberRange(min=0)],
-            "description": "Not counted",
+            "validators": [InputRequired("How many do you have?"), NumberRange(min=0)],
+            "description": "How many",
         },
         "is_default": {"label": "Default"},
     }
@@ -384,16 +384,22 @@ def _price_cell(view, context, model, name):
 
 def _stock_cell(view, context, model, name):
     options = model.options
-    tracked = [o for o in options if o.stock is not None]
     if not options:
         return Markup('<span class="bz-pill bz-pill--warn">no options</span>')
-    if not tracked:
-        return Markup('<span class="bz-muted">not counted</span>')
-    total = sum(o.stock for o in tracked)
-    sold_out = [o for o in tracked if o.stock <= 0]
-    if len(sold_out) == len(options):
+    if any(o.stock is None for o in options):
+        return Markup('<span class="bz-pill bz-pill--warn">stock not set</span>')
+    if model.sold_out_at is not None:
+        return Markup(
+            '<span class="bz-pill bz-pill--bad">sold out · hidden</span>'
+            '<br><small class="bz-muted">since %s</small>'
+        ) % (f"{model.sold_out_at:%d %b}")
+    available = sum(o.available for o in options)
+    sold_out = [o for o in options if not o.in_stock]
+    if not available:
         return Markup('<span class="bz-pill bz-pill--bad">sold out</span>')
-    label = Markup("%d in stock") % total
+    label = Markup("%d available") % available
+    if available <= inventory.low_stock_alert():
+        label = Markup('<span class="bz-pill bz-pill--warn">%d left</span>') % available
     if sold_out:
         label += Markup('<br><small class="bz-muted">%d option(s) sold out</small>') % len(sold_out)
     return label
@@ -491,21 +497,45 @@ class ProductView(SecureModelView):
         if model.compare_at_price is not None and model.compare_at_price <= model.price:
             model.compare_at_price = None
         if not model.options:
-            model.options = [Variant(name="One Size", is_default=True)]
+            raise ValidationError(
+                "Add the stock: at least one row under Options & stock "
+                "(use “One Size” if there's just one kind)."
+            )
         defaults = [o for o in model.options if o.is_default]
         for option in model.options:
             option.is_default = option is (defaults[0] if defaults else model.options[0])
         for rows in (model.options, model.associations):
             for row in rows:
                 row.position = int(row.position) if str(row.position or "").isdigit() else 0
+        # Visibility: an admin un-ticking Active hides it for good (no automatic comeback);
+        # otherwise the product is hidden when it sells out and comes back when restocked.
+        was_active = form.is_active.object_data
+        if not model.is_active and (is_created or was_active):
+            model.sold_out_at = None
+        if model.is_active and not was_active:
+            model.sold_out_at = None
+        hidden, restored = inventory.refresh([model])
+        if hidden:
+            flash(
+                f"{model.name} has no stock to sell, so it's hidden from the shop until you add some.",
+                "warning",
+            )
+        if restored:
+            flash(f"{model.name} is back in stock and showing in the shop again.", "success")
 
     @expose("/toggle/<int:id>", methods=["POST"])
     def toggle_active(self, id):
         product = db.session.get(Product, id) or abort(404)
-        product.is_active = not product.is_active
-        db.session.commit()
-        where = "shown in" if product.is_active else "hidden from"
-        flash(f"{product.name} is now {where} the shop.", "success")
+        if not product.is_active and inventory.is_sold_out(product):
+            flash(
+                f"{product.name} is sold out. Add stock to its options first, then it shows again.", "error"
+            )
+        else:
+            product.is_active = not product.is_active
+            product.sold_out_at = None
+            db.session.commit()
+            where = "shown in" if product.is_active else "hidden from"
+            flash(f"{product.name} is now {where} the shop.", "success")
         back = request.form.get("next", "")
         return redirect(back if back.startswith("/admin/") else self.get_url(".index_view"))
 

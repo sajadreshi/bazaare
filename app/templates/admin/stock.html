@@ -1,0 +1,48 @@
+{% extends 'admin/master.html' %}
+{% block page_title %}{% endblock %}
+{% block body %}
+{% set labels = {'all': 'All', 'missing': 'Not counted yet', 'out': 'Sold out', 'low': 'Running low', 'ok': 'In stock'} %}
+<form method="post" class="bz-editor" novalidate>
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <div class="bz-editor__head">
+    <div>
+      <h1>Stock</h1>
+      <p class="bz-muted">Every option's count on one page. Type the new numbers and save once. Reserve threshold: {{ settings.stock_threshold }} · low-stock warning at {{ settings.low_stock_alert }} (<a href="{{ url_for('settings.index') }}">change</a>).</p>
+    </div>
+    <div class="bz-editor__tools">
+      <button type="submit" class="btn bz-btn-gold">Save stock</button>
+    </div>
+  </div>
+  <nav class="bz-filter">
+    {% for key, label in labels.items() %}
+    <a href="{{ url_for('.index', show=key) }}" class="{{ 'is-active' if show == key }}">{{ label }}{% if key != 'all' %} <span>{{ counts[key] }}</span>{% endif %}</a>
+    {% endfor %}
+  </nav>
+  <section class="bz-panel">
+    {% if rows %}
+    <table class="table bz-table bz-stock">
+      <thead><tr><th></th><th>Product</th><th>Option</th><th>Status</th><th class="text-right">Stock</th></tr></thead>
+      <tbody>
+        {% for product, option, state in rows %}
+        <tr class="bz-stock--{{ state }}">
+          <td>{% if product.main_image %}<img class="bz-list-thumb" src="{{ image_url(product.main_image, thumb=True) }}" alt="">{% endif %}</td>
+          <td><a href="{{ url_for('product.edit_view', id=product.id) }}"><strong>{{ product.name }}</strong></a><br><small class="bz-muted">{{ product.sku }}{{ ' · hidden by hand' if not product.is_active and not product.sold_out_at }}</small></td>
+          <td>{{ option.name }}</td>
+          <td>
+            {% if state == 'missing' %}<span class="bz-pill bz-pill--warn">not counted</span>
+            {% elif state == 'out' %}<span class="bz-pill bz-pill--bad">{{ 'sold out · hidden' if product.sold_out_at else 'sold out' }}</span>
+            {% elif state == 'low' %}<span class="bz-pill bz-pill--warn">{{ option.available }} left to sell</span>
+            {% else %}<span class="bz-muted">{{ option.available }} to sell</span>{% endif %}
+          </td>
+          <td class="text-right"><input class="form-control bz-stock__input" type="number" min="0" step="1" inputmode="numeric" name="stock-{{ option.id }}" value="{{ option.stock if option.stock is not none else '' }}" placeholder="How many?" aria-label="Stock for {{ product.name }}, {{ option.name }}"></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p class="bz-muted">Nothing here.</p>
+    {% endif %}
+  </section>
+  <div class="bz-stock__save"><button type="submit" class="btn bz-btn-gold">Save stock</button></div>
+</form>
+{% endblock %}

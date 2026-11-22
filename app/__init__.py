@@ -7,6 +7,7 @@ from flask_wtf.csrf import CSRFError
 from markupsafe import Markup
 
 from app.adminapp.auth import bp as admin_auth_bp
+from app.adminapp.settings import SettingsView, StockView
 from app.adminapp.views import (
     AttributesView,
     CarouselView,
@@ -26,6 +27,7 @@ from app.customer import customer as customer_bp
 from app.main import main
 from app.richtext import clean_html
 from app.services import catalog as catalog_service
+from app.services import inventory as inventory_service
 from app.services import shipping as shipping_service
 from app.services import wishlist as wishlist_service
 from app.services.cart import item_count
@@ -101,6 +103,7 @@ def create_app(config_overrides=None):
     # Changes whenever the admin's CSS/JS change, so browsers fetch the new files.
     app.jinja_env.globals["asset_version"] = _asset_version(app)
     app.jinja_env.globals.update(
+        shop_settings=inventory_service.settings,
         cart_item_count=item_count,
         shop_menu=catalog_service.menu,
         wishlist_ids=wishlist_service.ids,
@@ -122,11 +125,13 @@ def create_app(config_overrides=None):
     admin.add_view(CategoryView(Category, db, category="Category"))
     admin.add_view(CarouselView(Carousel, db, category="Content", name="Home banner slides"))
     admin.add_view(ProductView(Product, db, category="Product"))
+    admin.add_view(StockView(name="Stock", endpoint="stock", category="Product"))
     admin.add_view(UserView(User, db, category="User"))
     admin.add_view(RoleView(Role, db, category="User"))
     admin.add_view(ProductAssociationView(ProductAssociation, db, category="Attributes"))
     admin.add_view(HolidayView(Holiday, db, category="Holidays"))
     admin.add_view(OrderView(Order, db, name="Orders", endpoint="order"))
+    admin.add_view(SettingsView(name="Settings", endpoint="settings"))
     if not any(link.name == "Sign out" for link in admin.menu_links()):
         admin.add_link(MenuLink(name="View shop", url="/"))
         admin.add_link(MenuLink(name="Sign out", url="/admin/logout"))
