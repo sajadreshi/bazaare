@@ -4,11 +4,12 @@
 {% block form %}
 <p class="bz-eyebrow">Your account</p>
 <h1 class="bz-title">Sign in</h1>
+{% if error %}<p class="bz-form-error" role="alert">{{ error }}</p>{% endif %}
 <form action="" method="post" class="bz-form" novalidate>
   {{ form.hidden_tag() }}
-  {{ input(form.email, 'email', 'email') }}
+  {{ input(form.email, 'email', 'email', autofocus=not error) }}
   <div>
-    {{ input(form.password, 'current-password') }}
+    {{ input(form.password, 'current-password', autofocus=error) }}
     <a class="bz-auth__forgot" href="{{ url_for('auth.reset_password_request') }}">Forgot your password?</a>
   </div>
   {{ checkbox(form.remember_me) }}

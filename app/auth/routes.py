@@ -20,8 +20,9 @@ def login():
     if form.validate_on_submit():
         user = User.query.filter_by(email=form.email.data).first()
         if user is None or not user.check_password(form.password.data):
-            flash("That email and password don't match an account. Please try again.")
-            return redirect(url_for("auth.login", next=request.args.get("next")))
+            # Show the form again with the email kept (the password is never sent back).
+            error = "That email and password don't match an account. Please try again."
+            return render_template("auth/login.html", form=form, error=error), 401
         sign_in(user, remember=form.remember_me.data)
         next_page = request.args.get("next")
         if not is_safe_next(next_page):

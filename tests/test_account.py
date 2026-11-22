@@ -111,7 +111,14 @@ def test_register_signs_you_in_and_keeps_the_bag(app, client, product_ids):
 def test_wrong_password_keeps_where_you_were_going(client, member):
     client.get("/auth/logout")
     resp = client.post("/auth/login?next=/customer/orders", data={"email": member, "password": "nope-nope"})
-    assert resp.headers["Location"].endswith("/auth/login?next=/customer/orders")
+    html = resp.get_data(as_text=True)
+    assert resp.status_code == 401 and "don&#39;t match an account" in html
+    assert f'value="{member}"' in html and "nope-nope" not in html  # email kept, password not
+    # The form still posts to the same address, so ?next survives the retry.
+    resp = client.post(
+        "/auth/login?next=/customer/orders", data={"email": member, "password": "member-password-1"}
+    )
+    assert resp.headers["Location"].endswith("/customer/orders")
 
 
 def test_account_pages_share_the_new_layout(client, member):

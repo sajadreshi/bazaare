@@ -81,11 +81,12 @@
 {% endmacro %}
 
 {# A labelled input for the address forms. #}
-{% macro input(f, autocomplete=None, type=None, cls='') %}
+{% macro input(f, autocomplete=None, type=None, cls='', autofocus=False) %}
 <div class="bz-input {{ cls }} {{ 'has-error' if f.errors }}">
   <label for="{{ f.id }}">{{ f.label.text }}{% if not f.flags.required %} <span class="bz-optional">(optional)</span>{% endif %}</label>
   {% set attrs = {'autocomplete': autocomplete} if autocomplete else {} %}
   {% if type %}{% set _ = attrs.update({'type': type}) %}{% endif %}
+  {% if autofocus %}{% set _ = attrs.update({'autofocus': True}) %}{% endif %}
   {{ f(placeholder='', **attrs) }}
   {% for error in f.errors %}<p class="bz-input__error">{{ error }}</p>{% endfor %}
 </div>

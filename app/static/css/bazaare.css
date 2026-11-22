@@ -548,3 +548,4 @@ form.is-busy { opacity: .55; pointer-events: none; }
 .bz-order-card__total .bz-muted { font-size: .75rem; letter-spacing: .12em; text-transform: uppercase; }
 .bz-order-card__total strong { font-family: var(--bz-serif); font-size: 1.4rem; font-weight: 600; color: var(--bz-ink); }
 .bz-order-card__cta { font-size: .85rem; letter-spacing: .06em; text-transform: uppercase; color: var(--bz-gold); }
+.bz-form-error { margin: 0 0 16px; padding: 12px 14px; border-radius: 10px; background: #f6e5e3; border: 1px solid #e8c3bd; color: var(--bz-sale); font-size: .92rem; }
