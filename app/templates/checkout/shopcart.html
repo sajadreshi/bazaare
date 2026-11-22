@@ -1,27 +1,56 @@
 {% extends 'common/layout.html' %}
-
-{% block title %}Cart{% endblock %}
+{% from 'checkout/_macros.html' import bag_line, totals, assurances, money with context %}
+{% from 'common/_icons.html' import icon %}
+{% block title %}Your bag{% endblock %}
 {% block header %}{% include 'common/header.html' %}{% endblock %}
 {% block content %}
-{% with messages = get_flashed_messages() %}
-{% if messages %}
-{% for message in messages %}
-<div class="alert alert-warning alert-dismissible fade show" role="alert">
-  <div class="flash-msg">{{message}}</div>
-  <span type="button" class="close" data-dismiss="alert" aria-label="Close"><span
-      aria-hidden="true">&times;</span></span>
-</div>
-{% endfor %}
-{% endif %}
-{% endwith %}
-<section class="">
-  {% include 'checkout/shopcartbreadcrubm.html'%}
-</section>
-<section class="shopping-cart-details">
-  {% if cart and cart.pending_items %}
-  {% include 'checkout/cartdetails.html'%}
+{% set items = cart.pending_items if cart else [] %}
+<section class="bz-section bz-checkout">
+  <header class="bz-checkout__head">
+    <div>
+      <p class="bz-eyebrow">Shopping bag</p>
+      <h1 class="bz-title">Your bag</h1>
+    </div>
+    {% if items %}<p class="bz-count">{{ items | length }} item{{ 's' if items | length != 1 }}</p>{% endif %}
+  </header>
+
+  {% if items %}
+  <div class="bz-checkout__grid">
+    <div class="bz-checkout__main">
+      {% if free_shipping_gap %}
+      {% set pct = ((cart.total_merchandise or 0) / free_over * 100) | round | int %}
+      <div class="bz-freeship">
+        <p>{{ icon('truck', 18) }} You're <strong>{{ money(free_shipping_gap) }}</strong> away from free standard shipping.</p>
+        <div class="bz-freeship__bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ pct }}"><span style="width: {{ pct }}%"></span></div>
+      </div>
+      {% elif free_over %}
+      <div class="bz-freeship is-done"><p>{{ icon('check', 18) }} Your order ships free with standard shipping.</p></div>
+      {% endif %}
+      <ul class="bz-lines">
+        {% for item in items %}{{ bag_line(item, editable=True) }}{% endfor %}
+      </ul>
+      <a class="bz-back-link" href="{{ url_for('main.home') }}">{{ icon('arrow-left', 16) }} Continue shopping</a>
+    </div>
+
+    <aside class="bz-summary">
+      <h2 class="bz-summary__title">Order summary</h2>
+      {{ totals(cart.total_merchandise, cart.total_shipping, cart.total_taxes, cart.total_discount, cart.total_cart,
+                shipping_label='Shipping (' ~ shipping_method_for(cart.shipping_method).name ~ ')', count=items | length) }}
+      <a class="bz-btn bz-btn--wide" href="{{ url_for('checkout.order') }}">{{ icon('lock', 18) }} Checkout</a>
+      <p class="bz-summary__note">Shipping options and payment are chosen on the next step.</p>
+      {{ assurances(free_over) }}
+    </aside>
+  </div>
   {% else %}
-  {% include 'checkout/emptyCart.html'%}
+  <div class="bz-empty bz-empty--bag">
+    {{ icon('bag', 40) }}
+    <h2>Your bag is empty</h2>
+    <p>Find something you'll love: jhumkas, chandbalis, haslis and more, handcrafted in small batches.</p>
+    <div class="bz-empty__actions">
+      <a class="bz-btn" href="{{ url_for('catalog.category', slug='new') }}">Shop new arrivals</a>
+      <a class="bz-btn bz-btn--ghost" href="{{ url_for('catalog.wishlist') }}">{{ icon('heart', 18) }} Your wishlist</a>
+    </div>
+  </div>
   {% endif %}
 </section>
 
@@ -32,5 +61,4 @@
 </section>
 {% endif %}
 {% endblock %}
-
 {% block footer %}{% include 'common/footer.html' %}{% endblock %}

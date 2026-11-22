@@ -9,23 +9,15 @@ from app.us_states import US_STATES
 
 
 class _AddressForm(FlaskForm):
-    first_name = StringField(
-        "First Name", validators=[Length(max=100), DataRequired()], render_kw={"placeholder": "First Name"}
-    )
-    last_name = StringField(
-        "Last Name", validators=[Length(max=100), DataRequired()], render_kw={"placeholder": "Last Name"}
-    )
-    address1 = StringField(
-        "Address Line1", validators=[DataRequired()], render_kw={"placeholder": "Address Line 1"}
-    )
-    address2 = StringField("Address Line2", render_kw={"placeholder": "Address Line 2 (Optional)"})
-    city = StringField("City", validators=[DataRequired()], render_kw={"placeholder": "City"})
-    state = SelectField("State", validators=[DataRequired()], choices=US_STATES)
-    zip = StringField("Zip", validators=[Length(max=10), DataRequired()], render_kw={"placeholder": "Zip"})
-    email = StringField("Email", validators=[DataRequired(), Email()], render_kw={"placeholder": "Email"})
-    phone = StringField(
-        "Phone", validators=[Length(max=14), DataRequired()], render_kw={"placeholder": "Phone"}
-    )
+    first_name = StringField("First name", validators=[Length(max=100), DataRequired()])
+    last_name = StringField("Last name", validators=[Length(max=100), DataRequired()])
+    address1 = StringField("Address", validators=[Length(max=200), DataRequired()])
+    address2 = StringField("Apartment, suite, etc.", validators=[Length(max=200)])
+    city = StringField("City", validators=[Length(max=100), DataRequired()])
+    state = SelectField("State", validators=[DataRequired()], choices=[("", "Select…"), *US_STATES])
+    zip = StringField("ZIP code", validators=[Length(max=10), DataRequired()])
+    email = StringField("Email", validators=[DataRequired(), Email()])
+    phone = StringField("Phone", validators=[Length(max=14), DataRequired()])
     submit = SubmitField("Continue")
 
     def fill_from(self, address):

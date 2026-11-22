@@ -1,88 +1,91 @@
-{# Full view of one Order model as `order`: used by the confirmation page and "My orders". #}
-{% macro section(title) %}
-<div class="worked checkout-sec">
-  <div class="completed-sec">
-    <h5 class="mb-0"><span class="heading">{{ title }}</span></h5>
-    <div class="card-body">{{ caller() }}</div>
+{# Full view of one Order as `order`: used by the confirmation page and "My orders". #}
+{% from 'checkout/_macros.html' import money, totals, address_lines with context %}
+{% from 'common/_icons.html' import icon %}
+{% set hand = order.carrier == 'Hand delivery' %}
+{% set steps = [
+  ('PLACED', 'Placed', order.placed_at),
+  ('SHIPPED', 'Out for delivery' if hand else 'Shipped', order.shipped_at),
+  ('DELIVERED', 'Delivered', order.delivered_at),
+] %}
+{% set reached = {'PLACED': 0, 'SHIPPED': 1, 'DELIVERED': 2}.get(order.status, -1) %}
+<div class="bz-order-view">
+  <div class="bz-order-view__main">
+    <section class="bz-card-panel">
+      <header class="bz-card-panel__head">
+        <h2>Order {{ order.number }}</h2>
+        <span class="bz-status bz-status--{{ order.status | lower }}">{{ order.status | title }}</span>
+      </header>
+      {% if order.status == 'CANCELLED' %}
+      <p class="bz-muted">This order was cancelled.</p>
+      {% else %}
+      <ol class="bz-track">
+        {% for code, label, when in steps %}
+        <li class="{{ 'is-done' if loop.index0 <= reached }} {{ 'is-current' if loop.index0 == reached }}">
+          <span class="bz-track__dot">{% if loop.index0 <= reached %}{{ icon('check', 12) }}{% endif %}</span>
+          <span class="bz-track__label">{{ label }}</span>
+          <span class="bz-track__date">{% if when and loop.index0 <= reached %}{{ when.strftime('%d %b') }}{% endif %}</span>
+        </li>
+        {% endfor %}
+      </ol>
+      {% set earliest, latest = order.estimated_delivery %}
+      <p class="bz-order-view__eta">
+        {% if order.status == 'DELIVERED' %}
+          {{ icon('check', 16) }} Delivered{{ ' by hand' if hand }}{% if order.delivered_at %} on {{ order.delivered_at.strftime('%a %d %b %Y') }}{% endif %}.
+        {% elif order.status == 'SHIPPED' and hand %}
+          {{ icon('truck', 16) }} We're bringing it to you by hand.
+        {% else %}
+          {{ icon('truck', 16) }} {{ order.method.name }} shipping · estimated delivery {{ earliest.strftime('%a %d %b') }} – {{ latest.strftime('%a %d %b') }}
+        {% endif %}
+      </p>
+      {% if order.tracking_number %}
+      <p class="bz-order-view__eta">{{ order.carrier }} tracking:
+        {% if order.tracking_url %}<a href="{{ order.tracking_url }}" target="_blank" rel="noopener">{{ order.tracking_number }} ↗</a>{% else %}{{ order.tracking_number }}{% endif %}
+      </p>
+      {% endif %}
+      {% endif %}
+    </section>
+
+    <section class="bz-card-panel">
+      <header class="bz-card-panel__head"><h2>Items</h2><span class="bz-muted">{{ order.items | length }} item{{ 's' if order.items | length != 1 }}</span></header>
+      <ul class="bz-lines">
+        {% for item in order.items %}
+        <li class="bz-line">
+          {% if item.product_id %}<a class="bz-line__img" href="{{ url_for('catalog.product', productId=item.product_id) }}">{% else %}<span class="bz-line__img">{% endif %}
+            <img src="{{ image_url(item.image, thumb=True) }}" alt="" width="96" height="96">
+          {% if item.product_id %}</a>{% else %}</span>{% endif %}
+          <div class="bz-line__body">
+            <span class="bz-line__name">{{ item.name }}</span>
+            {% if item.variant_name and item.variant_name != 'One Size' %}<p class="bz-line__meta">{{ item.variant_name }}</p>{% endif %}
+            <p class="bz-line__meta">SKU {{ item.sku }}</p>
+          </div>
+          <div class="bz-line__price">{{ money(item.price) }}</div>
+        </li>
+        {% endfor %}
+      </ul>
+    </section>
   </div>
-</div>
-{% endmacro %}
-<div class="checkout-section mt-150 mb-150">
-  <div class="container">
-    <div class="row">
-      <div class="col-lg-8">
-        <div class="checkout-accordion-wrap">
-          {% call section("Order Details") %}
-          <div class="order-sec">
-            <div class="order-ref">Order Number : {{ order.number }}</div>
-            <span class="add-elem">Status : {{ order.status | title }}</span>
-            <span class="add-elem">Placed : {{ order.placed_at.strftime('%a, %d %b %Y') }}</span>
-            {% for payment in order.payments %}
-            <span class="add-elem">Payment Method : {{ payment.payment_method }}</span>
-            <span class="add-elem">Payment Amount : ${{ payment.approved_amount }}</span>
-            {% endfor %}
-          </div>
-          {% endcall %}
-          {% call section("Shipping") %}
-          {% set earliest, latest = order.estimated_delivery %}
-          <div class="address-sec">
-            <span class="add-elem">{{ order.method.name }} shipping · {{ order.method.days_label }}</span>
-            {% if order.status == 'DELIVERED' %}
-            <span class="add-elem">Delivered{{ ' by hand' if order.carrier == 'Hand delivery' }}{% if order.delivered_at %} {{ order.delivered_at.strftime('%a, %d %b %Y') }}{% endif %}</span>
-            {% elif order.status == 'SHIPPED' and order.carrier == 'Hand delivery' %}
-            <span class="add-elem">Out for delivery: we're bringing it to you by hand</span>
-            {% elif order.status == 'CANCELLED' %}
-            <span class="add-elem">Cancelled</span>
-            {% else %}
-            <span class="add-elem">Estimated delivery {{ earliest.strftime('%a, %d %b') }} – {{ latest.strftime('%a, %d %b %Y') }}</span>
-            {% endif %}
-            {% if order.tracking_number %}
-            <span class="add-elem">{{ order.carrier }} tracking:
-              {% if order.tracking_url %}<a href="{{ order.tracking_url }}" target="_blank" rel="noopener">{{ order.tracking_number }}</a>{% else %}{{ order.tracking_number }}{% endif %}
-            </span>
-            {% endif %}
-          </div>
-          {% endcall %}
-          {% call section("Items") %}
-          <div class="cart-table-wrap">
-            <table class="cart-table">
-              <tbody>
-                {% for item in order.items %}
-                <tr class="table-body-row">
-                  <td class="product-image">
-                    <img src="{{ image_url(item.image) }}" alt="{{ item.name }}">
-                  </td>
-                  <td>
-                    <span class="td-content">{{ item.name }}</span><br>
-                    <span class="td-content">${{ item.price }}</span><br>
-                    <span class="td-content">{{ item.variant_name or '' }}</span>
-                  </td>
-                </tr>
-                {% endfor %}
-              </tbody>
-            </table>
-          </div>
-          {% endcall %}
-          {% call section("Shipping Address") %}{% with address = order.shipping_address %}{% include 'orders/_address.html' %}{% endwith %}{% endcall %}
-          {% call section("Billing Address") %}{% with address = order.billing_address %}{% include 'orders/_address.html' %}{% endwith %}{% endcall %}
-        </div>
-      </div>
-      <div class="col-lg-4">
-        <div class="total-section">
-          <table class="total-table">
-            <thead class="total-table-head">
-              <tr class="total-data-header"><th colspan="2">Order Total</th></tr>
-            </thead>
-            <tbody>
-              <tr class="total-data"><td><strong>Subtotal: </strong></td><td><span class="td-content">${{ order.total_merchandise }}</span></td></tr>
-              <tr class="total-data"><td><strong>Shipping: </strong></td><td><span class="td-content">${{ order.total_shipping }}</span></td></tr>
-              <tr class="total-data"><td><strong>Taxes: </strong></td><td><span class="td-content">${{ order.total_taxes }}</span></td></tr>
-              <tr class="total-data"><td><strong>Discounts: </strong></td><td><span class="td-content">-${{ order.total_discount }}</span></td></tr>
-              <tr class="total-data"><td><strong>Total: </strong></td><td><span class="td-content">${{ order.total }}</span></td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  </div>
+
+  <aside class="bz-order-view__side">
+    <section class="bz-card-panel">
+      <h2 class="bz-card-panel__title">Summary</h2>
+      <p class="bz-muted bz-card-panel__sub">Placed {{ order.placed_at.strftime('%a %d %b %Y') }}</p>
+      {{ totals(order.total_merchandise, order.total_shipping, order.total_taxes, order.total_discount, order.total,
+                shipping_label='Shipping (' ~ order.method.name ~ ')') }}
+      {% for payment in order.payments %}
+      <p class="bz-order-view__pay">{{ icon('cash', 16) }} {{ 'Cash on delivery' if payment.payment_method == 'COD' else payment.payment_method }}</p>
+      {% endfor %}
+    </section>
+    <section class="bz-card-panel">
+      <h2 class="bz-card-panel__title">Shipping to</h2>
+      {{ address_lines(order.shipping_address) }}
+    </section>
+    <section class="bz-card-panel">
+      <h2 class="bz-card-panel__title">Billing address</h2>
+      {% if order.billing_address_id and order.billing_address_id == order.shipping_address_id %}
+      <p class="bz-muted">Same as shipping address</p>
+      {% else %}
+      {{ address_lines(order.billing_address) }}
+      {% endif %}
+    </section>
+  </aside>
 </div>

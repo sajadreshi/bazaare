@@ -49,7 +49,10 @@ from .models import (
 def _asset_version(app):
     import os
 
-    paths = [os.path.join(app.static_folder, f) for f in ("css/admin.css", "js/admin.js", "css/bazaare.css")]
+    paths = [
+        os.path.join(app.static_folder, f)
+        for f in ("css/admin.css", "js/admin.js", "css/bazaare.css", "js/bazaare.js", "js/custom.js")
+    ]
     return str(int(max((os.path.getmtime(p) for p in paths if os.path.exists(p)), default=0)))
 
 
@@ -107,6 +110,7 @@ def create_app(config_overrides=None):
         primary_category=catalog_service.primary_category,
         shipping_method_for=shipping_service.method_for,
         shipping_estimate=shipping_service.estimated_delivery,
+        shipping_methods=shipping_service.METHODS,
     )
     app.register_blueprint(main)
     app.register_blueprint(admin_auth_bp)

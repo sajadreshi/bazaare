@@ -113,8 +113,40 @@ def test_checkout_page_prefills_saved_address(app, client, product_ids):
         add_to_cart(client, pid, small)
     client.post("/checkout/order", data=address("shipping_form"), headers=REFERER)
     html = client.get("/checkout/order").get_data(as_text=True)
-    assert 'value="Lovelace"' in html
-    assert "1 Main St" in html
+    # A saved address is shown as a summary with a Change link; billing defaults to the same address.
+    assert "Ada Lovelace" in html and "1 Main St" in html and 'name="first_name"' not in html
+    assert "Same as shipping address" in html and "Place order" in html
+    html = client.get("/checkout/order?edit=shipping").get_data(as_text=True)
+    assert 'value="Lovelace"' in html and 'autocomplete="shipping family-name"' in html
+
+
+def test_checkout_shows_errors_on_the_step_and_can_bill_to_the_shipping_address(app, client, product_ids):
+    pid, small, _ = product_ids
+    with app.app_context():
+        add_to_cart(client, pid, small)
+    bad = {**address("shipping_form"), "zip": "", "email": "nope"}
+    html = client.post("/checkout/order", data=bad).get_data(as_text=True)
+    assert 'id="shipping"' in html and "This field is required." in html and "Invalid email address." in html
+    assert "Place order" not in html  # payment stays locked until the address is complete
+    client.post("/checkout/order", data=address("shipping_form"))
+    client.post("/checkout/order", data={**address("billing_form"), "last_name": "Byron"})
+    assert "Byron" in client.get("/checkout/order").get_data(as_text=True)
+    resp = client.post("/checkout/order", data={"form_id": "billing_same"})
+    assert resp.status_code == 302
+    html = client.get("/checkout/order").get_data(as_text=True)
+    assert "Byron" not in html and "Same as shipping address" in html
+
+
+def test_bag_page_shows_lines_totals_and_free_shipping_progress(app, client, product_ids):
+    pid, small, _ = product_ids
+    html = client.get("/checkout/shopcart").get_data(as_text=True)
+    assert "Your bag is empty" in html
+    with app.app_context():
+        add_to_cart(client, pid, small)
+    html = client.get("/checkout/shopcart").get_data(as_text=True)
+    assert "Gold Signet" in html and "$99.99" in html and "Order summary" in html
+    assert "ships free with standard shipping" in html  # $99.99 is over the $50 threshold
+    assert 'name="size"' in html and "Ring size 9 · $109.99" in html  # option can be changed in the bag
 
 
 def test_size_endpoint_lists_product_variants(app, client, product_ids):
