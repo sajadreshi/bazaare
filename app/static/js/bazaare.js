@@ -36,6 +36,23 @@
       }
     });
   });
+  // Photos come from the image host (Cloudflare R2). If one fails to load, try once more
+  // after a moment, then show a neutral placeholder instead of a broken image.
+  function photoFallback(img) {
+    if (img.dataset.bzRetried) {
+      img.classList.add('is-missing');
+      img.src = img.dataset.bzPlaceholder || '/static/images/default.jpg';
+      return;
+    }
+    img.dataset.bzRetried = '1';
+    var src = img.currentSrc || img.src;
+    setTimeout(function () { img.src = src + (src.indexOf('?') === -1 ? '?' : '&') + 'retry=1'; }, 1500);
+  }
+  document.querySelectorAll('img').forEach(function (img) {
+    if (img.src.indexOf('/static/') !== -1) return;
+    if (img.complete && img.naturalWidth === 0 && img.src) photoFallback(img);
+    img.addEventListener('error', function () { if (!img.classList.contains('is-missing')) photoFallback(img); });
+  });
   // Product gallery: show the full image when a thumbnail is clicked.
   document.querySelectorAll('[data-bz-thumb]').forEach(function (thumb) {
     thumb.addEventListener('click', function () {
