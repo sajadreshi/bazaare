@@ -1,0 +1,15 @@
+{% extends 'customer/_account.html' %}
+{% block title %}Password{% endblock %}
+{% block account %}
+<section class="bz-card-panel">
+  <h2 class="bz-card-panel__title">Change your password</h2>
+  <p class="bz-muted bz-card-panel__sub">Use at least 8 characters. A short phrase is easier to remember than random letters.</p>
+  <form method="post" action="{{ url_for('customer.security') }}" class="bz-form bz-form--narrow" novalidate>
+    {{ form.hidden_tag() }}
+    {{ input(form.current_password, 'current-password') }}
+    {{ input(form.password, 'new-password') }}
+    {{ input(form.confirm_password, 'new-password') }}
+    <div class="bz-form__actions"><button type="submit" class="bz-btn">Change password</button></div>
+  </form>
+</section>
+{% endblock %}

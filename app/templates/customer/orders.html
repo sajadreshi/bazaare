@@ -1,0 +1,39 @@
+{% extends 'customer/_account.html' %}
+{% block title %}Your orders{% endblock %}
+{% block account %}
+{% if orders %}
+<ul class="bz-orders">
+  {% for order in orders %}
+  <li class="bz-order-card">
+    <a class="bz-order-card__link" href="{{ url_for('customer.orderDetails', orderId=order.id) }}">
+      <div class="bz-order-card__top">
+        <div>
+          <strong class="bz-order-card__num">{{ order.number }}</strong>
+          <span class="bz-muted">Placed {{ order.placed_at.strftime('%d %b %Y') }} · {{ order.items | length }} item{{ 's' if order.items | length != 1 }}</span>
+        </div>
+        <span class="bz-status bz-status--{{ order.status | lower }}">{{ order.status | title }}</span>
+      </div>
+      <div class="bz-order-card__bottom">
+        <div class="bz-order-card__thumbs">
+          {% for item in order.items[:4] %}<img src="{{ image_url(item.image, thumb=True) }}" alt="" width="56" height="56">{% endfor %}
+          {% if order.items | length > 4 %}<span class="bz-order-card__more">+{{ order.items | length - 4 }}</span>{% endif %}
+        </div>
+        <div class="bz-order-card__total">
+          <span class="bz-muted">Total</span>
+          <strong>{{ money(order.total) }}</strong>
+        </div>
+      </div>
+      <span class="bz-order-card__cta">View order →</span>
+    </a>
+  </li>
+  {% endfor %}
+</ul>
+{% else %}
+<div class="bz-empty bz-empty--bag">
+  {{ icon('bag', 40) }}
+  <h2>No orders yet</h2>
+  <p>When you place an order it shows up here, so you can follow it to your door.</p>
+  <div class="bz-empty__actions"><a class="bz-btn" href="{{ url_for('catalog.category', slug='new') }}">Shop new arrivals</a></div>
+</div>
+{% endif %}
+{% endblock %}

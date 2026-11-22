@@ -1,0 +1,25 @@
+{% extends 'common/layout.html' %}
+{# Shared frame for sign in, register and password reset: a brand panel and a form card. #}
+{% from 'checkout/_macros.html' import input, checkbox with context %}
+{% from 'common/_icons.html' import icon %}
+{% block header %}{% include 'common/header.html' %}{% endblock %}
+{% block content %}
+<section class="bz-auth">
+  <div class="bz-auth__card">
+    <aside class="bz-auth__brand">
+      <img src="{{ url_for('static', filename='images/bazaare-logo.jpg') }}" alt="" width="84" height="84">
+      <p class="bz-eyebrow">BazaarE'</p>
+      <h2>{% block brand_title %}Jewellery with a story{% endblock %}</h2>
+      <ul>
+        <li>{{ icon('bag', 18) }} Follow your orders from workshop to doorstep</li>
+        <li>{{ icon('truck', 18) }} Saved addresses for a faster checkout</li>
+        <li>{{ icon('heart', 18) }} Keep a wishlist of pieces you love</li>
+      </ul>
+    </aside>
+    <div class="bz-auth__form">
+      {% block form %}{% endblock %}
+    </div>
+  </div>
+</section>
+{% endblock %}
+{% block footer %}{% include 'common/footer.html' %}{% endblock %}

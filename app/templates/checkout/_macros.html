@@ -81,18 +81,19 @@
 {% endmacro %}
 
 {# A labelled input for the address forms. #}
-{% macro input(f, autocomplete=None, type=None, cls='') %}
+{% macro input(f, autocomplete=None, type=None, cls='', autofocus=False) %}
 <div class="bz-input {{ cls }} {{ 'has-error' if f.errors }}">
   <label for="{{ f.id }}">{{ f.label.text }}{% if not f.flags.required %} <span class="bz-optional">(optional)</span>{% endif %}</label>
   {% set attrs = {'autocomplete': autocomplete} if autocomplete else {} %}
   {% if type %}{% set _ = attrs.update({'type': type}) %}{% endif %}
+  {% if autofocus %}{% set _ = attrs.update({'autofocus': True}) %}{% endif %}
   {{ f(placeholder='', **attrs) }}
   {% for error in f.errors %}<p class="bz-input__error">{{ error }}</p>{% endfor %}
 </div>
 {% endmacro %}
 
-{% macro address_form(form, form_id, submit_label, section) %}
-<form method="post" action="{{ url_for('checkout.order') }}" class="bz-form" novalidate>
+{% macro address_form(form, form_id, submit_label, section, action=None, cancel_url=None) %}
+<form method="post" action="{{ action or url_for('checkout.order') }}" class="bz-form" novalidate>
   {{ form.hidden_tag() }}
   <div class="bz-form__row">
     {{ input(form.first_name, section ~ ' given-name') }}
@@ -109,6 +110,17 @@
     {{ input(form.email, 'email', 'email') }}
     {{ input(form.phone, 'tel', 'tel') }}
   </div>
-  <button type="submit" class="bz-btn">{{ submit_label }}</button>
+  <div class="bz-form__actions">
+    <button type="submit" class="bz-btn">{{ submit_label }}</button>
+    {% if cancel_url %}<a class="bz-textbtn" href="{{ cancel_url }}">Cancel</a>{% endif %}
+  </div>
 </form>
+{% endmacro %}
+
+{# A checkbox with a label and optional hint, for preferences and "keep me signed in". #}
+{% macro checkbox(f, hint=None) %}
+<label class="bz-checkbox">
+  {{ f() }}
+  <span><strong>{{ f.label.text }}</strong>{% if hint %}<small>{{ hint }}</small>{% endif %}</span>
+</label>
 {% endmacro %}

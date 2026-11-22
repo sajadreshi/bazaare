@@ -8,24 +8,14 @@ from app.services.account import MIN_PASSWORD_LENGTH, PROFILE_FIELDS
 
 
 class ProfileForm(FlaskForm):
-    first_name = StringField(
-        "First Name", validators=[Length(max=100), DataRequired()], render_kw={"placeholder": "First Name"}
-    )
-    last_name = StringField(
-        "Last Name", validators=[Length(max=100), DataRequired()], render_kw={"placeholder": "Last Name"}
-    )
-    cell_number = StringField(
-        "Cell Phone", validators=[Length(max=20)], render_kw={"placeholder": "Cell Phone"}
-    )
-    marketing_email = BooleanField("Marketing Email", render_kw={"placeholder": "Receive Marketing email"})
-    transactional_email = BooleanField(
-        "Transactional Email", render_kw={"placeholder": "Receive Transactional email"}
-    )
-    marketing_sms = BooleanField("Marketing SMS", render_kw={"placeholder": "Receive Marketing SMS"})
-    transactional_sms = BooleanField(
-        "Transactional SMS", render_kw={"placeholder": "Receive Transactional SMS"}
-    )
-    submit = SubmitField("Save")
+    first_name = StringField("First name", validators=[Length(max=100), DataRequired()])
+    last_name = StringField("Last name", validators=[Length(max=100), DataRequired()])
+    cell_number = StringField("Mobile number", validators=[Length(max=20)])
+    marketing_email = BooleanField("New arrivals and offers by email")
+    transactional_email = BooleanField("Order updates by email")
+    marketing_sms = BooleanField("New arrivals and offers by text message")
+    transactional_sms = BooleanField("Order updates by text message")
+    submit = SubmitField("Save changes")
 
     def fill_from(self, user):
         if not self.is_submitted():
@@ -35,23 +25,24 @@ class ProfileForm(FlaskForm):
 
 
 class ShippingForm(CheckoutShippingForm):
-    submit = SubmitField("Save")
+    submit = SubmitField("Save address")
 
 
 class BillingForm(CheckoutBillingForm):
-    submit = SubmitField("Save")
+    submit = SubmitField("Save address")
 
 
 class ChangePassword(FlaskForm):
-    current_password = PasswordField("Current Password", validators=[DataRequired()])
+    current_password = PasswordField("Current password", validators=[DataRequired()])
     password = PasswordField(
-        "New Password",
+        "New password",
         validators=[
             DataRequired(),
             Length(min=MIN_PASSWORD_LENGTH, message=f"Use at least {MIN_PASSWORD_LENGTH} characters."),
         ],
     )
     confirm_password = PasswordField(
-        "Confirm Password", validators=[DataRequired(), EqualTo("password", message="Passwords must match.")]
+        "Repeat new password",
+        validators=[DataRequired(), EqualTo("password", message="Passwords must match.")],
     )
-    submit = SubmitField("Change Password")
+    submit = SubmitField("Change password")
