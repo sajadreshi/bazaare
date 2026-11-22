@@ -1,0 +1,34 @@
+{# Shared email frame: black header with the brand, ivory body, gold accents. Tables + inline styles for email clients. #}
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>{% block title %}BazaarE'{% endblock %}</title>
+</head>
+<body style="margin:0;padding:0;background:#f8f4ec;font-family:Helvetica,Arial,sans-serif;color:#2a2620;">
+<div style="display:none;max-height:0;overflow:hidden;">{% block preheader %}{% endblock %}</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f8f4ec;">
+  <tr><td align="center" style="padding:24px 12px;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;background:#fffdf8;border:1px solid #e6ddcc;border-radius:16px;overflow:hidden;">
+      <tr><td align="center" style="background:#0e0d0b;padding:22px 24px;">
+        <a href="{{ shop_url }}" style="color:#c9a45c;text-decoration:none;font-family:Georgia,'Times New Roman',serif;font-size:28px;font-weight:bold;letter-spacing:1px;">BazaarE&rsquo;</a>
+        <div style="color:#b9ae9b;font-size:10px;letter-spacing:4px;text-transform:uppercase;margin-top:4px;">Jewellery &middot; Craft &middot; Culture</div>
+      </td></tr>
+      <tr><td style="padding:28px 28px 8px;">
+        {% block body %}{% endblock %}
+      </td></tr>
+      <tr><td style="padding:18px 28px 26px;border-top:1px solid #e6ddcc;color:#786f60;font-size:12px;line-height:1.6;">
+        {% block footer %}
+        Questions? Reply to this email or write to <a href="mailto:{{ support_email }}" style="color:#a8834a;">{{ support_email }}</a>.<br>
+        <a href="{{ url('main.policy', slug='shipping') }}" style="color:#786f60;">Shipping</a> &middot;
+        <a href="{{ url('main.policy', slug='returns') }}" style="color:#786f60;">Returns &amp; exchanges</a> &middot;
+        <a href="{{ url('main.policy', slug='privacy') }}" style="color:#786f60;">Privacy</a>
+        {% endblock %}
+      </td></tr>
+    </table>
+  </td></tr>
+</table>
+</body>
+</html>

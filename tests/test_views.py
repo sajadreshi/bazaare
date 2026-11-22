@@ -24,7 +24,7 @@ def test_public_pages(client):
     ]:
         resp = client.get(url)
         assert resp.status_code == 200, url
-    assert b"Bazaare" in client.get("/about").data
+    assert b"BazaarE" in client.get("/about").data
 
 
 def test_product_page_shows_jewellery_fields(app, client):

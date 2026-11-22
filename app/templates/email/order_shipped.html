@@ -1,0 +1,19 @@
+{% extends 'email/_layout.html' %}
+{% from 'email/_order.html' import items, address, heading, button with context %}
+{% block title %}Your order {{ order.number }} is on its way{% endblock %}
+{% block preheader %}{{ 'We are bringing your order to you by hand.' if hand else 'Your BazaarE’ order has shipped.' }}{% endblock %}
+{% block body %}
+{% set earliest, latest = order.estimated_delivery %}
+{% if hand %}
+{{ heading('Order ' ~ order.number, "It's on its way") }}
+<p style="font-size:15px;line-height:1.6;margin:0 0 14px;">Good news{{ ', ' ~ name if name }}! We're delivering your order to you by hand.</p>
+{% else %}
+{{ heading('Order ' ~ order.number, 'Your order has shipped') }}
+<p style="font-size:15px;line-height:1.6;margin:0 0 14px;">Good news{{ ', ' ~ name if name }}! Your order is on its way with <strong>{{ order.carrier }}</strong>{% if order.tracking_number %}, tracking number <strong>{{ order.tracking_number }}</strong>{% endif %}.
+  Expected {{ earliest.strftime('%a %d %b') }} &ndash; {{ latest.strftime('%a %d %b') }}.</p>
+{% if order.tracking_url %}{{ button(order.tracking_url, 'Track your parcel') }}{% endif %}
+{% endif %}
+{{ items(order) }}
+<p style="font-size:14px;line-height:1.5;margin-top:16px;"><span style="color:#786f60;font-size:11px;letter-spacing:2px;text-transform:uppercase;">Shipping to</span><br>{{ address(order.shipping_address) }}</p>
+{% if order_url %}{{ button(order_url, 'View your order') }}{% endif %}
+{% endblock %}

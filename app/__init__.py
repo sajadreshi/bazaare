@@ -7,7 +7,7 @@ from flask_wtf.csrf import CSRFError
 from markupsafe import Markup
 
 from app.adminapp.auth import bp as admin_auth_bp
-from app.adminapp.settings import PromotionSettingsView, SettingsView, StockView, TaxesView
+from app.adminapp.settings import EmailsView, PromotionSettingsView, SettingsView, StockView, TaxesView
 from app.adminapp.views import (
     AttributesView,
     CarouselView,
@@ -15,6 +15,7 @@ from app.adminapp.views import (
     CouponView,
     HolidayView,
     OrderView,
+    PageView,
     ProductAssociationView,
     ProductView,
     RoleView,
@@ -43,6 +44,7 @@ from .models import (
     Coupon,
     Holiday,
     Order,
+    Page,
     Product,
     ProductAssociation,
     Role,
@@ -58,6 +60,22 @@ def _asset_version(app):
         for f in ("css/admin.css", "js/admin.js", "css/bazaare.css", "js/bazaare.js", "js/custom.js")
     ]
     return str(int(max((os.path.getmtime(p) for p in paths if os.path.exists(p)), default=0)))
+
+
+def _policy_pages():
+    """Published pages other than About, in order, for the footer (cached for the request)."""
+    from flask import g
+
+    from app.models import Page
+
+    if "policy_pages" not in g:
+        g.policy_pages = (
+            db.session.query(Page)
+            .filter(Page.is_published.is_(True), Page.slug != "about")
+            .order_by(Page.position, Page.title)
+            .all()
+        )
+    return g.policy_pages
 
 
 def create_app(config_overrides=None):
@@ -106,6 +124,7 @@ def create_app(config_overrides=None):
     app.jinja_env.globals["asset_version"] = _asset_version(app)
     app.jinja_env.globals.update(
         shop_settings=inventory_service.settings,
+        policy_pages=_policy_pages,
         cart_item_count=item_count,
         shop_menu=catalog_service.menu,
         wishlist_ids=wishlist_service.ids,
@@ -126,6 +145,7 @@ def create_app(config_overrides=None):
     admin.add_view(AttributesView(Attribute, db, category="Attributes", name="Attribute types"))
     admin.add_view(CategoryView(Category, db, category="Category"))
     admin.add_view(CarouselView(Carousel, db, category="Content", name="Home banner slides"))
+    admin.add_view(PageView(Page, db, category="Content", name="Pages & policies", endpoint="page"))
     admin.add_view(ProductView(Product, db, category="Product"))
     admin.add_view(StockView(name="Stock", endpoint="stock", category="Product"))
     admin.add_view(UserView(User, db, category="User"))
@@ -139,6 +159,7 @@ def create_app(config_overrides=None):
     admin.add_view(OrderView(Order, db, name="Orders", endpoint="order"))
     admin.add_view(SettingsView(name="Inventory", endpoint="settings", category="Settings"))
     admin.add_view(TaxesView(name="Taxes", endpoint="taxes", category="Settings"))
+    admin.add_view(EmailsView(name="Emails", endpoint="emails", category="Settings"))
     if not any(link.name == "Sign out" for link in admin.menu_links()):
         admin.add_link(MenuLink(name="View shop", url="/"))
         admin.add_link(MenuLink(name="Sign out", url="/admin/logout"))

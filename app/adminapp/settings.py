@@ -4,8 +4,8 @@ from flask import flash, redirect, url_for
 from flask_admin import BaseView, expose
 from flask_wtf import FlaskForm
 from sqlalchemy import func
-from wtforms import BooleanField, DecimalField, IntegerField
-from wtforms.validators import InputRequired, NumberRange, Optional
+from wtforms import BooleanField, DecimalField, IntegerField, StringField
+from wtforms.validators import Email, InputRequired, Length, NumberRange, Optional
 
 from app.adminapp.security import AdminOnlyMixin
 from app.extension import db
@@ -245,3 +245,68 @@ class PromotionSettingsView(AdminOnlyMixin, BaseView):
             return redirect(url_for(".index"))
         db.session.commit()
         return self.render("admin/promotion_settings.html", form=form, settings=settings)
+
+
+class EmailSettingsForm(FlaskForm):
+    order_alert_email = StringField(
+        "Send new-order alerts to", validators=[Optional(), Email(), Length(max=120)]
+    )
+    support_email = StringField(
+        "Customer support address", validators=[InputRequired(), Email(), Length(max=120)]
+    )
+
+
+class EmailsView(AdminOnlyMixin, BaseView):
+    """Settings > Emails: where order alerts go, the support address, and previews of every order email."""
+
+    @expose("/", methods=["GET", "POST"])
+    def index(self):
+        from flask import current_app, request
+
+        from app import mailer
+        from app.models import Order
+        from app.services import notifications
+
+        settings = inventory.settings()
+        form = EmailSettingsForm(obj=settings)
+        if request.method == "POST" and request.form.get("action") == "test":
+            order = db.session.query(Order).order_by(Order.id.desc()).first()
+            to = notifications.alert_address()
+            if order is None or not to:
+                flash("There's no order to use for a test yet, or no alert address.", "error")
+            else:
+                email = notifications.build("confirmed", order)
+                mailer.send("[Test] " + email.subject, [to], email.html, email.text)
+                where = "saved to the outbox folder" if mailer.uses_outbox(current_app) else f"sent to {to}"
+                flash(f"Test email {where}.", "success")
+            return redirect(url_for(".index"))
+        if form.validate_on_submit():
+            form.populate_obj(settings)
+            settings.order_alert_email = settings.order_alert_email or None
+            inventory.forget_settings()
+            db.session.commit()
+            flash("Email settings saved.", "success")
+            return redirect(url_for(".index"))
+        db.session.commit()
+        latest = db.session.query(Order).order_by(Order.id.desc()).first()
+        return self.render(
+            "admin/emails.html",
+            form=form,
+            latest=latest,
+            kinds=notifications.KINDS,
+            mail_server=current_app.config.get("MAIL_SERVER"),
+            outbox=mailer.outbox_dir(current_app) if mailer.uses_outbox(current_app) else None,
+            alert_to=notifications.alert_address(),
+        )
+
+    @expose("/preview/<kind>/<int:order_id>")
+    def preview(self, kind, order_id):
+        from flask import abort
+
+        from app.models import Order
+        from app.services import notifications
+
+        order = db.session.get(Order, order_id)
+        if order is None or kind not in notifications.KINDS:
+            abort(404)
+        return notifications.build(kind, order).html

@@ -1,0 +1,16 @@
+{{ heading }}
+
+{{ intro }}
+
+{% for item in order.items %}- {{ item.name }}{% if item.variant_name and item.variant_name != 'One Size' %} ({{ item.variant_name }}){% endif %}: ${{ '%.2f' | format(item.price) }}
+{% endfor %}
+Subtotal: ${{ '%.2f' | format(order.total_merchandise) }}{% if order.total_discount %}
+Discount{% if order.coupon_code %} ({{ order.coupon_code }}){% endif %}: -${{ '%.2f' | format(order.total_discount) }}{% endif %}
+Shipping ({{ order.method.name }}): {{ 'Free' if not order.total_shipping else '$%.2f' | format(order.total_shipping) }}{% if order.total_taxes %}
+Sales tax: ${{ '%.2f' | format(order.total_taxes) }}{% endif %}
+Total: ${{ '%.2f' | format(order.total) }}
+{% if link %}
+{{ link_label }}: {{ link }}
+{% endif %}
+Questions? Write to {{ support_email }}.
+BazaarE'

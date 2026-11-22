@@ -1,0 +1,14 @@
+{% extends 'email/_layout.html' %}
+{% from 'email/_order.html' import money, items, totals, address, heading, button with context %}
+{% block title %}New order {{ order.number }}: {{ money(order.total) }}{% endblock %}
+{% block preheader %}{{ customer_name }} ordered {{ order.items | length }} item(s), {{ money(order.total) }}.{% endblock %}
+{% block body %}
+{{ heading('New order', order.number ~ ' · ' ~ money(order.total)) }}
+<p style="font-size:15px;line-height:1.6;margin:0 0 6px;"><strong>{{ customer_name }}</strong> ({{ customer_kind }}) · {{ customer_email or 'no email' }}</p>
+<p style="font-size:14px;color:#786f60;margin:0 0 14px;">{{ order.method.name }} shipping · {{ payment_label }}{% if order.coupon_code %} · coupon {{ order.coupon_code }}{% endif %}</p>
+{{ items(order) }}
+{{ totals(order) }}
+<p style="font-size:14px;line-height:1.5;margin-top:16px;"><span style="color:#786f60;font-size:11px;letter-spacing:2px;text-transform:uppercase;">Ship to</span><br>{{ address(order.shipping_address) }}<br>{{ order.shipping_address.phone if order.shipping_address }}</p>
+{{ button(admin_url, 'Open in admin') }}
+{% endblock %}
+{% block footer %}This alert goes to {{ alert_email }}. Change it in Admin › Settings › Emails.{% endblock %}

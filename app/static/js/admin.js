@@ -10,15 +10,32 @@
     wrap.className = 'bz-rich';
     var bar = document.createElement('div');
     bar.className = 'bz-rich__bar';
-    [['bold', '<b>B</b>', 'Bold'], ['italic', '<i>I</i>', 'Italic'],
-     ['insertUnorderedList', '• List', 'Bulleted list'], ['insertOrderedList', '1. List', 'Numbered list'],
-     ['removeFormat', 'Clear', 'Remove formatting']].forEach(function (cmd) {
+    var headings = area.hasAttribute('data-bz-headings');
+    if (headings) wrap.classList.add('bz-rich--tall');
+    var tools = [['bold', '<b>B</b>', 'Bold'], ['italic', '<i>I</i>', 'Italic'],
+     ['insertUnorderedList', '• List', 'Bulleted list'], ['insertOrderedList', '1. List', 'Numbered list']];
+    if (headings) {
+      tools.push(['h2', 'Heading', 'Section heading'], ['h3', 'Subheading', 'Smaller heading'],
+                 ['p', 'Text', 'Normal paragraph'], ['link', 'Link', 'Link the selected words']);
+    }
+    tools.push(['removeFormat', 'Clear', 'Remove formatting']);
+    tools.forEach(function (cmd) {
       var btn = document.createElement('button');
       btn.type = 'button';
       btn.innerHTML = cmd[1];
       btn.title = cmd[2];
       btn.addEventListener('mousedown', function (e) { e.preventDefault(); });
-      btn.addEventListener('click', function () { document.execCommand(cmd[0], false, null); sync(); });
+      btn.addEventListener('click', function () {
+        if (cmd[0] === 'h2' || cmd[0] === 'h3' || cmd[0] === 'p') {
+          document.execCommand('formatBlock', false, cmd[0]);
+        } else if (cmd[0] === 'link') {
+          var href = window.prompt('Link to (a page address like /policies/returns, https://… or mailto:…)');
+          if (href) document.execCommand('createLink', false, href.trim());
+        } else {
+          document.execCommand(cmd[0], false, null);
+        }
+        sync();
+      });
       bar.appendChild(btn);
     });
     var editor = document.createElement('div');

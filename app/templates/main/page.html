@@ -1,0 +1,31 @@
+{% extends 'common/layout.html' %}
+{% from 'common/_icons.html' import icon %}
+{% block title %}{{ page.title }}{% endblock %}
+{% block meta_description %}{{ page.summary or page.title }}{% endblock %}
+{% block header %}{% include 'common/header.html' %}{% endblock %}
+{% block content %}
+<section class="bz-section bz-page">
+  <header class="bz-page__head">
+    <p class="bz-eyebrow">{{ 'Our story' if page.slug == 'about' else 'Customer care' }}</p>
+    <h1 class="bz-title">{{ page.title }}</h1>
+    {% if page.summary %}<p class="bz-page__lead">{{ page.summary }}</p>{% endif %}
+    {% if page.slug != 'about' and page.updated_at %}<p class="bz-page__updated">Last updated {{ page.updated_at.strftime('%d %B %Y') }}</p>{% endif %}
+  </header>
+  <div class="bz-page__grid">
+    <article class="bz-prose">{{ page.body | rich }}</article>
+    <aside class="bz-page__side">
+      <nav class="bz-page__nav" aria-label="Customer care">
+        <p class="bz-page__navtitle">Customer care</p>
+        {% for p in pages %}
+        <a href="{{ url_for('main.about') if p.slug == 'about' else url_for('main.policy', slug=p.slug) }}" class="{{ 'is-active' if p.id == page.id }}" {{ 'aria-current=page' if p.id == page.id }}>{{ p.title }}</a>
+        {% endfor %}
+      </nav>
+      <div class="bz-page__help">
+        {{ icon('heart', 20) }}
+        <p><strong>Need help?</strong> Write to us at <a href="mailto:{{ shop_settings().support_email }}">{{ shop_settings().support_email }}</a>. We usually reply within one business day.</p>
+      </div>
+    </aside>
+  </div>
+</section>
+{% endblock %}
+{% block footer %}{% include 'common/footer.html' %}{% endblock %}

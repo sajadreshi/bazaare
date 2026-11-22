@@ -1,0 +1,45 @@
+{# Order pieces for emails. #}
+{% macro money(v) %}${{ '%.2f' | format(v or 0) }}{% endmacro %}
+
+{% macro button(href, label) %}
+<table role="presentation" cellpadding="0" cellspacing="0" style="margin:18px 0;"><tr><td style="background:#0e0d0b;border-radius:999px;">
+  <a href="{{ href }}" style="display:inline-block;padding:12px 26px;color:#f3ede2;text-decoration:none;font-weight:bold;font-size:14px;letter-spacing:.5px;">{{ label }}</a>
+</td></tr></table>
+{% endmacro %}
+
+{% macro items(order) %}
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid #e6ddcc;margin-top:8px;">
+  {% for item in order.items %}
+  <tr>
+    <td width="64" style="padding:12px 12px 12px 0;border-bottom:1px solid #e6ddcc;vertical-align:top;">
+      <img src="{{ absolute(image_url(item.image, thumb=True)) }}" width="56" height="56" alt="" style="display:block;border-radius:8px;border:1px solid #e6ddcc;object-fit:cover;">
+    </td>
+    <td style="padding:12px 0;border-bottom:1px solid #e6ddcc;vertical-align:top;font-size:14px;">
+      <div style="font-family:Georgia,'Times New Roman',serif;font-size:16px;color:#0e0d0b;">{{ item.name }}</div>
+      {% if item.variant_name and item.variant_name != 'One Size' %}<div style="color:#786f60;font-size:13px;">{{ item.variant_name }}</div>{% endif %}
+    </td>
+    <td align="right" style="padding:12px 0;border-bottom:1px solid #e6ddcc;vertical-align:top;font-size:14px;white-space:nowrap;">{{ money(item.price) }}</td>
+  </tr>
+  {% endfor %}
+</table>
+{% endmacro %}
+
+{% macro totals(order) %}
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="font-size:14px;margin-top:10px;">
+  <tr><td style="padding:4px 0;color:#786f60;">Subtotal</td><td align="right">{{ money(order.total_merchandise) }}</td></tr>
+  {% if order.total_discount %}<tr><td style="padding:4px 0;color:#786f60;">Discount{% if order.coupon_code %} ({{ order.coupon_code }}){% endif %}</td><td align="right" style="color:#2f6b34;">&minus;{{ money(order.total_discount) }}</td></tr>{% endif %}
+  <tr><td style="padding:4px 0;color:#786f60;">Shipping ({{ order.method.name }})</td><td align="right">{{ 'Free' if not order.total_shipping else money(order.total_shipping) }}</td></tr>
+  {% if order.total_taxes %}<tr><td style="padding:4px 0;color:#786f60;">Sales tax</td><td align="right">{{ money(order.total_taxes) }}</td></tr>{% endif %}
+  <tr><td style="padding:10px 0 4px;border-top:1px solid #e6ddcc;font-weight:bold;color:#0e0d0b;">Total</td>
+      <td align="right" style="padding:10px 0 4px;border-top:1px solid #e6ddcc;font-family:Georgia,'Times New Roman',serif;font-size:20px;font-weight:bold;color:#0e0d0b;">{{ money(order.total) }}</td></tr>
+</table>
+{% endmacro %}
+
+{% macro address(a) %}
+{% if a %}{{ a.first_name }} {{ a.last_name }}<br>{{ a.address1 }}{% if a.address2 %}, {{ a.address2 }}{% endif %}<br>{{ a.city }}, {{ a.state }} {{ a.zip }}{% endif %}
+{% endmacro %}
+
+{% macro heading(eyebrow, title) %}
+<div style="color:#a8834a;font-size:11px;letter-spacing:3px;text-transform:uppercase;">{{ eyebrow }}</div>
+<h1 style="font-family:Georgia,'Times New Roman',serif;font-size:28px;font-weight:normal;color:#0e0d0b;margin:6px 0 12px;">{{ title }}</h1>
+{% endmacro %}
