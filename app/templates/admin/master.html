@@ -2,7 +2,7 @@
 {# Bazaare admin chrome: brand mark and black-and-gold styling on top of Flask-Admin's Bootstrap 4 theme. #}
 {% block head_tail %}
   {{ super() }}
-  <link rel="icon" href="{{ url_for('static', filename='images/favicon.png') }}">
+  {% include 'common/_favicons.html' %}
   <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css', v=asset_version) }}">
 {% endblock %}
 {% block brand %}

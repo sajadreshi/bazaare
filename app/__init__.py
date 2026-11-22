@@ -57,7 +57,14 @@ def _asset_version(app):
 
     paths = [
         os.path.join(app.static_folder, f)
-        for f in ("css/admin.css", "js/admin.js", "css/bazaare.css", "js/bazaare.js", "js/custom.js")
+        for f in (
+            "css/admin.css",
+            "js/admin.js",
+            "css/bazaare.css",
+            "js/bazaare.js",
+            "js/custom.js",
+            "images/favicon.ico",
+        )
     ]
     return str(int(max((os.path.getmtime(p) for p in paths if os.path.exists(p)), default=0)))
 
