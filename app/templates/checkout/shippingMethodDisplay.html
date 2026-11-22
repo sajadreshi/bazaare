@@ -1,8 +1,0 @@
-{% set method = shipping_method_for(cart.shipping_method) %}
-{% set charge = method.charge(cart.total_merchandise or 0) %}
-{% set earliest, latest = shipping_estimate(method.code) %}
-<div class="address-sec">
-    <span class="add-elem-top">{{ method.name }} · {{ 'Free' if not charge else '$%.2f' | format(charge) }}</span>
-    <span class="add-elem">{{ method.days_label }}, arrives {{ earliest.strftime('%a %d %b') }}–{{ latest.strftime('%a %d %b') }}</span>
-    <span class="add-elem">Ships from the US</span>
-</div>

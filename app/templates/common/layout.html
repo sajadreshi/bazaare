@@ -14,12 +14,12 @@
 		<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Jost:wght@400;500;600&display=swap" rel="stylesheet">
 		<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 		<link href="{{ url_for('static',filename='css/responsive.css') }}" rel="stylesheet" />
-		<link rel="stylesheet" href="{{ url_for('static', filename='css/bazaare.css') }}">
+		<link rel="stylesheet" href="{{ url_for('static', filename='css/bazaare.css', v=asset_version) }}">
 	</head>
 	<body class="bz-body {% block body_class %}{% endblock %}">
 		{% block header %}{% endblock %}
 		<main class="bz-main">{% block content %}{% endblock %}</main>
 		{% block footer %}{% endblock %}
-		<script src="{{ url_for('static', filename='js/bazaare.js') }}" defer></script>
+		<script src="{{ url_for('static', filename='js/bazaare.js', v=asset_version) }}" defer></script>
 	</body>
 </html>

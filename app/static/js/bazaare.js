@@ -27,6 +27,15 @@
       if (main && radio.dataset.image) main.src = radio.dataset.image;
     });
   });
+  // Bag and checkout: changing an option or delivery method saves it straight away.
+  document.querySelectorAll('[data-bz-autosubmit]').forEach(function (input) {
+    input.addEventListener('change', function () {
+      if (input.form) {
+        input.form.classList.add('is-busy');
+        input.form.submit();
+      }
+    });
+  });
   // Product gallery: show the full image when a thumbnail is clicked.
   document.querySelectorAll('[data-bz-thumb]').forEach(function (thumb) {
     thumb.addEventListener('click', function () {

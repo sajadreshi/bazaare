@@ -1,30 +1,154 @@
 {% extends 'common/layout.html' %}
+{% from 'checkout/_macros.html' import bag_line, totals, assurances, money, address_lines, address_form with context %}
+{% from 'common/_icons.html' import icon %}
 {% block title %}Checkout{% endblock %}
 {% block header %}{% include 'common/header.html' %}{% endblock %}
 {% block content %}
-{% with messages = get_flashed_messages() %}
-{% if messages %}
-{% for message in messages %}
-<div class="alert alert-warning alert-dismissible fade show" role="alert">
-    <div class="flash-msg">{{message}}</div>
-    <span type="button" class="close" data-dismiss="alert" aria-label="Close"><span
-            aria-hidden="true">&times;</span></span>
-</div>
-{% endfor %}
-{% endif %}
-{% endwith %}
-<section class="">
-    {% include 'checkout/checkoutbreadcrumb.html'%}
-</section>
+{% set items = cart.pending_items if cart else [] %}
+<section class="bz-section bz-checkout">
+  <ol class="bz-progress" aria-label="Checkout progress">
+    <li class="is-done"><a href="{{ url_for('checkout.shopcart') }}">{{ icon('check', 14) }} Bag</a></li>
+    <li class="is-current" aria-current="step">Details &amp; payment</li>
+    <li>Confirmation</li>
+  </ol>
+  <header class="bz-checkout__head">
+    <div>
+      <p class="bz-eyebrow">Secure checkout</p>
+      <h1 class="bz-title">Checkout</h1>
+    </div>
+  </header>
 
-<section class="checkout-details">
-  {% if cart and cart.pending_items %}
-     {% include 'checkout/checkoutdetails.html'%}
-   {% else %}
-     {% include 'checkout/emptyCart.html'%}
- {% endif %}
-</section>
+  {% if items %}
+  <div class="bz-checkout__grid">
+    <div class="bz-checkout__main bz-steps">
 
+      {# 1. Shipping address #}
+      <section class="bz-step {{ 'is-open' if open_step == 'shipping' }} {{ 'is-done' if status.shipping }}" id="shipping">
+        <header class="bz-step__head">
+          <span class="bz-step__num">{% if status.shipping and open_step != 'shipping' %}{{ icon('check', 16) }}{% else %}1{% endif %}</span>
+          <h2>Shipping address</h2>
+          {% if status.shipping and open_step != 'shipping' %}<a class="bz-textbtn" href="{{ url_for('checkout.order', edit='shipping') }}#shipping">Change</a>{% endif %}
+          {% if open_step == 'shipping' and status.shipping %}<a class="bz-textbtn" href="{{ url_for('checkout.order') }}">Cancel</a>{% endif %}
+        </header>
+        <div class="bz-step__body">
+          {% if open_step == 'shipping' %}
+            {{ address_form(shipping_form, 'shipping_form', 'Save and continue', 'shipping') }}
+          {% else %}
+            {{ address_lines(customer.shipping_address) }}
+          {% endif %}
+        </div>
+      </section>
+
+      {# 2. Billing address #}
+      <section class="bz-step {{ 'is-open' if open_step == 'billing' }} {{ 'is-done' if status.billing }} {{ 'is-locked' if not status.shipping }}" id="billing">
+        <header class="bz-step__head">
+          <span class="bz-step__num">{% if status.billing and open_step != 'billing' %}{{ icon('check', 16) }}{% else %}2{% endif %}</span>
+          <h2>Billing address</h2>
+          {% if status.billing and open_step != 'billing' %}<a class="bz-textbtn" href="{{ url_for('checkout.order', edit='billing') }}#billing">Change</a>{% endif %}
+          {% if open_step == 'billing' and status.billing %}<a class="bz-textbtn" href="{{ url_for('checkout.order') }}">Cancel</a>{% endif %}
+        </header>
+        {% if status.shipping %}
+        <div class="bz-step__body">
+          {% if open_step == 'billing' %}
+            {% if customer and customer.shipping_address and customer.billing_address_id != customer.shipping_address_id %}
+            <form method="post" action="{{ url_for('checkout.order') }}" class="bz-same">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <input type="hidden" name="form_id" value="billing_same">
+              <button type="submit" class="bz-btn bz-btn--ghost">Same as shipping address</button>
+              <span class="bz-muted">or enter a different one below</span>
+            </form>
+            {% endif %}
+            {{ address_form(billing_form, 'billing_form', 'Save and continue', 'billing') }}
+          {% elif customer and customer.billing_address_id == customer.shipping_address_id %}
+            <p class="bz-step__same">{{ icon('check', 16) }} Same as shipping address</p>
+          {% else %}
+            {{ address_lines(customer.billing_address if customer else None) }}
+          {% endif %}
+        </div>
+        {% endif %}
+      </section>
+
+      {# 3. Delivery #}
+      <section class="bz-step {{ 'is-locked' if not status.shipping }} {{ 'is-open' if status.shipping and not open_step }}" id="delivery">
+        <header class="bz-step__head">
+          <span class="bz-step__num">3</span>
+          <h2>Delivery</h2>
+        </header>
+        {% if status.shipping %}
+        <div class="bz-step__body">
+          <form method="post" action="{{ url_for('checkout.order') }}" class="bz-choices" data-bz-delivery>
+            {{ delivery_form.hidden_tag() }}
+            {% for code, method in shipping_methods.items() %}
+            {% set charge = method.charge(cart.total_merchandise or 0) %}
+            {% set earliest, latest = shipping_estimate(code) %}
+            <label class="bz-choice">
+              <input type="radio" name="shipping_method" value="{{ code }}" {{ 'checked' if delivery_form.shipping_method.data == code }} data-bz-autosubmit>
+              <span class="bz-choice__box">
+                <span class="bz-choice__main">
+                  <strong>{{ method.name }}</strong>
+                  <span class="bz-muted">Arrives {{ earliest.strftime('%a %d %b') }} – {{ latest.strftime('%a %d %b') }} · {{ method.days_label }}</span>
+                </span>
+                <span class="bz-choice__price">{{ 'Free' if not charge else money(charge) }}</span>
+              </span>
+            </label>
+            {% endfor %}
+            <noscript><button type="submit" class="bz-btn bz-btn--ghost">Update delivery</button></noscript>
+          </form>
+        </div>
+        {% endif %}
+      </section>
+
+      {# 4. Payment #}
+      <section class="bz-step {{ 'is-locked' if not status.ready }} {{ 'is-open' if status.ready and not open_step }}" id="payment">
+        <header class="bz-step__head">
+          <span class="bz-step__num">4</span>
+          <h2>Payment</h2>
+        </header>
+        {% if status.ready %}
+        <div class="bz-step__body">
+          <form method="post" action="{{ url_for('checkout.order') }}" class="bz-choices">
+            {{ place_order_form.hidden_tag() }}
+            {% for value, label in place_order_form.payment_method.choices %}
+            <label class="bz-choice">
+              <input type="radio" name="payment_method" value="{{ value }}" {{ 'checked' if loop.first }}>
+              <span class="bz-choice__box">
+                <span class="bz-choice__icon">{{ icon('cash', 22) }}</span>
+                <span class="bz-choice__main">
+                  <strong>{{ "Cash on delivery" if value == "COD" else label }}</strong>
+                  {% if value == 'COD' %}<span class="bz-muted">Pay {{ money(cart.total_cart) }} in cash when your order arrives.</span>{% endif %}
+                </span>
+              </span>
+            </label>
+            {% endfor %}
+            <button type="submit" class="bz-btn bz-btn--wide bz-btn--lg">{{ icon('lock', 18) }} Place order · {{ money(cart.total_cart) }}</button>
+            <p class="bz-fine">By placing your order you agree to pay the total shown, including shipping.</p>
+          </form>
+        </div>
+        {% endif %}
+      </section>
+    </div>
+
+    <aside class="bz-summary">
+      <div class="bz-summary__head">
+        <h2 class="bz-summary__title">Your order</h2>
+        <a class="bz-textbtn" href="{{ url_for('checkout.shopcart') }}">Edit bag</a>
+      </div>
+      <ul class="bz-lines bz-lines--compact">
+        {% for item in items %}{{ bag_line(item) }}{% endfor %}
+      </ul>
+      {{ totals(cart.total_merchandise, cart.total_shipping, cart.total_taxes, cart.total_discount, cart.total_cart,
+                shipping_label='Shipping (' ~ shipping_method_for(cart.shipping_method).name ~ ')', count=items | length) }}
+      {{ assurances() }}
+    </aside>
+  </div>
+  {% else %}
+  <div class="bz-empty bz-empty--bag">
+    {{ icon('bag', 40) }}
+    <h2>Your bag is empty</h2>
+    <p>Add something to your bag to check out.</p>
+    <div class="bz-empty__actions"><a class="bz-btn" href="{{ url_for('main.home') }}">Continue shopping</a></div>
+  </div>
+  {% endif %}
+</section>
 {% endblock %}
-
 {% block footer %}{% include 'common/footer.html' %}{% endblock %}

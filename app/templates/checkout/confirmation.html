@@ -1,24 +1,40 @@
 {% extends 'common/layout.html' %}
-{% block title %}Confirmation{% endblock %}
+{% from 'common/_icons.html' import icon %}
+{% from 'checkout/_macros.html' import money with context %}
+{% block title %}Order {{ order.number }} confirmed{% endblock %}
 {% block header %}{% include 'common/header.html' %}{% endblock %}
 {% block content %}
-{% with messages = get_flashed_messages() %}
-{% if messages %}
-{% for message in messages %}
-<div class="alert alert-warning alert-dismissible fade show" role="alert">
-    <div class="flash-msg">{{message}}</div>
-    <span type="button" class="close" data-dismiss="alert" aria-label="Close"><span
-            aria-hidden="true">&times;</span></span>
-</div>
-{% endfor %}
-{% endif %}
-{% endwith %}
-<section class="">
-    {% include 'checkout/confirmationbreadcrumb.html'%}
-</section>
-<section class="checkout-details">
-    {% include 'orders/_order.html' %}
+{% set address = order.shipping_address %}
+{% set earliest, latest = order.estimated_delivery %}
+<section class="bz-section bz-checkout">
+  <ol class="bz-progress" aria-label="Checkout progress">
+    <li class="is-done">{{ icon('check', 14) }} Bag</li>
+    <li class="is-done">{{ icon('check', 14) }} Details &amp; payment</li>
+    <li class="is-current" aria-current="step">Confirmation</li>
+  </ol>
+
+  <div class="bz-thanks">
+    <span class="bz-thanks__mark">{{ icon('check', 34) }}</span>
+    <p class="bz-eyebrow">Order {{ order.number }}</p>
+    <h1 class="bz-title">Thank you{% if address %}, {{ address.first_name }}{% endif %}!</h1>
+    <p class="bz-thanks__lead">Your order is placed. We're getting your pieces ready to ship.</p>
+    <div class="bz-thanks__facts">
+      <div><span>Estimated delivery</span><strong>{{ earliest.strftime('%a %d %b') }} – {{ latest.strftime('%a %d %b') }}</strong></div>
+      <div><span>Shipping</span><strong>{{ order.method.name }}</strong></div>
+      <div><span>Payment</span><strong>{% for p in order.payments %}{{ 'Cash on delivery' if p.payment_method == 'COD' else p.payment_method }}{% else %}—{% endfor %}</strong></div>
+      <div><span>Total</span><strong>{{ money(order.total) }}</strong></div>
+    </div>
+    {% if order.payments and order.payments[0].payment_method == 'COD' %}
+    <p class="bz-thanks__note">{{ icon('cash', 18) }} Please have {{ money(order.total) }} ready in cash when your order arrives.</p>
+    {% endif %}
+  </div>
+
+  {% include 'orders/_order.html' %}
+
+  <div class="bz-thanks__actions">
+    <a class="bz-btn" href="{{ url_for('main.home') }}">Continue shopping</a>
+    {% if current_user.is_authenticated %}<a class="bz-btn bz-btn--ghost" href="{{ url_for('customer.orders') }}">View your orders</a>{% endif %}
+  </div>
 </section>
 {% endblock %}
-
 {% block footer %}{% include 'common/footer.html' %}{% endblock %}

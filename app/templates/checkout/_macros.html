@@ -1,0 +1,114 @@
+{# Building blocks for the bag, checkout and order pages. #}
+{% from 'common/_icons.html' import icon %}
+
+{% macro money(value) %}${{ '%.2f' | format(value or 0) }}{% endmacro %}
+
+{# One line of the bag. `editable` adds the option picker and Remove. #}
+{% macro bag_line(item, editable=False) %}
+{% set product = item.product %}
+{% set options = product.options if product else [] %}
+{% set show_option = item.variant and not (options | length == 1 and item.variant.name == 'One Size') %}
+<li class="bz-line">
+  <a class="bz-line__img" href="{{ url_for('catalog.product', productId=item.product_id) if product else '#' }}">
+    <img src="{{ image_url(product.main_image if product else None, thumb=True) }}" alt="" width="96" height="96">
+  </a>
+  <div class="bz-line__body">
+    <a class="bz-line__name" href="{{ url_for('catalog.product', productId=item.product_id) if product else '#' }}">{{ item.product_name }}</a>
+    {% if product and product.material %}<p class="bz-line__meta">{{ product.material }}</p>{% endif %}
+    {% if show_option %}
+      {% set label = (product.option_label if product and product.option_label else 'Option') %}
+      {% if editable and options | length > 1 %}
+      <form method="post" action="{{ url_for('checkout.shopcart') }}" class="bz-line__option">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="itemId" value="{{ item.id }}">
+        <input type="hidden" name="productId" value="{{ item.product_id }}">
+        <label for="opt-{{ item.id }}">{{ label }}</label>
+        <select id="opt-{{ item.id }}" name="size" data-bz-autosubmit>
+          {% for option in options %}
+          <option value="{{ option.id }}" {{ 'selected' if option.id == item.size_id }} {{ 'disabled' if not option.in_stock and option.id != item.size_id }}>
+            {{ option.name }}{% if option.price is not none and option.price != product.price %} · {{ money(option.price) }}{% endif %}{% if not option.in_stock %} (sold out){% endif %}
+          </option>
+          {% endfor %}
+        </select>
+        <noscript><button type="submit" class="bz-textbtn">Update</button></noscript>
+      </form>
+      {% else %}
+      <p class="bz-line__meta">{{ label }}: {{ item.variant.name }}</p>
+      {% endif %}
+    {% endif %}
+    {% if editable %}
+    <form method="post" action="{{ url_for('checkout.remove', itemId=item.id) }}" class="bz-line__remove">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button type="submit" class="bz-textbtn">Remove</button>
+    </form>
+    {% endif %}
+  </div>
+  <div class="bz-line__price">{{ money(item.product_price) }}</div>
+</li>
+{% endmacro %}
+
+{# Totals for a cart or an order (both have the same total_* fields; the grand total differs). #}
+{% macro totals(subtotal, shipping, taxes, discount, total, shipping_label='Shipping', count=None) %}
+<dl class="bz-totals">
+  <div><dt>Subtotal{% if count %} ({{ count }} item{{ 's' if count != 1 }}){% endif %}</dt><dd>{{ money(subtotal) }}</dd></div>
+  <div><dt>{{ shipping_label }}</dt><dd>{{ 'Free' if not shipping else money(shipping) }}</dd></div>
+  {% if taxes %}<div><dt>Taxes</dt><dd>{{ money(taxes) }}</dd></div>{% endif %}
+  {% if discount %}<div class="is-discount"><dt>Discount</dt><dd>−{{ money(discount) }}</dd></div>{% endif %}
+  <div class="bz-totals__grand"><dt>Total</dt><dd>{{ money(total) }}</dd></div>
+</dl>
+{% endmacro %}
+
+{# Promises shown under the bag and checkout buttons. #}
+{% macro assurances(free_over=None) %}
+<ul class="bz-assure">
+  <li>{{ icon('lock', 18) }} Secure checkout</li>
+  <li>{{ icon('hand', 18) }} Handcrafted pieces, checked before they ship</li>
+  {% if free_over %}<li>{{ icon('truck', 18) }} Free standard shipping over {{ money(free_over) | replace('.00', '') }}</li>{% endif %}
+</ul>
+{% endmacro %}
+
+{% macro address_lines(address) %}
+{% if address %}
+<address class="bz-address">
+  <strong>{{ address.first_name }} {{ address.last_name }}</strong><br>
+  {{ address.address1 }}{% if address.address2 %}, {{ address.address2 }}{% endif %}<br>
+  {{ address.city }}, {{ address.state }} {{ address.zip }}<br>
+  <span class="bz-address__contact">{{ address.email }} · {{ address.phone }}</span>
+</address>
+{% else %}
+<p class="bz-muted">Not provided</p>
+{% endif %}
+{% endmacro %}
+
+{# A labelled input for the address forms. #}
+{% macro input(f, autocomplete=None, type=None, cls='') %}
+<div class="bz-input {{ cls }} {{ 'has-error' if f.errors }}">
+  <label for="{{ f.id }}">{{ f.label.text }}{% if not f.flags.required %} <span class="bz-optional">(optional)</span>{% endif %}</label>
+  {% set attrs = {'autocomplete': autocomplete} if autocomplete else {} %}
+  {% if type %}{% set _ = attrs.update({'type': type}) %}{% endif %}
+  {{ f(placeholder='', **attrs) }}
+  {% for error in f.errors %}<p class="bz-input__error">{{ error }}</p>{% endfor %}
+</div>
+{% endmacro %}
+
+{% macro address_form(form, form_id, submit_label, section) %}
+<form method="post" action="{{ url_for('checkout.order') }}" class="bz-form" novalidate>
+  {{ form.hidden_tag() }}
+  <div class="bz-form__row">
+    {{ input(form.first_name, section ~ ' given-name') }}
+    {{ input(form.last_name, section ~ ' family-name') }}
+  </div>
+  {{ input(form.address1, section ~ ' address-line1') }}
+  {{ input(form.address2, section ~ ' address-line2') }}
+  <div class="bz-form__row bz-form__row--3">
+    {{ input(form.city, section ~ ' address-level2') }}
+    {{ input(form.state, section ~ ' address-level1') }}
+    {{ input(form.zip, section ~ ' postal-code') }}
+  </div>
+  <div class="bz-form__row">
+    {{ input(form.email, 'email', 'email') }}
+    {{ input(form.phone, 'tel', 'tel') }}
+  </div>
+  <button type="submit" class="bz-btn">{{ submit_label }}</button>
+</form>
+{% endmacro %}

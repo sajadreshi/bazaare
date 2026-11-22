@@ -71,6 +71,16 @@ def save_address(form, kind):
     return address
 
 
+def use_shipping_for_billing():
+    """Bill to the shipping address. Returns False if there's no shipping address yet."""
+    customer = get_or_create_current_customer()
+    if customer.shipping_address is None:
+        return False
+    customer.billing_address = customer.shipping_address
+    db.session.commit()
+    return True
+
+
 def save_shipping_method(code):
     """Choose Standard/Express for the current cart. Returns False for an unknown method."""
     cart = get_cart()
