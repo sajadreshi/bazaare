@@ -13,6 +13,13 @@
       <button type="submit" class="btn bz-btn-gold">Save stock</button>
     </div>
   </div>
+  {% if counts.missing %}
+  <div class="bz-fill">
+    <span><strong>{{ counts.missing }} option(s) have no count</strong> and can't be sold. Count them below, or give them all the same number for now:</span>
+    <input class="form-control" type="number" min="0" step="1" name="fill_missing" placeholder="e.g. 5" aria-label="Stock for every option without a count">
+    <button type="submit" class="btn bz-btn-outline">Fill empty counts</button>
+  </div>
+  {% endif %}
   <nav class="bz-filter">
     {% for key, label in labels.items() %}
     <a href="{{ url_for('.index', show=key) }}" class="{{ 'is-active' if show == key }}">{{ label }}{% if key != 'all' %} <span>{{ counts[key] }}</span>{% endif %}</a>
@@ -29,7 +36,7 @@
           <td><a href="{{ url_for('product.edit_view', id=product.id) }}"><strong>{{ product.name }}</strong></a><br><small class="bz-muted">{{ product.sku }}{{ ' · hidden by hand' if not product.is_active and not product.sold_out_at }}</small></td>
           <td>{{ option.name }}</td>
           <td>
-            {% if state == 'missing' %}<span class="bz-pill bz-pill--warn">not counted</span>
+            {% if state == 'missing' %}<span class="bz-pill bz-pill--bad">not counted · can't be sold</span>
             {% elif state == 'out' %}<span class="bz-pill bz-pill--bad">{{ 'sold out · hidden' if product.sold_out_at else 'sold out' }}</span>
             {% elif state == 'low' %}<span class="bz-pill bz-pill--warn">{{ option.available }} left to sell</span>
             {% else %}<span class="bz-muted">{{ option.available }} to sell</span>{% endif %}

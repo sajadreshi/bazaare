@@ -40,7 +40,7 @@ def test_product_page_shows_jewellery_fields(app, client):
             is_active=True,
         )
         product.categories.append(rings)
-        product.options = [Variant(name="Ring size 7", is_default=True)]
+        product.options = [Variant(stock=1000, name="Ring size 7", is_default=True)]
         db.session.add(product)
         db.session.commit()
         pid = product.id

@@ -1,5 +1,6 @@
 """Inventory: selling the last piece hides a product, restocking brings it back, and the shop threshold."""
 
+import re
 from decimal import Decimal
 
 import pytest
@@ -151,3 +152,30 @@ def test_stock_page_updates_many_options_at_once(app, admin):
     assert product(app, b) == (True, False, [0, 2])  # restocked: back in the shop
     admin.post("/admin/stock/", data={f"stock-{a1}": "lots"})
     assert product(app, a)[2] == [6]  # not a number: nothing saved
+
+
+def test_an_option_without_a_stock_count_cannot_be_bought(app, client):
+    pid, [uncounted, counted] = make(app, None, 2)
+    client.post(f"/catalog/product/{pid}", data={"pid": pid, "size": uncounted})
+    with client.session_transaction() as sess:
+        assert any("sold out" in m for _, m in sess.pop("_flashes", []))
+    html = client.get(f"/catalog/product/{pid}").get_data(as_text=True)
+    assert re.search(rf'value="{uncounted}"[^>]*disabled', html)  # shown, but can't be picked
+    assert re.search(rf'value="{counted}"[^>]*checked', html)  # the counted one is preselected
+
+
+def test_a_product_with_nothing_counted_is_hidden_until_stock_is_entered(app, admin):
+    pid, [opt] = make(app, None)
+    with app.app_context():
+        inventory.refresh([db.session.get(Product, pid)])
+        db.session.commit()
+    assert product(app, pid) == (False, True, [None])
+    admin.post("/admin/stock/", data={f"stock-{opt}": "3"})
+    assert product(app, pid) == (True, False, [3])
+
+
+def test_stock_page_can_fill_every_missing_count_at_once(app, admin):
+    a, [a1] = make(app, None)
+    b, [b1] = make(app, 7)
+    admin.post("/admin/stock/", data={"fill_missing": "4"})
+    assert product(app, a)[2] == [4] and product(app, b)[2] == [7]

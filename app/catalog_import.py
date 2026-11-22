@@ -27,6 +27,7 @@ from app.models import (
     ProductImage,
     Variant,
 )
+from app.services import inventory
 from app.storage import save_image
 
 log = logging.getLogger(__name__)
@@ -38,6 +39,16 @@ def _upload(images_dir, filename, folder):
     path = os.path.join(images_dir, filename)
     with open(path, "rb") as fh:
         return save_image(FileStorage(stream=fh, filename=filename), folder)
+
+
+def _set_stock(product, stock):
+    """Stock from the manifest: a number for every option, or {"Design name": number}."""
+    if stock is None:
+        return
+    for option in product.options:
+        value = stock.get(option.name) if isinstance(stock, dict) else stock
+        if value is not None:
+            option.stock = int(value)
 
 
 def _set_designs(product, designs):
@@ -125,12 +136,15 @@ def import_catalog(manifest_path, images_dir, update=False):
         product.is_active = True
         product.categories = [categories[code] for code in item["categories"]]
         _set_designs(product, item.get("designs"))
+        _set_stock(product, item.get("stock"))
         _set_attributes(product, item.get("attributes") or {})
         if not product.images:
             product.images = [
                 ProductImage(image=_upload(images_dir, filename, "products"), position=position)
                 for position, filename in enumerate(item["images"])
             ]
+        db.session.flush()
+        inventory.refresh([product])  # nothing counted yet = not for sale until stock is set
         db.session.commit()
         created += is_new
         updated += not is_new

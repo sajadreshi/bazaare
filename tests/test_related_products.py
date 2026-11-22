@@ -15,7 +15,7 @@ def make(sku, name, price, code="NECK-NECKLACES"):
         sku=sku, name=name, compare_at_price=Decimal(price), price=Decimal(price), is_active=True
     )
     product.categories = [Category.query.filter_by(code=code).one()]
-    product.options = [Variant(name="One Size", is_default=True)]
+    product.options = [Variant(stock=1000, name="One Size", is_default=True)]
     db.session.add(product)
     db.session.flush()
     return product

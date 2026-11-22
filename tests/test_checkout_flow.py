@@ -159,7 +159,7 @@ def cheap_product_ids(app):
             price=Decimal("1.00"),
             is_active=True,
         )
-        product.options = [Variant(name="One size", is_default=True)]
+        product.options = [Variant(stock=1000, name="One size", is_default=True)]
         db.session.add(product)
         db.session.commit()
         return product.id, product.options[0].id

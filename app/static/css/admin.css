@@ -279,3 +279,6 @@ a:hover { color: #f1d595; }
 .bz-stock__input { width: 110px; margin-left: auto; text-align: right; }
 .bz-stock--missing .bz-stock__input { border-color: var(--bz-gold); }
 .bz-stock__save { display: flex; justify-content: flex-end; margin-top: 12px; }
+.bz-fill { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 0 0 14px; padding: 12px 16px; border-radius: 12px; background: #2a1f14; border: 1px solid #5a4423; }
+.bz-fill span { flex: 1 1 320px; color: var(--bz-text); }
+.bz-fill input { width: 110px; }

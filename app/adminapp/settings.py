@@ -55,6 +55,14 @@ class StockView(AdminOnlyMixin, BaseView):
         if request.method == "POST":
             # The app-wide CSRFProtect has already checked this POST's token.
             changed, errors = set(), []
+            fill = (request.form.get("fill_missing") or "").strip()
+            if fill:
+                if not fill.isdigit():
+                    flash(f"“{fill}” isn't a whole number.", "error")
+                    return redirect(url_for(".index", show=request.args.get("show", "all")))
+                for variant in db.session.query(Variant).filter(Variant.stock.is_(None)):
+                    variant.stock = int(fill)
+                    changed.add(variant.product)
             for variant in db.session.query(Variant).all():
                 raw = request.form.get(f"stock-{variant.id}")
                 if raw is None:
