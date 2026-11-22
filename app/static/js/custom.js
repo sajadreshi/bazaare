@@ -1,6 +1,6 @@
 // nice select
 $(document).ready(function() {
-    $('select').not('.bz-input select, .bz-line__option select').niceSelect();
+    $('select').not('.bz-input select, .bz-line__option select, select.bz-select').niceSelect();
   });
 
 $('a.cont_shopping').click(function(){
