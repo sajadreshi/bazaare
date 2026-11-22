@@ -129,9 +129,9 @@ def create_app(config_overrides=None):
     admin.add_view(UserView(User, db, category="User"))
     admin.add_view(RoleView(Role, db, category="User"))
     admin.add_view(ProductAssociationView(ProductAssociation, db, category="Attributes"))
-    admin.add_view(HolidayView(Holiday, db, category="Holidays"))
+    admin.add_view(HolidayView(Holiday, db, category="Settings", name="Shop holidays", endpoint="holiday"))
     admin.add_view(OrderView(Order, db, name="Orders", endpoint="order"))
-    admin.add_view(SettingsView(name="Settings", endpoint="settings"))
+    admin.add_view(SettingsView(name="Inventory", endpoint="settings", category="Settings"))
     if not any(link.name == "Sign out" for link in admin.menu_links()):
         admin.add_link(MenuLink(name="View shop", url="/"))
         admin.add_link(MenuLink(name="Sign out", url="/admin/logout"))
